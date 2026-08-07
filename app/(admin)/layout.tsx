@@ -1,9 +1,12 @@
 // app/(admin)/layout.tsx
+'use client'
+
 import Sidebar from '@/components/layout/Sidebar'
 import Navbar from '@/components/layout/Navbar'
+import { withAuth } from '@/lib/withAuth'
 import { ReactNode } from 'react'
 
-export default function AdminLayout({ children }: { children: ReactNode }) {
+function AdminLayout({ children }: { children: ReactNode }) {
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
@@ -16,3 +19,5 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
     </div>
   )
 }
+
+export default withAuth(AdminLayout)
