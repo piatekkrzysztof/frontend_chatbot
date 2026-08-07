@@ -9,6 +9,7 @@ const links = [
   { href: '/faq', label: 'FAQ' },
   { href: '/widget-settings', label: 'Widget' },
   { href: '/conversations', label: 'Konwersacje' },
+  { href: '/leads', label: 'Zapytania' },
 ]
 
 export default function Sidebar() {

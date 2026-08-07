@@ -49,6 +49,12 @@ export default function WidgetChat() {
   const [sending, setSending] = useState(false)
   const bottomRef = useRef<HTMLDivElement>(null)
 
+  // Eskalacja do człowieka — pojawia się, gdy bot odpowiedział bez pokrycia w materiałach
+  const [offerContact, setOfferContact] = useState(false)
+  const [contactOpen, setContactOpen] = useState(false)
+  const [contactValue, setContactValue] = useState('')
+  const [contactSent, setContactSent] = useState(false)
+
   useEffect(() => {
     if (!apiKey) return
 
@@ -118,12 +124,18 @@ export default function WidgetChat() {
               }
               return next
             })
-          } else if (event.type === 'done' && event.sources?.length) {
-            setMessages((prev) => {
-              const next = [...prev]
-              next[next.length - 1] = { ...next[next.length - 1], sources: event.sources }
-              return next
-            })
+          } else if (event.type === 'done') {
+            if (event.sources?.length) {
+              setMessages((prev) => {
+                const next = [...prev]
+                next[next.length - 1] = { ...next[next.length - 1], sources: event.sources }
+                return next
+              })
+            }
+            // 'gpt' = brak oparcia w dokumentach i FAQ — proponujemy kontakt z firmą
+            if (event.source === 'gpt' && !contactSent) {
+              setOfferContact(true)
+            }
           }
         }
       }
@@ -134,6 +146,29 @@ export default function WidgetChat() {
       ])
     } finally {
       setSending(false)
+    }
+  }
+
+  async function handleContactSubmit() {
+    const value = contactValue.trim()
+    if (!value || !apiKey) return
+
+    try {
+      await fetch(`${API_URL}/widget/contact/`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-API-Key': apiKey },
+        body: JSON.stringify({
+          contact: value,
+          message: messages.filter((m) => m.sender === 'user').slice(-1)[0]?.text || '',
+          conversation_session_id: getSessionId(apiKey),
+        }),
+      })
+      setContactSent(true)
+      setContactOpen(false)
+      setOfferContact(false)
+      setContactValue('')
+    } catch {
+      // brak sieci — nie blokujemy rozmowy, użytkownik może spróbować ponownie
     }
   }
 
@@ -167,6 +202,9 @@ export default function WidgetChat() {
         className="px-4 py-3 font-medium flex items-center gap-2"
       >
         {isWhiteLabel && branding?.widget_logo ? (
+          // Logo klienta z backendu/S3 — widget działa w iframe, optymalizacja
+          // next/image tylko dokładałaby zależność od konfiguracji domen.
+          // eslint-disable-next-line @next/next/no-img-element
           <img src={branding.widget_logo} alt="" className="h-6" />
         ) : (
           <span
@@ -192,6 +230,7 @@ export default function WidgetChat() {
           <div key={i} className="flex items-start gap-2 max-w-[85%]" style={m.sender === 'user' ? { alignSelf: 'flex-end', flexDirection: 'row-reverse' } : undefined}>
             {m.sender === 'bot' && (
               isWhiteLabel && branding?.widget_avatar ? (
+                // eslint-disable-next-line @next/next/no-img-element
                 <img src={branding.widget_avatar} alt="" className="h-6 w-6 rounded-full shrink-0" />
               ) : (
                 <span className="h-6 w-6 rounded-full shrink-0" style={{ backgroundColor: avatarBg }} />
@@ -221,6 +260,69 @@ export default function WidgetChat() {
         {sending && messages[messages.length - 1]?.sender === 'user' && (
           <div className="self-start text-sm" style={{ color: inputHintColor }}>Piszę...</div>
         )}
+
+        {contactSent && (
+          <div
+            className="rounded-lg px-3 py-2 text-sm self-start"
+            style={{ backgroundColor: botBubbleBg, color: botBubbleText }}
+          >
+            Dziękujemy — przekazaliśmy Twój kontakt. Odezwiemy się wkrótce.
+          </div>
+        )}
+
+        {offerContact && !contactSent && !sending && (
+          <div className="self-start w-full">
+            {!contactOpen ? (
+              <button
+                onClick={() => setContactOpen(true)}
+                className="text-xs underline"
+                style={{ color: inputHintColor }}
+              >
+                Nie znalazłeś odpowiedzi? Zostaw kontakt do siebie
+              </button>
+            ) : (
+              <div
+                className="rounded-lg p-3 flex flex-col gap-2"
+                style={{ backgroundColor: botBubbleBg }}
+              >
+                <p className="text-xs" style={{ color: botBubbleText }}>
+                  Zostaw e-mail lub telefon — odezwiemy się z odpowiedzią.
+                </p>
+                <input
+                  type="text"
+                  value={contactValue}
+                  onChange={(e) => setContactValue(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && handleContactSubmit()}
+                  placeholder="jan@firma.pl lub 500 100 200"
+                  className="rounded border px-2 py-1 text-sm"
+                  style={{
+                    borderColor: footerBorder,
+                    backgroundColor: isWhiteLabel ? '#ffffff' : SMART_THEME.messageAreaBg,
+                    color: isWhiteLabel ? '#1c2b36' : SMART_THEME.white,
+                  }}
+                />
+                <div className="flex gap-2">
+                  <button
+                    onClick={handleContactSubmit}
+                    disabled={!contactValue.trim()}
+                    style={{ backgroundColor: accent, color: isWhiteLabel ? '#ffffff' : SMART_THEME.bg }}
+                    className="rounded px-3 py-1 text-xs font-medium disabled:opacity-50"
+                  >
+                    Wyślij
+                  </button>
+                  <button
+                    onClick={() => { setContactOpen(false); setOfferContact(false) }}
+                    className="text-xs"
+                    style={{ color: inputHintColor }}
+                  >
+                    Nie teraz
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
         <div ref={bottomRef} />
       </div>
 

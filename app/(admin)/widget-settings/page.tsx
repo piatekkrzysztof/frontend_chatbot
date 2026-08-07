@@ -136,6 +136,9 @@ export default function WidgetSettingsPage() {
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Logo</label>
               {logoUrl && !logoFile && (
+                // Plik wgrany przez klienta, serwowany przez backend/S3 — optymalizacja
+                // next/image wymagałaby listy dozwolonych domen i nic tu nie wnosi.
+                // eslint-disable-next-line @next/next/no-img-element
                 <img src={logoUrl} alt="Aktualne logo" className="h-8 mb-2" />
               )}
               <input
@@ -148,6 +151,7 @@ export default function WidgetSettingsPage() {
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Awatar bota</label>
               {avatarUrl && !avatarFile && (
+                // eslint-disable-next-line @next/next/no-img-element
                 <img src={avatarUrl} alt="Aktualny awatar" className="h-8 w-8 rounded-full mb-2" />
               )}
               <input
