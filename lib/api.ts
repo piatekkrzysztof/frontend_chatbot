@@ -25,6 +25,12 @@ export async function apiFetch(path: string, options: RequestInit = {}) {
 
   const response = await fetch(`${API_URL}${path}`, { ...options, headers })
 
+  if (response.status === 401) {
+    clearTokens()
+    if (typeof window !== 'undefined') window.location.href = '/login'
+    throw new Error('Sesja wygasła. Zaloguj się ponownie.')
+  }
+
   if (!response.ok) {
     let detail = response.statusText
     try {

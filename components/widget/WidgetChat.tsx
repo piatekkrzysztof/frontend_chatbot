@@ -5,9 +5,27 @@ import { useSearchParams } from 'next/navigation'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api'
 
+const SMART_THEME = {
+  bg: '#110c04',
+  messageAreaBg: '#241a0e',
+  bubbleBg: '#332612',
+  accent: '#F97316',
+  white: '#FAF8F5',
+  muted: '#6B5A48',
+}
+
 interface Message {
   sender: 'user' | 'bot'
   text: string
+}
+
+interface Branding {
+  branding_mode: 'smart' | 'white_label'
+  widget_title: string
+  widget_color: string
+  widget_footer_text: string
+  widget_logo: string | null
+  widget_avatar: string | null
 }
 
 function getSessionId(apiKey: string) {
@@ -24,12 +42,10 @@ export default function WidgetChat() {
   const searchParams = useSearchParams()
   const apiKey = searchParams.get('key') || ''
 
-  const [title, setTitle] = useState('Chatbot')
-  const [color, setColor] = useState('#111827')
+  const [branding, setBranding] = useState<Branding | null>(null)
   const [messages, setMessages] = useState<Message[]>([])
   const [input, setInput] = useState('')
   const [sending, setSending] = useState(false)
-  const [ready, setReady] = useState(false)
   const bottomRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -37,14 +53,8 @@ export default function WidgetChat() {
 
     fetch(`${API_URL}/widget-settings/`, { headers: { 'X-API-Key': apiKey } })
       .then((res) => (res.ok ? res.json() : null))
-      .then((data) => {
-        if (data) {
-          setTitle(data.widget_title || 'Chatbot')
-          setColor(data.widget_color || '#111827')
-        }
-        setReady(true)
-      })
-      .catch(() => setReady(true))
+      .then((data) => setBranding(data))
+      .catch(() => setBranding(null))
   }, [apiKey])
 
   useEffect(() => {
@@ -98,53 +108,105 @@ export default function WidgetChat() {
     )
   }
 
+  const isWhiteLabel = branding?.branding_mode === 'white_label'
+  const accent = isWhiteLabel ? branding?.widget_color || '#111827' : SMART_THEME.accent
+  const name = isWhiteLabel ? branding?.widget_title || 'Chatbot' : 'Sm-art'
+  const headerBg = isWhiteLabel ? accent : SMART_THEME.bg
+  const headerText = isWhiteLabel ? '#ffffff' : SMART_THEME.white
+  const messageAreaBg = isWhiteLabel ? '#f1f5f8' : SMART_THEME.messageAreaBg
+  const botBubbleBg = isWhiteLabel ? '#eef2f6' : SMART_THEME.bubbleBg
+  const botBubbleText = isWhiteLabel ? '#1c2b36' : SMART_THEME.white
+  const userBubbleText = isWhiteLabel ? '#ffffff' : SMART_THEME.bg
+  const footerBg = isWhiteLabel ? '#ffffff' : SMART_THEME.bg
+  const footerBorder = isWhiteLabel ? '#eef2f6' : 'rgba(250,248,245,0.06)'
+  const inputHintColor = isWhiteLabel ? '#9fb0bd' : SMART_THEME.muted
+  const footerLabel = isWhiteLabel ? branding?.widget_footer_text : 'Powered by Sm-art'
+  const avatarBg = isWhiteLabel ? '#d7e3ee' : '#332612'
+
   return (
-    <div className="flex h-screen flex-col bg-white">
-      <div style={{ backgroundColor: color }} className="px-4 py-3 text-white font-medium">
-        {title}
+    <div className="flex h-screen flex-col" style={{ backgroundColor: isWhiteLabel ? '#ffffff' : SMART_THEME.bg }}>
+      <div
+        style={{ backgroundColor: headerBg, color: headerText }}
+        className="px-4 py-3 font-medium flex items-center gap-2"
+      >
+        {isWhiteLabel && branding?.widget_logo ? (
+          <img src={branding.widget_logo} alt="" className="h-6" />
+        ) : (
+          <span
+            style={{
+              backgroundColor: isWhiteLabel ? '#ffffff' : accent,
+              color: isWhiteLabel ? accent : SMART_THEME.bg,
+            }}
+            className="h-6 w-6 rounded flex items-center justify-center text-xs font-medium"
+          >
+            {name.charAt(0).toUpperCase()}
+          </span>
+        )}
+        {name}
       </div>
 
-      <div className="flex-1 overflow-y-auto p-3 flex flex-col gap-2">
-        {messages.length === 0 && ready && (
-          <p className="text-sm text-gray-400 text-center mt-4">Napisz wiadomość, aby rozpocząć rozmowę.</p>
+      <div className="flex-1 overflow-y-auto p-3 flex flex-col gap-2" style={{ backgroundColor: messageAreaBg }}>
+        {messages.length === 0 && (
+          <p className="text-sm text-center mt-4" style={{ color: inputHintColor }}>
+            Napisz wiadomość, aby rozpocząć rozmowę.
+          </p>
         )}
         {messages.map((m, i) => (
-          <div
-            key={i}
-            className={`max-w-[80%] rounded-lg px-3 py-2 text-sm ${
-              m.sender === 'user'
-                ? 'self-end bg-gray-100 text-gray-900'
-                : 'self-start text-white'
-            }`}
-            style={m.sender === 'bot' ? { backgroundColor: color } : undefined}
-          >
-            {m.text}
+          <div key={i} className="flex items-start gap-2 max-w-[85%]" style={m.sender === 'user' ? { alignSelf: 'flex-end', flexDirection: 'row-reverse' } : undefined}>
+            {m.sender === 'bot' && (
+              isWhiteLabel && branding?.widget_avatar ? (
+                <img src={branding.widget_avatar} alt="" className="h-6 w-6 rounded-full shrink-0" />
+              ) : (
+                <span className="h-6 w-6 rounded-full shrink-0" style={{ backgroundColor: avatarBg }} />
+              )
+            )}
+            <div
+              className="rounded-lg px-3 py-2 text-sm"
+              style={{
+                backgroundColor: m.sender === 'user' ? accent : botBubbleBg,
+                color: m.sender === 'user' ? userBubbleText : botBubbleText,
+              }}
+            >
+              {m.text}
+            </div>
           </div>
         ))}
         {sending && (
-          <div className="self-start rounded-lg px-3 py-2 text-sm text-gray-400">Piszę...</div>
+          <div className="self-start text-sm" style={{ color: inputHintColor }}>Piszę...</div>
         )}
         <div ref={bottomRef} />
       </div>
 
-      <div className="flex items-center gap-2 border-t border-gray-200 p-3">
+      <div
+        style={{ backgroundColor: footerBg, borderTop: `0.5px solid ${footerBorder}` }}
+        className="flex items-center gap-2 p-3"
+      >
         <input
           type="text"
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={(e) => e.key === 'Enter' && handleSend()}
           placeholder="Napisz wiadomość..."
-          className="flex-1 rounded border border-gray-300 px-3 py-2 text-sm"
+          className="flex-1 rounded border px-3 py-2 text-sm"
+          style={{ borderColor: footerBorder, backgroundColor: isWhiteLabel ? '#ffffff' : SMART_THEME.messageAreaBg, color: isWhiteLabel ? '#1c2b36' : SMART_THEME.white }}
         />
         <button
           onClick={handleSend}
           disabled={sending || !input.trim()}
-          style={{ backgroundColor: color }}
-          className="rounded px-4 py-2 text-sm text-white font-medium disabled:opacity-50"
+          style={{ backgroundColor: accent, color: isWhiteLabel ? '#ffffff' : SMART_THEME.bg }}
+          className="rounded px-4 py-2 text-sm font-medium disabled:opacity-50"
         >
           Wyślij
         </button>
       </div>
+
+      {footerLabel && (
+        <div style={{ backgroundColor: footerBg }} className="px-3 pb-2 text-right">
+          <span className="text-xs" style={{ color: isWhiteLabel ? accent : '#A89880', fontWeight: isWhiteLabel ? 500 : 400 }}>
+            {footerLabel}
+          </span>
+        </div>
+      )}
     </div>
   )
 }
