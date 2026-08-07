@@ -17,6 +17,7 @@ const SMART_THEME = {
 interface Message {
   sender: 'user' | 'bot'
   text: string
+  sources?: string[]
 }
 
 interface Branding {
@@ -71,7 +72,7 @@ export default function WidgetChat() {
 
     try {
       const sessionId = getSessionId(apiKey)
-      const res = await fetch(`${API_URL}/widget/chat/`, {
+      const res = await fetch(`${API_URL}/widget/chat/stream/`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -84,12 +85,48 @@ export default function WidgetChat() {
         }),
       })
 
-      if (!res.ok) {
+      if (!res.ok || !res.body) {
         throw new Error('Wystąpił błąd. Spróbuj ponownie.')
       }
 
-      const data = await res.json()
-      setMessages((prev) => [...prev, { sender: 'bot', text: data.response }])
+      // Pusty dymek bota, który wypełniamy w miarę napływania tokenów
+      setMessages((prev) => [...prev, { sender: 'bot', text: '' }])
+
+      const reader = res.body.getReader()
+      const decoder = new TextDecoder()
+      let buffer = ''
+
+      while (true) {
+        const { done, value } = await reader.read()
+        if (done) break
+
+        buffer += decoder.decode(value, { stream: true })
+        const events = buffer.split('\n\n')
+        buffer = events.pop() || ''
+
+        for (const raw of events) {
+          const line = raw.trim()
+          if (!line.startsWith('data: ')) continue
+
+          const event = JSON.parse(line.slice(6))
+          if (event.type === 'delta') {
+            setMessages((prev) => {
+              const next = [...prev]
+              next[next.length - 1] = {
+                ...next[next.length - 1],
+                text: next[next.length - 1].text + event.content,
+              }
+              return next
+            })
+          } else if (event.type === 'done' && event.sources?.length) {
+            setMessages((prev) => {
+              const next = [...prev]
+              next[next.length - 1] = { ...next[next.length - 1], sources: event.sources }
+              return next
+            })
+          }
+        }
+      }
     } catch (err) {
       setMessages((prev) => [
         ...prev,
@@ -160,18 +197,28 @@ export default function WidgetChat() {
                 <span className="h-6 w-6 rounded-full shrink-0" style={{ backgroundColor: avatarBg }} />
               )
             )}
-            <div
-              className="rounded-lg px-3 py-2 text-sm"
-              style={{
-                backgroundColor: m.sender === 'user' ? accent : botBubbleBg,
-                color: m.sender === 'user' ? userBubbleText : botBubbleText,
-              }}
-            >
-              {m.text}
+            <div className="flex flex-col gap-1">
+              <div
+                className="rounded-lg px-3 py-2 text-sm whitespace-pre-wrap"
+                style={{
+                  backgroundColor: m.sender === 'user' ? accent : botBubbleBg,
+                  color: m.sender === 'user' ? userBubbleText : botBubbleText,
+                }}
+              >
+                {m.text}
+                {m.sender === 'bot' && m.text === '' && (
+                  <span className="opacity-60">…</span>
+                )}
+              </div>
+              {m.sources && m.sources.length > 0 && (
+                <p className="text-xs px-1" style={{ color: inputHintColor }}>
+                  Na podstawie: {m.sources.join(', ')}
+                </p>
+              )}
             </div>
           </div>
         ))}
-        {sending && (
+        {sending && messages[messages.length - 1]?.sender === 'user' && (
           <div className="self-start text-sm" style={{ color: inputHintColor }}>Piszę...</div>
         )}
         <div ref={bottomRef} />
