@@ -121,7 +121,7 @@ export default function DocumentsPage() {
       <form onSubmit={handleUpload} className="flex items-center gap-3 mb-6">
         <input
           type="file"
-          accept=".pdf,.doc,.docx"
+          accept=".pdf,.docx,.txt,.md"
           onChange={(e) => setFile(e.target.files?.[0] || null)}
           className="text-sm"
         />
