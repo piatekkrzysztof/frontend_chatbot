@@ -26,7 +26,20 @@ export default function FAQPage() {
   }
 
   useEffect(() => {
-    load()
+    let active = true
+
+    apiFetch('/faq/')
+      .then((data) => {
+        if (active) setItems(Array.isArray(data) ? data : data.results || [])
+      })
+      .catch((err) => {
+        if (active) setError(err instanceof Error ? err.message : 'Nie udało się pobrać FAQ.')
+      })
+
+    // nie ustawiamy stanu, jeśli komponent zdążył się odmontować
+    return () => {
+      active = false
+    }
   }, [])
 
   async function handleAdd(e: FormEvent) {

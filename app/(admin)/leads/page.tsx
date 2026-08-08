@@ -26,7 +26,20 @@ export default function LeadsPage() {
   }
 
   useEffect(() => {
-    load()
+    let active = true
+
+    apiFetch('/contact-requests/')
+      .then((data) => {
+        if (active) setItems(Array.isArray(data) ? data : data.results || [])
+      })
+      .catch((err) => {
+        if (active) setError(err instanceof Error ? err.message : 'Nie udało się pobrać zapytań.')
+      })
+
+    // nie ustawiamy stanu, jeśli komponent zdążył się odmontować
+    return () => {
+      active = false
+    }
   }, [])
 
   async function toggleHandled(item: ContactRequest) {

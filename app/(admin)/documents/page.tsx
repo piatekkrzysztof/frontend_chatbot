@@ -50,8 +50,28 @@ export default function DocumentsPage() {
   }
 
   useEffect(() => {
-    loadDocuments()
-    loadSources()
+    let active = true
+
+    apiFetch('/documents/')
+      .then((data) => {
+        if (active) setDocuments(Array.isArray(data) ? data : data.results || [])
+      })
+      .catch((err) => {
+        if (active) setError(err instanceof Error ? err.message : 'Nie udało się pobrać listy dokumentów.')
+      })
+
+    apiFetch('/website-sources/')
+      .then((data) => {
+        if (active) setSources(Array.isArray(data) ? data : data.results || [])
+      })
+      .catch((err) => {
+        if (active) setSourceError(err instanceof Error ? err.message : 'Nie udało się pobrać listy stron WWW.')
+      })
+
+    // nie ustawiamy stanu, jeśli komponent zdążył się odmontować
+    return () => {
+      active = false
+    }
   }, [])
 
   async function handleUpload(e: FormEvent) {

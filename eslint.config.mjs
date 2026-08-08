@@ -1,16 +1,15 @@
-import { dirname } from "path";
-import { fileURLToPath } from "url";
-import { FlatCompat } from "@eslint/eslintrc";
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
-
-const compat = new FlatCompat({
-  baseDirectory: __dirname,
-});
+// eslint-config-next 16 dostarcza konfigurację flat natywnie — warstwa
+// zgodności FlatCompat, wymagana przy Next 15, wywracała się tutaj na
+// cyklicznej strukturze podczas walidacji.
+import coreWebVitals from "eslint-config-next/core-web-vitals";
+import typescript from "eslint-config-next/typescript";
 
 const eslintConfig = [
-  ...compat.extends("next/core-web-vitals", "next/typescript"),
+  ...coreWebVitals,
+  ...typescript,
+  {
+    ignores: [".next/**", "node_modules/**", "next-env.d.ts"],
+  },
 ];
 
 export default eslintConfig;

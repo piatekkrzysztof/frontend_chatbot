@@ -27,7 +27,13 @@ export async function apiFetch(path: string, options: RequestInit = {}) {
 
   if (response.status === 401) {
     clearTokens()
-    if (typeof window !== 'undefined') window.location.href = '/login'
+    if (typeof window !== 'undefined') {
+      // Celowo pełne przeładowanie, nie router.push: po wygaśnięciu sesji
+      // chcemy wyczyścić cały stan aplikacji, żeby dane poprzedniego
+      // użytkownika nie zostały w pamięci komponentów.
+      // eslint-disable-next-line @next/next/no-location-assign-relative-destination
+      window.location.href = '/login'
+    }
     throw new Error('Sesja wygasła. Zaloguj się ponownie.')
   }
 
