@@ -3,16 +3,10 @@
 import { useEffect, useRef, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
 
+import { SMART_THEME, resolveTheme } from './theme'
+
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api'
 
-const SMART_THEME = {
-  bg: '#110c04',
-  messageAreaBg: '#241a0e',
-  bubbleBg: '#332612',
-  accent: '#F97316',
-  white: '#FAF8F5',
-  muted: '#6B5A48',
-}
 
 interface Message {
   sender: 'user' | 'bot'
@@ -28,16 +22,48 @@ interface Branding {
   widget_logo: string | null
   widget_avatar: string | null
   privacy_policy_url: string
+  widget_welcome_message: string
+  widget_suggested_questions: string[]
 }
 
+// localStorage, nie sessionStorage: widget siedzi w iframe, więc każde odświeżenie
+// strony klienta zaczynało rozmowę od zera i bot tracił kontekst w połowie wątku.
 function getSessionId(apiKey: string) {
   const storageKey = `widget_session_${apiKey}`
-  let sessionId = sessionStorage.getItem(storageKey)
+  let sessionId = localStorage.getItem(storageKey)
   if (!sessionId) {
     sessionId = crypto.randomUUID()
-    sessionStorage.setItem(storageKey, sessionId)
+    localStorage.setItem(storageKey, sessionId)
   }
   return sessionId
+}
+
+function historyKey(apiKey: string) {
+  return `widget_history_${apiKey}`
+}
+
+const MAX_STORED_MESSAGES = 50
+
+function loadHistory(apiKey: string): Message[] {
+  try {
+    const raw = localStorage.getItem(historyKey(apiKey))
+    const parsed = raw ? JSON.parse(raw) : null
+    return Array.isArray(parsed) ? parsed : []
+  } catch {
+    // uszkodzony wpis nie może blokować czatu — zaczynamy od pustej rozmowy
+    return []
+  }
+}
+
+function saveHistory(apiKey: string, messages: Message[]) {
+  try {
+    localStorage.setItem(
+      historyKey(apiKey),
+      JSON.stringify(messages.slice(-MAX_STORED_MESSAGES)),
+    )
+  } catch {
+    // brak miejsca albo zablokowany storage — rozmowa działa dalej, tylko bez zapisu
+  }
 }
 
 export default function WidgetChat() {
@@ -48,6 +74,7 @@ export default function WidgetChat() {
   const [messages, setMessages] = useState<Message[]>([])
   const [input, setInput] = useState('')
   const [sending, setSending] = useState(false)
+  const [historyLoaded, setHistoryLoaded] = useState(false)
   const bottomRef = useRef<HTMLDivElement>(null)
 
   // Eskalacja do człowieka — pojawia się, gdy bot odpowiedział bez pokrycia w materiałach
@@ -58,19 +85,37 @@ export default function WidgetChat() {
 
   useEffect(() => {
     if (!apiKey) return
+    let active = true
 
     fetch(`${API_URL}/widget-settings/`, { headers: { 'X-API-Key': apiKey } })
       .then((res) => (res.ok ? res.json() : null))
-      .then((data) => setBranding(data))
-      .catch(() => setBranding(null))
+      .then((data) => {
+        if (active) setBranding(data)
+      })
+      .catch(() => {
+        if (active) setBranding(null)
+      })
+
+    setMessages(loadHistory(apiKey))
+    setHistoryLoaded(true)
+
+    return () => {
+      active = false
+    }
   }, [apiKey])
+
+  // Zapisujemy dopiero po wczytaniu, żeby pierwszy render nie nadpisał historii pustką
+  useEffect(() => {
+    if (!apiKey || !historyLoaded) return
+    saveHistory(apiKey, messages)
+  }, [apiKey, historyLoaded, messages])
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages])
 
-  async function handleSend() {
-    const text = input.trim()
+  async function handleSend(presetText?: string) {
+    const text = (presetText ?? input).trim()
     if (!text || !apiKey || sending) return
 
     setMessages((prev) => [...prev, { sender: 'user', text }])
@@ -180,20 +225,11 @@ export default function WidgetChat() {
     )
   }
 
-  const isWhiteLabel = branding?.branding_mode === 'white_label'
-  const accent = isWhiteLabel ? branding?.widget_color || '#111827' : SMART_THEME.accent
-  const name = isWhiteLabel ? branding?.widget_title || 'Chatbot' : 'Sm-art'
-  const headerBg = isWhiteLabel ? accent : SMART_THEME.bg
-  const headerText = isWhiteLabel ? '#ffffff' : SMART_THEME.white
-  const messageAreaBg = isWhiteLabel ? '#f1f5f8' : SMART_THEME.messageAreaBg
-  const botBubbleBg = isWhiteLabel ? '#eef2f6' : SMART_THEME.bubbleBg
-  const botBubbleText = isWhiteLabel ? '#1c2b36' : SMART_THEME.white
-  const userBubbleText = isWhiteLabel ? '#ffffff' : SMART_THEME.bg
-  const footerBg = isWhiteLabel ? '#ffffff' : SMART_THEME.bg
-  const footerBorder = isWhiteLabel ? '#eef2f6' : 'rgba(250,248,245,0.06)'
-  const inputHintColor = isWhiteLabel ? '#9fb0bd' : SMART_THEME.muted
-  const footerLabel = isWhiteLabel ? branding?.widget_footer_text : 'Powered by Sm-art'
-  const avatarBg = isWhiteLabel ? '#d7e3ee' : '#332612'
+  const {
+    isWhiteLabel, accent, name, headerBg, headerText, messageAreaBg,
+    botBubbleBg, botBubbleText, userBubbleText, footerBg, footerBorder,
+    inputHintColor, footerLabel, avatarBg,
+  } = resolveTheme(branding)
 
   return (
     <div className="flex h-screen flex-col" style={{ backgroundColor: isWhiteLabel ? '#ffffff' : SMART_THEME.bg }}>
@@ -222,9 +258,38 @@ export default function WidgetChat() {
 
       <div className="flex-1 overflow-y-auto p-3 flex flex-col gap-2" style={{ backgroundColor: messageAreaBg }}>
         {messages.length === 0 && (
-          <p className="text-sm text-center mt-4" style={{ color: inputHintColor }}>
-            Napisz wiadomość, aby rozpocząć rozmowę.
-          </p>
+          <div className="mt-2">
+            {branding?.widget_welcome_message ? (
+              <div
+                className="rounded-lg px-3 py-2 text-sm mb-3"
+                style={{ backgroundColor: botBubbleBg, color: botBubbleText }}
+              >
+                {branding.widget_welcome_message}
+              </div>
+            ) : (
+              <p className="text-sm text-center mt-2 mb-3" style={{ color: inputHintColor }}>
+                Napisz wiadomość, aby rozpocząć rozmowę.
+              </p>
+            )}
+
+            {/* Gotowe pytania zdejmują z odwiedzającego konieczność wymyślenia
+                pierwszego kroku — bez nich puste okno najczęściej się zamyka. */}
+            {branding?.widget_suggested_questions?.length ? (
+              <div className="flex flex-col gap-1.5 items-start">
+                {branding.widget_suggested_questions.map((question) => (
+                  <button
+                    key={question}
+                    onClick={() => handleSend(question)}
+                    disabled={sending}
+                    className="rounded-full border px-3 py-1.5 text-xs text-left disabled:opacity-50"
+                    style={{ borderColor: accent, color: accent }}
+                  >
+                    {question}
+                  </button>
+                ))}
+              </div>
+            ) : null}
+          </div>
         )}
         {messages.map((m, i) => (
           <div key={i} className="flex items-start gap-2 max-w-[85%]" style={m.sender === 'user' ? { alignSelf: 'flex-end', flexDirection: 'row-reverse' } : undefined}>
@@ -340,7 +405,7 @@ export default function WidgetChat() {
           style={{ borderColor: footerBorder, backgroundColor: isWhiteLabel ? '#ffffff' : SMART_THEME.messageAreaBg, color: isWhiteLabel ? '#1c2b36' : SMART_THEME.white }}
         />
         <button
-          onClick={handleSend}
+          onClick={() => handleSend()}
           disabled={sending || !input.trim()}
           style={{ backgroundColor: accent, color: isWhiteLabel ? '#ffffff' : SMART_THEME.bg }}
           className="rounded px-4 py-2 text-sm font-medium disabled:opacity-50"

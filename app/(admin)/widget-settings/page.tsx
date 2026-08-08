@@ -2,6 +2,7 @@
 
 import { useEffect, useState, FormEvent } from 'react'
 import { apiFetch } from '@/lib/api'
+import WidgetPreview from '@/components/widget/WidgetPreview'
 
 export default function WidgetSettingsPage() {
   const [brandingMode, setBrandingMode] = useState<'smart' | 'white_label'>('smart')
@@ -9,6 +10,8 @@ export default function WidgetSettingsPage() {
   const [color, setColor] = useState('#000000')
   const [title, setTitle] = useState('Chatbot')
   const [footerText, setFooterText] = useState('')
+  const [welcomeMessage, setWelcomeMessage] = useState('')
+  const [suggestedQuestions, setSuggestedQuestions] = useState('')
   const [logoFile, setLogoFile] = useState<File | null>(null)
   const [avatarFile, setAvatarFile] = useState<File | null>(null)
   const [logoUrl, setLogoUrl] = useState<string | null>(null)
@@ -26,6 +29,8 @@ export default function WidgetSettingsPage() {
         setColor(data.widget_color)
         setTitle(data.widget_title)
         setFooterText(data.widget_footer_text || '')
+        setWelcomeMessage(data.widget_welcome_message || '')
+        setSuggestedQuestions((data.widget_suggested_questions || []).join('\n'))
         setLogoUrl(data.widget_logo)
         setAvatarUrl(data.widget_avatar)
       })
@@ -49,6 +54,8 @@ export default function WidgetSettingsPage() {
       formData.append('widget_color', color)
       formData.append('widget_title', title)
       formData.append('widget_footer_text', footerText)
+      formData.append('widget_welcome_message', welcomeMessage)
+      formData.append('widget_suggested_questions', suggestedQuestions)
       if (logoFile) formData.append('widget_logo', logoFile)
       if (avatarFile) formData.append('widget_avatar', avatarFile)
 
@@ -73,10 +80,19 @@ export default function WidgetSettingsPage() {
     ? `<script src="${origin}/embed.js" data-key="${apiKey}" async></script>`
     : ''
 
+  // Podgląd rysujemy z niezapisanych plików, żeby efekt było widać od razu
+  const previewLogo = logoFile ? URL.createObjectURL(logoFile) : logoUrl
+  const previewAvatar = avatarFile ? URL.createObjectURL(avatarFile) : avatarUrl
+
   return (
     <div>
-      <h1 className="text-2xl font-bold mb-4">Widget czatu</h1>
+      <h1 className="text-2xl font-bold mb-1">Widget czatu</h1>
+      <p className="text-gray-600 mb-6">
+        Podgląd po prawej pokazuje, co zobaczy odwiedzający — zmiany widać od razu,
+        jeszcze przed zapisaniem.
+      </p>
 
+      <div className="flex flex-wrap items-start gap-10">
       <form onSubmit={handleSubmit} className="flex flex-col gap-4 max-w-md mb-8">
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">Branding</label>
@@ -174,6 +190,43 @@ export default function WidgetSettingsPage() {
           </>
         )}
 
+        {/* Wspólne dla obu wariantów brandingu — dotyczą treści, nie wyglądu */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Wiadomość powitalna
+          </label>
+          <p className="text-xs text-gray-500 mb-1">
+            Pierwsze, co widzi odwiedzający po otwarciu czatu. Zostaw puste, żeby okno
+            otwierało się bez powitania.
+          </p>
+          <textarea
+            value={welcomeMessage}
+            onChange={(e) => setWelcomeMessage(e.target.value)}
+            rows={2}
+            placeholder="Cześć! W czym mogę pomóc?"
+            className="w-full rounded border border-gray-300 px-3 py-2 text-sm"
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Proponowane pytania
+          </label>
+          <p className="text-xs text-gray-500 mb-1">
+            Po jednym w wierszu, pokażemy do czterech. Klikalne od razu po otwarciu czatu —
+            odwiedzający nie musi wymyślać pierwszego pytania.
+          </p>
+          <textarea
+            value={suggestedQuestions}
+            onChange={(e) => setSuggestedQuestions(e.target.value)}
+            rows={4}
+            placeholder={`Jakie macie godziny otwarcia?
+Ile kosztuje usługa?
+Gdzie was znaleźć?`}
+            className="w-full rounded border border-gray-300 px-3 py-2 text-sm"
+          />
+        </div>
+
         {error && <p className="text-sm text-red-600">{error}</p>}
         {saved && <p className="text-sm text-green-600">Zapisano.</p>}
         <button
@@ -184,6 +237,21 @@ export default function WidgetSettingsPage() {
           {saving ? 'Zapisywanie...' : 'Zapisz'}
         </button>
       </form>
+
+      <div className="sticky top-6">
+        <p className="text-sm font-medium text-gray-700 mb-2">Podgląd</p>
+        <WidgetPreview
+          brandingMode={brandingMode}
+          color={color}
+          title={title}
+          footerText={footerText}
+          welcomeMessage={welcomeMessage}
+          suggestedQuestions={suggestedQuestions.split('\n')}
+          logoUrl={previewLogo}
+          avatarUrl={previewAvatar}
+        />
+      </div>
+      </div>
 
       {embedSnippet && (
         <div>
