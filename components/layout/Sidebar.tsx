@@ -11,6 +11,7 @@ const links = [
   { href: '/conversations', label: 'Konwersacje' },
   { href: '/leads', label: 'Zapytania' },
   { href: '/team', label: 'Zespół' },
+  { href: '/subskrypcja', label: 'Subskrypcja' },
   { href: '/privacy', label: 'Prywatność' },
 ]
 
