@@ -10,6 +10,7 @@ const links = [
   { href: '/widget-settings', label: 'Widget' },
   { href: '/conversations', label: 'Konwersacje' },
   { href: '/leads', label: 'Zapytania' },
+  { href: '/team', label: 'Zespół' },
   { href: '/privacy', label: 'Prywatność' },
 ]
 
