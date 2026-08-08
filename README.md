@@ -45,6 +45,29 @@ Gotowy snippet generuje się w panelu w zakładce Widget:
 <script src="https://twoja-domena.pl/embed.js" data-key="TENANT_API_KEY" async></script>
 ```
 
+## Wdrożenie (Vercel)
+
+Widget musi być publicznie dostępny — klient wkleja `<script>` wskazujący na
+`embed.js` z tej domeny, a sam czat ładuje się z `/widget` w iframe.
+
+1. Zaimportuj repozytorium na Vercel (Add New → Project). Next.js jest
+   rozpoznawany automatycznie, nie trzeba nic konfigurować.
+2. Ustaw zmienną środowiskową:
+   `NEXT_PUBLIC_API_URL = https://<backend>.onrender.com/api`
+3. Po wdrożeniu dopisz domenę Vercela do backendu, w zmiennej
+   `DJANGO_CORS_ALLOWED_ORIGINS` — bez tego przeglądarka zablokuje zapytania
+   widgetu do API.
+
+Kod osadzenia generuje się sam w panelu (zakładka Widget) na podstawie adresu,
+pod którym panel jest otwarty, więc po wdrożeniu będzie od razu poprawny.
+
+### Nagłówki ramkowania
+
+`next.config.js` celowo różnicuje polityki: `/widget` pozwala na osadzenie
+z dowolnej domeny (`frame-ancestors *`), bo to jego zadanie. Pozostałe strony —
+w tym panel klienta — dopuszczają tylko własną domenę, żeby zalogowanego
+użytkownika nie dało się wciągnąć w cudzą ramkę.
+
 ## Uwaga przy pracy lokalnej
 
 `npm run build` i `npm run dev` współdzielą katalog `.next`. Jeśli po buildzie serwer
