@@ -5,6 +5,7 @@ import { apiFetch } from '@/lib/api'
 
 interface PromptLogItem {
   id: number
+  conversation_session_id: string | null
   prompt: string
   response: string | null
   source: string
@@ -16,16 +17,42 @@ interface PromptLogItem {
 export default function ConversationsPage() {
   const [logs, setLogs] = useState<PromptLogItem[]>([])
   const [error, setError] = useState('')
+  const [copied, setCopied] = useState<string | null>(null)
 
   useEffect(() => {
+    let active = true
+
     apiFetch('/chat/logs/')
-      .then((data) => setLogs(Array.isArray(data) ? data : data.results || []))
-      .catch((err) => setError(err.message))
+      .then((data) => {
+        if (active) setLogs(Array.isArray(data) ? data : data.results || [])
+      })
+      .catch((err) => {
+        if (active) setError(err instanceof Error ? err.message : 'Nie udało się pobrać konwersacji.')
+      })
+
+    // nie ustawiamy stanu, jeśli komponent zdążył się odmontować
+    return () => {
+      active = false
+    }
   }, [])
+
+  async function copySessionId(sessionId: string) {
+    try {
+      await navigator.clipboard.writeText(sessionId)
+      setCopied(sessionId)
+      setTimeout(() => setCopied(null), 2000)
+    } catch {
+      // schowek bywa zablokowany — identyfikator i tak jest widoczny do zaznaczenia
+    }
+  }
 
   return (
     <div>
-      <h1 className="text-2xl font-bold mb-4">Konwersacje</h1>
+      <h1 className="text-2xl font-bold mb-1">Konwersacje</h1>
+      <p className="text-gray-600 mb-6">
+        Identyfikator rozmowy przydaje się, gdy ktoś poprosi o usunięcie swoich danych —
+        wklej go w zakładce Prywatność.
+      </p>
 
       {error && <p className="text-sm text-red-600 mb-4">{error}</p>}
 
@@ -44,6 +71,17 @@ export default function ConversationsPage() {
               <span className="font-medium">Odpowiedź: </span>
               {log.response || '–'}
             </p>
+            {log.conversation_session_id && (
+              <button
+                onClick={() => copySessionId(log.conversation_session_id!)}
+                title="Kopiuj identyfikator rozmowy"
+                className="mt-3 text-xs font-mono text-gray-400 hover:text-gray-700"
+              >
+                {copied === log.conversation_session_id
+                  ? 'Skopiowano'
+                  : log.conversation_session_id}
+              </button>
+            )}
           </div>
         ))}
         {logs.length === 0 && !error && (

@@ -1,9 +1,20 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import Link from 'next/link'
 import { apiFetch } from '@/lib/api'
 
+interface Knowledge {
+  has_description: boolean
+  documents: number
+  indexed_chunks: number
+  faqs: number
+  websites: number
+  is_empty: boolean
+}
+
 interface Analytics {
+  knowledge: Knowledge
   conversations: { total: number; last_7d: number; last_30d: number }
   questions: { total: number; last_7d: number }
   answer_sources: { document: number; faq: number; gpt: number }
@@ -21,19 +32,86 @@ function Metric({ label, value, hint }: { label: string; value: string | number;
   )
 }
 
+/**
+ * Bot bez żadnych materiałów celowo odmawia odpowiedzi na każde pytanie o firmę,
+ * żeby ich nie zmyślać. Bez tego komunikatu właściciel widzi tylko bota, który
+ * "nic nie umie", i nie ma jak się domyślić, że po prostu nie dostał wiedzy.
+ */
+function KnowledgeNotice({ knowledge }: { knowledge: Knowledge }) {
+  if (knowledge.is_empty) {
+    return (
+      <div className="rounded-lg border border-amber-300 bg-amber-50 p-4 mb-6">
+        <p className="font-medium text-amber-900 mb-1">
+          Chatbot nie ma jeszcze żadnej wiedzy o Twojej firmie
+        </p>
+        <p className="text-sm text-amber-800">
+          Dopóki tak jest, na każde pytanie o firmę odpowie, że nie posiada informacji,
+          i poprosi o kontakt. To celowe — bez materiałów mógłby zmyślać.
+        </p>
+        <p className="text-sm text-amber-800 mt-2">
+          Uzupełnij przynajmniej jedno:{' '}
+          <Link href="/documents" className="underline font-medium">
+            opis działalności, dokumenty lub stronę WWW
+          </Link>
+          , albo <Link href="/faq" className="underline font-medium">FAQ</Link>.
+        </p>
+      </div>
+    )
+  }
+
+  const pendingDocs = knowledge.documents > 0 && knowledge.indexed_chunks === 0
+
+  if (!knowledge.has_description) {
+    return (
+      <div className="rounded-lg border border-gray-300 bg-gray-50 p-4 mb-6">
+        <p className="text-sm text-gray-700">
+          Nie masz uzupełnionego opisu działalności. Bot odpowie na pytania z dokumentów
+          i FAQ, ale na ogólne „czym się zajmujecie?” powie, że nie wie.{' '}
+          <Link href="/documents" className="underline font-medium">Uzupełnij opis</Link>.
+        </p>
+      </div>
+    )
+  }
+
+  if (pendingDocs) {
+    return (
+      <div className="rounded-lg border border-gray-300 bg-gray-50 p-4 mb-6">
+        <p className="text-sm text-gray-700">
+          Twoje dokumenty czekają na przetworzenie — bot jeszcze z nich nie korzysta.
+        </p>
+      </div>
+    )
+  }
+
+  return null
+}
+
 export default function DashboardPage() {
   const [tenantName, setTenantName] = useState('')
   const [data, setData] = useState<Analytics | null>(null)
   const [error, setError] = useState('')
 
   useEffect(() => {
+    let active = true
+
     apiFetch('/accounts/me/')
-      .then((d) => setTenantName(d.tenant_name || ''))
+      .then((d) => {
+        if (active) setTenantName(d.tenant_name || '')
+      })
       .catch(() => {})
 
     apiFetch('/analytics/')
-      .then(setData)
-      .catch((err) => setError(err instanceof Error ? err.message : 'Nie udało się pobrać statystyk.'))
+      .then((d) => {
+        if (active) setData(d)
+      })
+      .catch((err) => {
+        if (active) setError(err instanceof Error ? err.message : 'Nie udało się pobrać statystyk.')
+      })
+
+    // nie ustawiamy stanu, jeśli komponent zdążył się odmontować
+    return () => {
+      active = false
+    }
   }, [])
 
   const sources = data?.answer_sources
@@ -52,6 +130,8 @@ export default function DashboardPage() {
 
       {data && (
         <>
+          <KnowledgeNotice knowledge={data.knowledge} />
+
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-8">
             <Metric label="Rozmowy (7 dni)" value={data.conversations.last_7d} hint={`łącznie ${data.conversations.total}`} />
             <Metric label="Pytania (7 dni)" value={data.questions.last_7d} hint={`łącznie ${data.questions.total}`} />

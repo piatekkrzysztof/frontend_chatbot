@@ -1,5 +1,8 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // Next 16 dopisuje przy starcie AGENTS.md i CLAUDE.md do korzenia repo.
+  // Nie utrzymujemy tych plików, więc niech się nie tworzą.
+  agentRules: false,
   env: {
     NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL,
   },

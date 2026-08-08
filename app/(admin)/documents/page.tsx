@@ -21,6 +21,11 @@ interface WebsiteSourceItem {
 }
 
 export default function DocumentsPage() {
+  const [description, setDescription] = useState('')
+  const [savedDescription, setSavedDescription] = useState('')
+  const [savingDescription, setSavingDescription] = useState(false)
+  const [descriptionError, setDescriptionError] = useState('')
+
   const [documents, setDocuments] = useState<DocumentItem[]>([])
   const [file, setFile] = useState<File | null>(null)
   const [uploading, setUploading] = useState(false)
@@ -68,11 +73,40 @@ export default function DocumentsPage() {
         if (active) setSourceError(err instanceof Error ? err.message : 'Nie udało się pobrać listy stron WWW.')
       })
 
+    apiFetch('/knowledge/')
+      .then((data) => {
+        if (active) {
+          setDescription(data.gpt_prompt || '')
+          setSavedDescription(data.gpt_prompt || '')
+        }
+      })
+      .catch((err) => {
+        if (active) setDescriptionError(err instanceof Error ? err.message : 'Nie udało się pobrać opisu firmy.')
+      })
+
     // nie ustawiamy stanu, jeśli komponent zdążył się odmontować
     return () => {
       active = false
     }
   }, [])
+
+  async function handleSaveDescription(e: FormEvent) {
+    e.preventDefault()
+    setSavingDescription(true)
+    setDescriptionError('')
+
+    try {
+      const data = await apiFetch('/knowledge/', {
+        method: 'PATCH',
+        body: JSON.stringify({ gpt_prompt: description }),
+      })
+      setSavedDescription(data.gpt_prompt || '')
+    } catch (err) {
+      setDescriptionError(err instanceof Error ? err.message : 'Nie udało się zapisać opisu.')
+    } finally {
+      setSavingDescription(false)
+    }
+  }
 
   async function handleUpload(e: FormEvent) {
     e.preventDefault()
@@ -136,7 +170,42 @@ export default function DocumentsPage() {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold mb-4">Dokumenty</h1>
+      <h1 className="text-2xl font-bold mb-1">Baza wiedzy</h1>
+      <p className="text-gray-600 mb-8">
+        Wszystko, na czym chatbot opiera odpowiedzi. Bez tych materiałów odmawia
+        odpowiedzi na pytania o firmę — celowo, żeby ich nie zmyślać.
+      </p>
+
+      <h2 className="text-xl font-bold mb-1">Opis działalności</h2>
+      <p className="text-sm text-gray-500 mb-3">
+        Najważniejsze pole. Napisz własnymi słowami, czym zajmuje się firma, co oferuje
+        i dla kogo. Bez tego bot nie odpowie nawet na „czym się zajmujecie?”.
+      </p>
+
+      <form onSubmit={handleSaveDescription} className="mb-10 max-w-2xl">
+        <textarea
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+          rows={5}
+          placeholder="Np. Jesteśmy gabinetem kosmetycznym w Krakowie. Wykonujemy zabiegi na twarz, manicure i depilację laserową. Przyjmujemy pon-sob."
+          className="w-full rounded border border-gray-300 px-3 py-2 text-sm"
+        />
+        <div className="flex items-center gap-3 mt-2">
+          <button
+            type="submit"
+            disabled={savingDescription || description === savedDescription}
+            className="rounded bg-gray-900 px-4 py-2 text-sm text-white font-medium disabled:opacity-50"
+          >
+            {savingDescription ? 'Zapisywanie...' : 'Zapisz opis'}
+          </button>
+          {description !== savedDescription && (
+            <span className="text-xs text-amber-600">Niezapisane zmiany</span>
+          )}
+        </div>
+        {descriptionError && <p className="text-sm text-red-600 mt-2">{descriptionError}</p>}
+      </form>
+
+      <h2 className="text-xl font-bold mb-4">Dokumenty</h2>
 
       <form onSubmit={handleUpload} className="flex items-center gap-3 mb-6">
         <input

@@ -27,6 +27,7 @@ interface Branding {
   widget_footer_text: string
   widget_logo: string | null
   widget_avatar: string | null
+  privacy_policy_url: string
 }
 
 function getSessionId(apiKey: string) {
@@ -86,7 +87,6 @@ export default function WidgetChat() {
         },
         body: JSON.stringify({
           message: text,
-          conversation_id: sessionId,
           conversation_session_id: sessionId,
         }),
       })
@@ -349,11 +349,34 @@ export default function WidgetChat() {
         </button>
       </div>
 
-      {footerLabel && (
-        <div style={{ backgroundColor: footerBg }} className="px-3 pb-2 text-right">
-          <span className="text-xs" style={{ color: isWhiteLabel ? accent : '#A89880', fontWeight: isWhiteLabel ? 500 : 400 }}>
-            {footerLabel}
-          </span>
+      {(footerLabel || branding?.privacy_policy_url) && (
+        <div
+          style={{ backgroundColor: footerBg }}
+          className="flex items-center justify-between gap-2 px-3 pb-2"
+        >
+          {/* RODO: odwiedzający ma być poinformowany o przetwarzaniu tam, gdzie
+              zostawia dane — czyli w oknie czatu, a nie dopiero w stopce strony. */}
+          {branding?.privacy_policy_url ? (
+            <a
+              href={branding.privacy_policy_url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-xs underline"
+              style={{ color: isWhiteLabel ? '#6b7a88' : '#6B5A48' }}
+            >
+              Przetwarzanie danych
+            </a>
+          ) : (
+            <span />
+          )}
+          {footerLabel && (
+            <span
+              className="text-xs"
+              style={{ color: isWhiteLabel ? accent : '#A89880', fontWeight: isWhiteLabel ? 500 : 400 }}
+            >
+              {footerLabel}
+            </span>
+          )}
         </div>
       )}
     </div>
