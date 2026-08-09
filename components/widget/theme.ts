@@ -9,7 +9,11 @@ export const SMART_THEME = {
   bubbleBg: '#332612',
   accent: '#F97316',
   white: '#FAF8F5',
-  muted: '#6B5A48',
+  // Zmierzony kontrast poprzedniej wartości (#6B5A48) wynosił 2,59:1 na obszarze
+  // wiadomości i 2,95:1 na tle nagłówka — poniżej progu 4,5:1 wymaganego przez
+  // WCAG 2.1 AA, a przez European Accessibility Act to wymóg, nie zalecenie.
+  // Ta wartość daje 5,10:1 i 5,82:1, zostając równie stonowana.
+  muted: '#9A8A76',
 }
 
 export interface ThemeInput {

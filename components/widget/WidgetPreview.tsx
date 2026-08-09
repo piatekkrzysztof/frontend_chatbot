@@ -62,7 +62,14 @@ export default function WidgetPreview({
             {theme.name.charAt(0).toUpperCase()}
           </span>
         )}
-        {theme.name}
+        <span className="min-w-0">
+          <span className="block truncate">{theme.name}</span>
+          {/* To samo ujawnienie co w prawdziwym widgecie — podgląd nie może
+              pokazywać mniej, niż zobaczy odwiedzający stronę klienta. */}
+          <span className="block text-[10px] font-normal opacity-80 leading-tight">
+            Asystent AI — odpowiada automatycznie
+          </span>
+        </span>
       </div>
 
       <div

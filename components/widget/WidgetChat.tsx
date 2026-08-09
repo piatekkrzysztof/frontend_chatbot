@@ -232,10 +232,15 @@ export default function WidgetChat() {
   } = resolveTheme(branding)
 
   return (
-    <div className="flex h-screen flex-col" style={{ backgroundColor: isWhiteLabel ? '#ffffff' : SMART_THEME.bg }}>
-      <div
+    <div
+      role="region"
+      aria-label="Okno czatu"
+      className="flex h-screen flex-col"
+      style={{ backgroundColor: isWhiteLabel ? '#ffffff' : SMART_THEME.bg }}
+    >
+      <header
         style={{ backgroundColor: headerBg, color: headerText }}
-        className="px-4 py-3 font-medium flex items-center gap-2"
+        className="px-4 py-3 flex items-center gap-2"
       >
         {isWhiteLabel && branding?.widget_logo ? (
           // Logo klienta z backendu/S3 — widget działa w iframe, optymalizacja
@@ -244,19 +249,39 @@ export default function WidgetChat() {
           <img src={branding.widget_logo} alt="" className="h-6" />
         ) : (
           <span
+            aria-hidden="true"
             style={{
               backgroundColor: isWhiteLabel ? '#ffffff' : accent,
               color: isWhiteLabel ? accent : SMART_THEME.bg,
             }}
-            className="h-6 w-6 rounded flex items-center justify-center text-xs font-medium"
+            className="h-6 w-6 rounded flex items-center justify-center text-xs font-medium shrink-0"
           >
             {name.charAt(0).toUpperCase()}
           </span>
         )}
-        {name}
-      </div>
+        <span className="min-w-0">
+          <span className="font-medium block truncate">{name}</span>
+          {/* Ujawnienie wymagane przez art. 50 EU AI Act od 2 sierpnia 2026:
+              odwiedzający musi wiedzieć, że rozmawia z AI. Celowo nie jest
+              konfigurowalne ani wyłączalne — to obowiązek prawny także po
+              stronie klienta, więc nie może zależeć od jego ustawień. */}
+          <span className="block text-xs opacity-80 leading-tight">
+            Asystent AI — odpowiada automatycznie
+          </span>
+        </span>
+      </header>
 
-      <div className="flex-1 overflow-y-auto p-3 flex flex-col gap-2" style={{ backgroundColor: messageAreaBg }}>
+      {/* aria-live sprawia, że czytnik ekranu ogłasza odpowiedzi w miarę ich
+          napływania — bez tego niewidomy użytkownik nie wie, że bot odpowiedział.
+          "polite" zamiast "assertive", żeby nie przerywać w połowie zdania. */}
+      <div
+        role="log"
+        aria-live="polite"
+        aria-relevant="additions text"
+        aria-label="Historia rozmowy"
+        className="flex-1 overflow-y-auto p-3 flex flex-col gap-2"
+        style={{ backgroundColor: messageAreaBg }}
+      >
         {messages.length === 0 && (
           <div className="mt-2">
             {branding?.widget_welcome_message ? (
@@ -401,12 +426,14 @@ export default function WidgetChat() {
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={(e) => e.key === 'Enter' && handleSend()}
           placeholder="Napisz wiadomość..."
+          aria-label="Treść wiadomości"
           className="flex-1 rounded border px-3 py-2 text-sm"
           style={{ borderColor: footerBorder, backgroundColor: isWhiteLabel ? '#ffffff' : SMART_THEME.messageAreaBg, color: isWhiteLabel ? '#1c2b36' : SMART_THEME.white }}
         />
         <button
           onClick={() => handleSend()}
           disabled={sending || !input.trim()}
+          aria-label="Wyślij wiadomość"
           style={{ backgroundColor: accent, color: isWhiteLabel ? '#ffffff' : SMART_THEME.bg }}
           className="rounded px-4 py-2 text-sm font-medium disabled:opacity-50"
         >

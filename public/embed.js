@@ -14,6 +14,10 @@
   var isOpen = false;
 
   var button = document.createElement('button');
+  button.setAttribute('type', 'button');
+  // aria-expanded mówi czytnikowi ekranu, czy okno jest otwarte. Bez tego
+  // użytkownik słyszy tylko "Otwórz czat" i nie wie, czy kliknięcie zadziałało.
+  button.setAttribute('aria-expanded', 'false');
   button.setAttribute('aria-label', 'Otwórz czat');
   button.style.cssText = [
     'position:fixed',
@@ -33,6 +37,8 @@
   button.textContent = '💬';
 
   var iframe = document.createElement('iframe');
+  // Ramka bez tytułu jest dla czytnika ekranu bezimienna — WCAG 4.1.2
+  iframe.setAttribute('title', 'Okno czatu');
   iframe.src = origin + '/widget?key=' + encodeURIComponent(apiKey);
   iframe.style.cssText = [
     'position:fixed',
@@ -49,9 +55,24 @@
     'display:none',
   ].join(';');
 
+  function ustawStan(otwarte) {
+    isOpen = otwarte;
+    iframe.style.display = otwarte ? 'block' : 'none';
+    button.setAttribute('aria-expanded', otwarte ? 'true' : 'false');
+    button.setAttribute('aria-label', otwarte ? 'Zamknij czat' : 'Otwórz czat');
+  }
+
   button.addEventListener('click', function () {
-    isOpen = !isOpen;
-    iframe.style.display = isOpen ? 'block' : 'none';
+    ustawStan(!isOpen);
+  });
+
+  // Escape zamyka okno i oddaje ognisko przyciskowi — bez tego użytkownik
+  // klawiatury zostaje uwięziony w ramce bez wyjścia.
+  document.addEventListener('keydown', function (zdarzenie) {
+    if (zdarzenie.key === 'Escape' && isOpen) {
+      ustawStan(false);
+      button.focus();
+    }
   });
 
   function mount() {
