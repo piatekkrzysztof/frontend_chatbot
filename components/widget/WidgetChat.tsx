@@ -12,6 +12,9 @@ interface Message {
   sender: 'user' | 'bot'
   text: string
   sources?: string[]
+  // Identyfikator przychodzi ze zdarzenia 'done' — bez niego nie ma czego ocenić
+  messageId?: number
+  rating?: 'up' | 'down'
 }
 
 interface Branding {
@@ -177,6 +180,13 @@ export default function WidgetChat() {
                 return next
               })
             }
+            if (event.message_id) {
+              setMessages((prev) => {
+                const next = [...prev]
+                next[next.length - 1] = { ...next[next.length - 1], messageId: event.message_id }
+                return next
+              })
+            }
             // 'gpt' = brak oparcia w dokumentach i FAQ — proponujemy kontakt z firmą
             if (event.source === 'gpt' && !contactSent) {
               setOfferContact(true)
@@ -191,6 +201,23 @@ export default function WidgetChat() {
       ])
     } finally {
       setSending(false)
+    }
+  }
+
+  async function handleRate(messageId: number, rating: 'up' | 'down') {
+    // Zaznaczamy od razu: ocena to gest uboczny, użytkownik nie powinien czekać
+    setMessages((prev) =>
+      prev.map((m) => (m.messageId === messageId ? { ...m, rating } : m)),
+    )
+
+    try {
+      await fetch(`${API_URL}/widget/feedback/`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-API-Key': apiKey },
+        body: JSON.stringify({ message_id: messageId, is_helpful: rating === 'up' }),
+      })
+    } catch {
+      // Nieudana ocena nie ma przerywać rozmowy ani straszyć komunikatem
     }
   }
 
@@ -343,6 +370,39 @@ export default function WidgetChat() {
                 <p className="text-xs px-1" style={{ color: inputHintColor }}>
                   Na podstawie: {m.sources.join(', ')}
                 </p>
+              )}
+
+              {/* Ocena pojawia się dopiero, gdy odpowiedź jest kompletna: przy
+                  pustym tekście strumień jeszcze leci i nie ma czego oceniać. */}
+              {m.sender === 'bot' && m.messageId && m.text !== '' && (
+                <div className="flex items-center gap-1 px-1">
+                  {m.rating ? (
+                    <span className="text-xs" style={{ color: inputHintColor }}>
+                      {m.rating === 'up' ? 'Dziękujemy za ocenę' : 'Dziękujemy, przekażemy to firmie'}
+                    </span>
+                  ) : (
+                    <>
+                      <button
+                        onClick={() => handleRate(m.messageId!, 'up')}
+                        aria-label="Ta odpowiedź była pomocna"
+                        title="Pomocna"
+                        className="text-xs px-1.5 py-0.5 rounded hover:opacity-100 opacity-60"
+                        style={{ color: inputHintColor }}
+                      >
+                        👍
+                      </button>
+                      <button
+                        onClick={() => handleRate(m.messageId!, 'down')}
+                        aria-label="Ta odpowiedź nie była pomocna"
+                        title="Niepomocna"
+                        className="text-xs px-1.5 py-0.5 rounded hover:opacity-100 opacity-60"
+                        style={{ color: inputHintColor }}
+                      >
+                        👎
+                      </button>
+                    </>
+                  )}
+                </div>
               )}
             </div>
           </div>
