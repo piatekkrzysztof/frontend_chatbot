@@ -12,6 +12,7 @@
   var origin = new URL(scriptTag.src).origin;
 
   var isOpen = false;
+  var iframe = null;
 
   var button = document.createElement('button');
   button.setAttribute('type', 'button');
@@ -36,28 +37,75 @@
   ].join(';');
   button.textContent = '💬';
 
-  var iframe = document.createElement('iframe');
-  // Ramka bez tytułu jest dla czytnika ekranu bezimienna — WCAG 4.1.2
-  iframe.setAttribute('title', 'Okno czatu');
-  iframe.src = origin + '/widget?key=' + encodeURIComponent(apiKey);
-  iframe.style.cssText = [
-    'position:fixed',
-    'bottom:88px',
-    position + ':20px',
-    'width:360px',
-    'height:520px',
-    'max-width:calc(100vw - 40px)',
-    'max-height:calc(100vh - 120px)',
-    'border:none',
-    'border-radius:12px',
-    'box-shadow:0 8px 30px rgba(0,0,0,0.25)',
-    'z-index:2147483000',
-    'display:none',
-  ].join(';');
+  /**
+   * Ramkę tworzymy dopiero, gdy jest potrzebna.
+   *
+   * Wcześniej powstawała od razu przy wczytaniu strony — ukryta, ale w pełni
+   * pobrana. Odwiedzający, który nigdy nie otworzył czatu, i tak ściągał
+   * dokument widgetu, wszystkie jego pliki JS i CSS oraz dwa zapytania do API.
+   * Widget obciążał więc Core Web Vitals każdej podstrony klienta, także tam,
+   * gdzie nikt z niego nie korzystał.
+   *
+   * Pozycja fixed sprawia, że sam przycisk nie przesuwa układu strony.
+   */
+  function utworzRamke() {
+    if (iframe) return iframe;
+
+    iframe = document.createElement('iframe');
+    // Ramka bez tytułu jest dla czytnika ekranu bezimienna — WCAG 4.1.2
+    iframe.setAttribute('title', 'Okno czatu');
+    iframe.src = origin + '/widget?key=' + encodeURIComponent(apiKey);
+    iframe.style.cssText = [
+      'position:fixed',
+      'bottom:88px',
+      position + ':20px',
+      'width:360px',
+      'height:520px',
+      'max-width:calc(100vw - 40px)',
+      'max-height:calc(100vh - 120px)',
+      'border:none',
+      'border-radius:12px',
+      'box-shadow:0 8px 30px rgba(0,0,0,0.25)',
+      'z-index:2147483000',
+      'display:none',
+    ].join(';');
+    document.body.appendChild(iframe);
+    return iframe;
+  }
+
+  /**
+   * Wstępne wczytanie po pierwszym sygnale, że ktoś faktycznie korzysta ze
+   * strony. Dzięki temu otwarcie czatu jest natychmiastowe, a użytkownik,
+   * który wchodzi i wychodzi, nie płaci za nic. requestIdleCallback czeka
+   * na moment bezczynności przeglądarki, żeby nie konkurować z renderowaniem
+   * treści klienta.
+   */
+  var rozgrzano = false;
+  function rozgrzej() {
+    if (rozgrzano) return;
+    rozgrzano = true;
+    odepnijSygnaly();
+
+    var start = function () { utworzRamke(); };
+    if (window.requestIdleCallback) {
+      window.requestIdleCallback(start, { timeout: 3000 });
+    } else {
+      setTimeout(start, 1200);
+    }
+  }
+
+  var SYGNALY = ['pointermove', 'touchstart', 'scroll', 'keydown'];
+  function odepnijSygnaly() {
+    SYGNALY.forEach(function (nazwa) {
+      window.removeEventListener(nazwa, rozgrzej);
+    });
+  }
 
   function ustawStan(otwarte) {
     isOpen = otwarte;
-    iframe.style.display = otwarte ? 'block' : 'none';
+    // Klik może wyprzedzić rozgrzewkę — wtedy tworzymy ramkę natychmiast
+    var ramka = utworzRamke();
+    ramka.style.display = otwarte ? 'block' : 'none';
     button.setAttribute('aria-expanded', otwarte ? 'true' : 'false');
     button.setAttribute('aria-label', otwarte ? 'Zamknij czat' : 'Otwórz czat');
   }
@@ -65,6 +113,10 @@
   button.addEventListener('click', function () {
     ustawStan(!isOpen);
   });
+
+  // Najazd i ognisko na przycisku to najsilniejsza zapowiedź otwarcia
+  button.addEventListener('mouseenter', rozgrzej);
+  button.addEventListener('focus', rozgrzej);
 
   // Escape zamyka okno i oddaje ognisko przyciskowi — bez tego użytkownik
   // klawiatury zostaje uwięziony w ramce bez wyjścia.
@@ -76,8 +128,10 @@
   });
 
   function mount() {
-    document.body.appendChild(iframe);
     document.body.appendChild(button);
+    SYGNALY.forEach(function (nazwa) {
+      window.addEventListener(nazwa, rozgrzej, { passive: true, once: false });
+    });
   }
 
   if (document.body) {
