@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { getToken } from '@/lib/api'
 import WidgetPreview from '@/components/widget/WidgetPreview'
+import Logo from '@/components/layout/Logo'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api'
 
@@ -117,9 +118,7 @@ export default function StronaGlowna() {
       <header className="sticky top-0 z-50 backdrop-blur-lg"
               style={{ background: 'rgba(17,12,4,0.72)', borderBottom: '1px solid var(--border-subtle)' }}>
         <nav className="max-w-6xl mx-auto px-5 h-[68px] flex items-center justify-between">
-          <span className="font-display font-extrabold text-lg tracking-tight">
-            Sm-art <span className="text-ember-500">Chatbot</span>
-          </span>
+          <Logo wysokosc={28} jakoLink />
           <div className="flex items-center gap-3">
             <Link href="/login" className="text-sm text-sand-300 hover:text-cream transition-colors">
               Zaloguj się
@@ -363,7 +362,10 @@ export default function StronaGlowna() {
 
       <footer className="py-10" style={{ borderTop: '1px solid var(--border-subtle)' }}>
         <div className="max-w-6xl mx-auto px-5 flex flex-wrap items-center justify-between gap-4 text-sm text-sand-400">
-          <span>© {new Date().getFullYear()} Sm-art</span>
+          <div className="flex items-center gap-3">
+            <Logo wysokosc={22} />
+            <span>© {new Date().getFullYear()}</span>
+          </div>
           <div className="flex gap-6">
             <a href="https://agencjasm-art.pl" className="hover:text-cream transition-colors">
               agencjasm-art.pl

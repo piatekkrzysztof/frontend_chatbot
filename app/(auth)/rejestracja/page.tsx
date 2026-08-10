@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import Logo from '@/components/layout/Logo'
 import { FormEvent, Suspense, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 
@@ -72,9 +73,9 @@ function FormularzRejestracji() {
 
   return (
     <div className="w-full max-w-sm">
-      <Link href="/" className="label-eyebrow mb-6 inline-block">
-        ← Sm-art Chatbot
-      </Link>
+      <div className="mb-7">
+        <Logo wysokosc={30} jakoLink />
+      </div>
 
       <h1 className="text-3xl mb-2">Załóż konto</h1>
       <p className="text-sand-300 text-sm mb-7">

@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { apiFetch, clearTokens } from '@/lib/api'
+import Logo from './Logo'
 
 interface Props {
   onToggleMenu?: () => void
@@ -50,12 +51,7 @@ export default function Navbar({ onToggleMenu, menuOtwarte }: Props) {
             </svg>
           </button>
         )}
-        <span
-          className="font-extrabold tracking-tight"
-          style={{ fontFamily: 'var(--font-display)' }}
-        >
-          Sm-art <span className="text-ember-500">Chatbot</span>
-        </span>
+        <Logo wysokosc={26} />
         {tenantName && (
           <>
             <span style={{ color: 'var(--color-sand-400)' }}>/</span>

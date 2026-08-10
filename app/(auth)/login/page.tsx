@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import Logo from '@/components/layout/Logo'
 import { useState, FormEvent } from 'react'
 import { useRouter } from 'next/navigation'
 import { API_URL, setTokens } from '@/lib/api'
@@ -40,9 +41,9 @@ export default function LoginPage() {
 
   return (
     <div className="w-full max-w-sm">
-      <Link href="/" className="label-eyebrow mb-6 inline-block">
-        ← Sm-art Chatbot
-      </Link>
+      <div className="mb-7">
+        <Logo wysokosc={30} jakoLink />
+      </div>
 
       <h1 className="text-3xl mb-6">Zaloguj się</h1>
       <form onSubmit={handleSubmit} className="flex flex-col gap-4">

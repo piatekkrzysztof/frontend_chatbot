@@ -26,6 +26,8 @@ export const metadata = {
   description:
     'Chatbot, który odpowiada klientom na podstawie wiedzy Twojej firmy. '
     + 'Wdrożenie w kilkanaście minut, bez programisty.',
+  // Ten sam znak, który stoi w karcie przeglądarki na agencjasm-art.pl
+  icons: { icon: '/img/favicon.svg' },
 }
 
 export default function RootLayout({ children }: { children: ReactNode }) {

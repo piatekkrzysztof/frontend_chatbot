@@ -35,6 +35,7 @@ export default function DocumentsPage() {
   const [newUrl, setNewUrl] = useState('')
   const [addingSource, setAddingSource] = useState(false)
   const [sourceError, setSourceError] = useState('')
+  const [odswiezane, setOdswiezane] = useState<number | null>(null)
 
   async function loadDocuments() {
     try {
@@ -136,6 +137,18 @@ export default function DocumentsPage() {
       setError(err instanceof Error ? err.message : 'Nie udało się wgrać dokumentu.')
     } finally {
       setUploading(false)
+    }
+  }
+
+  async function odswiezZrodlo(id: number) {
+    setOdswiezane(id)
+    setSourceError('')
+    try {
+      await apiFetch(`/website-sources/${id}/recrawl/`, { method: 'POST' })
+    } catch (err) {
+      setSourceError(err instanceof Error ? err.message : 'Nie udało się odświeżyć.')
+    } finally {
+      setOdswiezane(null)
     }
   }
 
@@ -301,7 +314,16 @@ export default function DocumentsPage() {
               <td className="py-2">{source.url}</td>
               <td className="py-2">{source.is_active ? 'Aktywna' : 'Wyłączona'}</td>
               <td className="py-2">{new Date(source.created_at).toLocaleString('pl-PL')}</td>
-              <td className="py-2 text-right">
+              <td className="py-2 text-right whitespace-nowrap">
+                {/* Plan Start nie ma automatycznego odświeżania, więc to
+                    jedyny sposób, żeby bot poznał zmiany na stronie */}
+                <button
+                  onClick={() => odswiezZrodlo(source.id)}
+                  disabled={odswiezane === source.id}
+                  className="text-xs text-sand-400 hover:text-ember-500 transition-colors mr-4 disabled:opacity-50"
+                >
+                  {odswiezane === source.id ? 'Odświeżam...' : 'Odśwież'}
+                </button>
                 <button
                   onClick={() => handleRemoveSource(source.id)}
                   className="text-rose-400 hover:underline"
