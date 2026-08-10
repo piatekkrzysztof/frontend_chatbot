@@ -28,9 +28,17 @@ interface Overview {
   plans: Plan[]
 }
 
+interface Domena {
+  id: number
+  host: string
+  last_seen: string
+}
+
 export default function SubskrypcjaPage() {
   const [data, setData] = useState<Overview | null>(null)
   const [error, setError] = useState('')
+  const [domeny, setDomeny] = useState<Domena[] | null>(null)
+  const [limitDomen, setLimitDomen] = useState<number | null>(null)
   const [buying, setBuying] = useState('')
 
   useEffect(() => {
@@ -43,6 +51,14 @@ export default function SubskrypcjaPage() {
       .catch((err) => {
         if (active) setError(err instanceof Error ? err.message : 'Nie udało się pobrać cennika.')
       })
+
+    apiFetch('/widget-domains/')
+      .then((d) => {
+        if (!active) return
+        setDomeny(d.domains)
+        setLimitDomen(d.limit)
+      })
+      .catch(() => {})
 
     // nie ustawiamy stanu, jeśli komponent zdążył się odmontować
     return () => {
@@ -64,6 +80,15 @@ export default function SubskrypcjaPage() {
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Nie udało się rozpocząć płatności.')
       setBuying('')
+    }
+  }
+
+  async function usunDomene(id: number) {
+    try {
+      await apiFetch(`/widget-domains/${id}/`, { method: 'DELETE' })
+      setDomeny((poprzednie) => (poprzednie || []).filter((d) => d.id !== id))
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Nie udało się usunąć witryny.')
     }
   }
 
@@ -129,6 +154,43 @@ export default function SubskrypcjaPage() {
             <p className="text-sm text-gray-500 mt-2">
               To plan spoza aktualnego cennika — zachowuje swoje warunki.
             </p>
+          )}
+        </div>
+      )}
+
+      {domeny && (
+        <div className="rounded-lg border border-gray-200 p-4 mb-8">
+          <div className="flex items-baseline justify-between mb-1">
+            <p className="font-medium">Witryny z widgetem</p>
+            <p className="text-sm text-gray-500">
+              {domeny.length}
+              {limitDomen !== null ? ` / ${limitDomen}` : ''} witryn
+            </p>
+          </div>
+          <p className="text-xs text-gray-500 mb-3">
+            Wykrywamy je automatycznie, gdy widget pierwszy raz zapyta z danej strony.
+            Adresy lokalne nie liczą się do limitu. Usunięcie zwalnia miejsce — witryna
+            wróci na listę, jeśli widget znów z niej zapyta.
+          </p>
+
+          {domeny.length === 0 ? (
+            <p className="text-sm text-gray-500">
+              Jeszcze nic nie wykryliśmy. Wklej kod widgetu na swoją stronę i odśwież ją.
+            </p>
+          ) : (
+            <ul className="flex flex-col divide-y divide-gray-100">
+              {domeny.map((domena) => (
+                <li key={domena.id} className="flex items-center justify-between py-2">
+                  <span className="text-sm">{domena.host}</span>
+                  <button
+                    onClick={() => usunDomene(domena.id)}
+                    className="text-xs text-gray-500 hover:text-red-600"
+                  >
+                    Usuń
+                  </button>
+                </li>
+              ))}
+            </ul>
           )}
         </div>
       )}

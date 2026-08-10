@@ -11,10 +11,31 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api'
 interface Message {
   sender: 'user' | 'bot'
   text: string
-  sources?: string[]
+  sources?: Zrodlo[]
   // Identyfikator przychodzi ze zdarzenia 'done' — bez niego nie ma czego ocenić
   messageId?: number
   rating?: 'up' | 'down'
+}
+
+/** Źródło odpowiedzi. Adres bywa pusty — patrz normalizujZrodla. */
+interface Zrodlo {
+  name: string
+  url?: string
+}
+
+/**
+ * Sprowadza źródła do jednego kształtu.
+ *
+ * Historia rozmowy siedzi w localStorage przeglądarki odwiedzającego, więc po
+ * wdrożeniu tej zmiany wciąż mogą tam leżeć wiadomości zapisane w starym
+ * kształcie, gdzie źródło było zwykłym napisem. Bez tego widget wywracałby się
+ * na cudzej, wcześniej zapisanej rozmowie.
+ */
+function normalizujZrodla(surowe: unknown): Zrodlo[] {
+  if (!Array.isArray(surowe)) return []
+  return surowe
+    .map((z) => (typeof z === 'string' ? { name: z } : z))
+    .filter((z): z is Zrodlo => Boolean(z && typeof z.name === 'string'))
 }
 
 interface Branding {
@@ -55,7 +76,12 @@ function loadHistory(apiKey: string): Message[] {
   try {
     const raw = localStorage.getItem(historyKey(apiKey))
     const parsed = raw ? JSON.parse(raw) : null
-    return Array.isArray(parsed) ? parsed : []
+    if (!Array.isArray(parsed)) return []
+    // Zapisane wcześniej rozmowy mogą mieć źródła w starym kształcie
+    return parsed.map((m: Message) => ({
+      ...m,
+      sources: m.sources ? normalizujZrodla(m.sources) : undefined,
+    }))
   } catch {
     // uszkodzony wpis nie może blokować czatu — zaczynamy od pustej rozmowy
     return []
@@ -180,7 +206,10 @@ export default function WidgetChat() {
             if (event.sources?.length) {
               setMessages((prev) => {
                 const next = [...prev]
-                next[next.length - 1] = { ...next[next.length - 1], sources: event.sources }
+                next[next.length - 1] = {
+                  ...next[next.length - 1],
+                  sources: normalizujZrodla(event.sources),
+                }
                 return next
               })
             }
@@ -372,7 +401,27 @@ export default function WidgetChat() {
               </div>
               {m.sources && m.sources.length > 0 && (
                 <p className="text-xs px-1" style={{ color: inputHintColor }}>
-                  Na podstawie: {m.sources.join(', ')}
+                  Na podstawie:{' '}
+                  {m.sources.map((zrodlo, i) => (
+                    <span key={`${zrodlo.name}-${i}`}>
+                      {i > 0 && ', '}
+                      {/* Link tylko dla treści, które i tak są publiczne.
+                          Wgrane pliki nie mają adresu celowo — link do cennika
+                          czy procedur firmy udostępniłby je każdemu. */}
+                      {zrodlo.url?.startsWith('http') ? (
+                        <a
+                          href={zrodlo.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="underline"
+                        >
+                          {zrodlo.name}
+                        </a>
+                      ) : (
+                        zrodlo.name
+                      )}
+                    </span>
+                  ))}
                 </p>
               )}
 
