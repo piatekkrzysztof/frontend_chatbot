@@ -29,6 +29,13 @@ const BRANDING_OPIS: Record<string, string> = {
   wlasny: 'Pełna biała etykieta — Twoje logo i kolory',
 }
 
+const KORZYSCI_SKROT = [
+  'Odpowiada o każdej porze, także w weekend',
+  'Zna Twój cennik i zasady — nie zmyśla',
+  'Zbiera kontakty, gdy nie zna odpowiedzi',
+  'Pokazuje, o co klienci naprawdę pytają',
+]
+
 const KORZYSCI = [
   {
     tytul: 'Odpowiada, kiedy Ciebie nie ma',
@@ -116,8 +123,8 @@ export default function StronaGlowna() {
             <Link href="/login" className="text-sm text-sand-300 hover:text-cream transition-colors">
               Zaloguj się
             </Link>
-            <Link href="/login" className="btn-primary !py-2.5 !px-5 !text-sm">
-              Zacznij teraz
+            <Link href="/rejestracja" className="btn-primary !py-2.5 !px-5 !text-sm">
+              Załóż konto
             </Link>
           </div>
         </nav>
@@ -132,28 +139,144 @@ export default function StronaGlowna() {
           style={{ background: 'radial-gradient(circle, rgba(249,115,22,0.13) 0%, transparent 62%)' }}
         />
 
-        <div className="relative max-w-6xl mx-auto px-5 pt-20 pb-24 md:pt-28 md:pb-32">
+        <div className="relative max-w-6xl mx-auto px-5 pt-10 pb-8 md:pt-14 md:pb-10">
           <span className="label-eyebrow wejscie">Asystent AI dla małych firm</span>
 
-          <h1 className="mt-5 max-w-4xl text-[clamp(2.4rem,7vw,5rem)] leading-[0.98] wejscie"
+          <h1 className="mt-4 max-w-3xl text-[clamp(2rem,4.4vw,3.25rem)] leading-[1.02] wejscie"
               style={{ animationDelay: '0.08s' }}>
             Twoja strona odpowiada
             <br />
             <span className="text-ember-500">zanim klient zdąży wyjść</span>
           </h1>
 
-          <p className="mt-7 max-w-xl text-lg text-sand-300 wejscie" style={{ animationDelay: '0.16s' }}>
-            Chatbot, który zna Twój cennik, godziny i zasady — bo uczy się wyłącznie
-            z Twoich materiałów. Wdrożenie zajmuje kilkanaście minut i jedną linijkę kodu.
+          <p className="mt-5 max-w-xl text-sand-300 wejscie" style={{ animationDelay: '0.16s' }}>
+            Uczy się wyłącznie z Twoich materiałów. Wdrożenie to kilkanaście
+            minut i jedna linijka kodu.
           </p>
 
-          <div className="mt-9 flex flex-wrap items-center gap-3 wejscie" style={{ animationDelay: '0.24s' }}>
-            <Link href="/login" className="btn-primary">Uruchom chatbota</Link>
-            <a href="#cennik" className="btn-ghost">Zobacz cennik</a>
+          {/* Cztery zdania zamiast osobnej sekcji. Cennik ma być tuż pod
+              zgięciem, a nie po przewinięciu przez listę funkcji. */}
+          <ul className="mt-6 grid gap-x-7 gap-y-2 sm:grid-cols-2 lg:grid-cols-4 max-w-5xl text-sm wejscie"
+              style={{ animationDelay: '0.2s' }}>
+            {KORZYSCI_SKROT.map((k) => (
+              <li key={k} className="flex gap-2.5 text-sand-300">
+                <span className="text-ember-500 shrink-0">→</span>
+                <span>{k}</span>
+              </li>
+            ))}
+          </ul>
+
+          {/* Bez pary przycisków w hero. Cennik jest tuż pod spodem, więc
+              "Zobacz cennik" prowadziłby do czegoś, co już widać, a każda karta
+              planu ma własne wezwanie. Wolne miejsce podnosi ceny wyżej. */}
+
+        </div>
+      </section>
+
+      {/* ─── Cennik ─── */}
+      <section id="cennik" className="pb-20 md:pb-24 scroll-mt-20">
+        <div className="max-w-6xl mx-auto px-5">
+          <div className="flex flex-wrap items-end justify-between gap-6">
+            {/* Bez nadnagłówka "Cennik" — samo zdanie mówi, o czym jest sekcja,
+                a każdy zaoszczędzony wiersz podnosi ceny bliżej pierwszego ekranu */}
+            <h2 className="text-[clamp(1.4rem,2.6vw,2rem)]">Płacisz za rozmowy, nie za obietnice</h2>
+
+            {/* Przełącznik okresu. Rabat roczny podany wprost, bo to
+                najczęstsze pytanie przy wyborze planu. */}
+            <div className="flex items-center gap-1 rounded-full p-1"
+                 style={{ background: 'var(--color-espresso-700)' }}>
+              <button
+                onClick={() => setRocznie(false)}
+                className={`rounded-full px-4 py-2 text-sm font-semibold transition-all ${
+                  !rocznie ? 'bg-ember-500 text-espresso-800' : 'text-sand-300'
+                }`}
+              >
+                Miesięcznie
+              </button>
+              <button
+                onClick={() => setRocznie(true)}
+                className={`rounded-full px-4 py-2 text-sm font-semibold transition-all ${
+                  rocznie ? 'bg-ember-500 text-espresso-800' : 'text-sand-300'
+                }`}
+              >
+                Rocznie −20%
+              </button>
+            </div>
           </div>
 
-          <p className="mt-5 text-sm text-sand-400 wejscie" style={{ animationDelay: '0.3s' }}>
-            Bez wtyczek. Bez programisty. Bez umowy na rok.
+          {plany.length === 0 ? (
+            <p className="mt-12 text-sand-400">Wczytywanie cennika...</p>
+          ) : (
+            <div className="mt-8 grid gap-5 md:grid-cols-3">
+              {plany.map((plan, i) => {
+                const wyrozniony = i === 1
+                const cena = rocznie ? plan.price_pln_yearly : plan.price_pln
+                return (
+                  <div
+                    key={plan.code}
+                    className={`relative p-6 flex flex-col rounded-[14px] transition-all ${
+                      wyrozniony ? 'md:-translate-y-4' : ''
+                    }`}
+                    style={{
+                      background: wyrozniony ? 'var(--color-espresso-700)' : 'var(--color-espresso-900)',
+                      border: `1px solid ${wyrozniony ? 'var(--ember-bdr)' : 'var(--border-subtle)'}`,
+                      boxShadow: wyrozniony ? '0 20px 60px rgba(0,0,0,0.35)' : 'none',
+                    }}
+                  >
+                    {wyrozniony && (
+                      <span className="absolute -top-3 left-8 pill">Najczęściej wybierany</span>
+                    )}
+
+                    <h3 className="text-base uppercase tracking-wider">{plan.name}</h3>
+
+                    <p className="mt-3 font-display font-extrabold text-[2.75rem] leading-none">
+                      {cena}
+                      <span className="text-base font-normal text-sand-400"> zł/mies.</span>
+                    </p>
+                    <p className="mt-1 text-xs text-sand-400">
+                      {rocznie ? `Płatne rocznie: ${cena * 12} zł netto` : 'netto, bez zobowiązania'}
+                    </p>
+
+                    <ul className="mt-6 mb-7 flex flex-col gap-2.5 text-sm text-sand-300">
+                      <li className="flex gap-2.5">
+                        <span className="text-ember-500">→</span>
+                        <span><strong className="text-cream">
+                          {plan.message_limit.toLocaleString('pl-PL')}
+                        </strong> rozmów miesięcznie</span>
+                      </li>
+                      <li className="flex gap-2.5">
+                        <span className="text-ember-500">→</span>
+                        <span>{plan.knowledge_base_mb} MB bazy wiedzy</span>
+                      </li>
+                      <li className="flex gap-2.5">
+                        <span className="text-ember-500">→</span>
+                        <span>
+                          {plan.max_domains === 1 ? '1 witryna' : `${plan.max_domains} witryn`}
+                          {' · '}
+                          {plan.max_seats === 1 ? '1 konto' : `${plan.max_seats} kont`}
+                        </span>
+                      </li>
+                      <li className="flex gap-2.5">
+                        <span className="text-ember-500">→</span>
+                        <span>{BRANDING_OPIS[plan.branding] || plan.branding}</span>
+                      </li>
+                    </ul>
+
+                    <Link
+                      href={`/rejestracja?plan=${plan.name}`}
+                      className={`mt-auto w-full text-center ${wyrozniony ? 'btn-primary' : 'btn-ghost'}`}
+                    >
+                      Wybieram {plan.name}
+                    </Link>
+                  </div>
+                )
+              })}
+            </div>
+          )}
+
+          <p className="mt-8 text-sm text-sand-400">
+            Wszystkie plany zawierają rozpoznawanie języka pytania, cytowanie źródeł
+            odpowiedzi, zbieranie kontaktów i zgodność z RODO oraz EU AI Act.
           </p>
         </div>
       </section>
@@ -202,116 +325,6 @@ export default function StronaGlowna() {
         </div>
       </section>
 
-      {/* ─── Cennik ─── */}
-      <section id="cennik" className="py-20 md:py-28 scroll-mt-20"
-               style={{ background: 'var(--color-espresso-800)' }}>
-        <div className="max-w-6xl mx-auto px-5">
-          <div className="flex flex-wrap items-end justify-between gap-6">
-            <div>
-              <span className="label-eyebrow">Cennik</span>
-              <h2 className="mt-4 text-[clamp(1.75rem,4vw,3rem)]">Płacisz za rozmowy, nie za obietnice</h2>
-            </div>
-
-            {/* Przełącznik okresu. Rabat roczny podany wprost, bo to
-                najczęstsze pytanie przy wyborze planu. */}
-            <div className="flex items-center gap-1 rounded-full p-1"
-                 style={{ background: 'var(--color-espresso-700)' }}>
-              <button
-                onClick={() => setRocznie(false)}
-                className={`rounded-full px-4 py-2 text-sm font-semibold transition-all ${
-                  !rocznie ? 'bg-ember-500 text-espresso-800' : 'text-sand-300'
-                }`}
-              >
-                Miesięcznie
-              </button>
-              <button
-                onClick={() => setRocznie(true)}
-                className={`rounded-full px-4 py-2 text-sm font-semibold transition-all ${
-                  rocznie ? 'bg-ember-500 text-espresso-800' : 'text-sand-300'
-                }`}
-              >
-                Rocznie −20%
-              </button>
-            </div>
-          </div>
-
-          {plany.length === 0 ? (
-            <p className="mt-12 text-sand-400">Wczytywanie cennika...</p>
-          ) : (
-            <div className="mt-12 grid gap-6 md:grid-cols-3">
-              {plany.map((plan, i) => {
-                const wyrozniony = i === 1
-                const cena = rocznie ? plan.price_pln_yearly : plan.price_pln
-                return (
-                  <div
-                    key={plan.code}
-                    className={`relative p-8 flex flex-col rounded-[14px] transition-all ${
-                      wyrozniony ? 'md:-translate-y-4' : ''
-                    }`}
-                    style={{
-                      background: wyrozniony ? 'var(--color-espresso-700)' : 'var(--color-espresso-900)',
-                      border: `1px solid ${wyrozniony ? 'var(--ember-bdr)' : 'var(--border-subtle)'}`,
-                      boxShadow: wyrozniony ? '0 20px 60px rgba(0,0,0,0.35)' : 'none',
-                    }}
-                  >
-                    {wyrozniony && (
-                      <span className="absolute -top-3 left-8 pill">Najczęściej wybierany</span>
-                    )}
-
-                    <h3 className="text-lg uppercase tracking-wider">{plan.name}</h3>
-
-                    <p className="mt-4 font-display font-extrabold text-5xl">
-                      {cena}
-                      <span className="text-base font-normal text-sand-400"> zł/mies.</span>
-                    </p>
-                    <p className="mt-1 text-xs text-sand-400">
-                      {rocznie ? `Płatne rocznie: ${cena * 12} zł netto` : 'netto, bez zobowiązania'}
-                    </p>
-
-                    <ul className="mt-8 mb-8 flex flex-col gap-3 text-sm text-sand-300">
-                      <li className="flex gap-2.5">
-                        <span className="text-ember-500">→</span>
-                        <span><strong className="text-cream">
-                          {plan.message_limit.toLocaleString('pl-PL')}
-                        </strong> rozmów miesięcznie</span>
-                      </li>
-                      <li className="flex gap-2.5">
-                        <span className="text-ember-500">→</span>
-                        <span>{plan.knowledge_base_mb} MB bazy wiedzy</span>
-                      </li>
-                      <li className="flex gap-2.5">
-                        <span className="text-ember-500">→</span>
-                        <span>
-                          {plan.max_domains === 1 ? '1 witryna' : `${plan.max_domains} witryn`}
-                          {' · '}
-                          {plan.max_seats === 1 ? '1 konto' : `${plan.max_seats} kont`}
-                        </span>
-                      </li>
-                      <li className="flex gap-2.5">
-                        <span className="text-ember-500">→</span>
-                        <span>{BRANDING_OPIS[plan.branding] || plan.branding}</span>
-                      </li>
-                    </ul>
-
-                    <Link
-                      href="/login"
-                      className={`mt-auto w-full text-center ${wyrozniony ? 'btn-primary' : 'btn-ghost'}`}
-                    >
-                      Wybieram {plan.name}
-                    </Link>
-                  </div>
-                )
-              })}
-            </div>
-          )}
-
-          <p className="mt-8 text-sm text-sand-400">
-            Wszystkie plany zawierają rozpoznawanie języka pytania, cytowanie źródeł
-            odpowiedzi, zbieranie kontaktów i zgodność z RODO oraz EU AI Act.
-          </p>
-        </div>
-      </section>
-
       {/* ─── Zamknięcie ─── */}
       <section className="py-24 md:py-32">
         <div className="max-w-3xl mx-auto px-5 text-center">
@@ -322,7 +335,7 @@ export default function StronaGlowna() {
             Wgraj cennik, wklej jedną linijkę i zobacz, o co naprawdę pytają
             odwiedzający Twoją stronę.
           </p>
-          <Link href="/login" className="btn-primary mt-9">Uruchom chatbota</Link>
+          <Link href="/rejestracja" className="btn-primary mt-9">Załóż konto za darmo</Link>
         </div>
       </section>
 

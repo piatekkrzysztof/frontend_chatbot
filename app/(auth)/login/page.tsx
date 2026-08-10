@@ -1,5 +1,6 @@
 'use client'
 
+import Link from 'next/link'
 import { useState, FormEvent } from 'react'
 import { useRouter } from 'next/navigation'
 import { API_URL, setTokens } from '@/lib/api'
@@ -38,8 +39,12 @@ export default function LoginPage() {
   }
 
   return (
-    <div>
-      <h1 className="text-2xl font-bold mb-4">Zaloguj się</h1>
+    <div className="w-full max-w-sm">
+      <Link href="/" className="label-eyebrow mb-6 inline-block">
+        ← Sm-art Chatbot
+      </Link>
+
+      <h1 className="text-3xl mb-6">Zaloguj się</h1>
       <form onSubmit={handleSubmit} className="flex flex-col gap-4">
         <div>
           <label className="label">E-mail</label>
@@ -65,11 +70,20 @@ export default function LoginPage() {
         <button
           type="submit"
           disabled={loading}
-          className="btn-primary"
+          className="btn-primary w-full"
         >
           {loading ? 'Logowanie...' : 'Zaloguj się'}
         </button>
       </form>
+
+      {/* Bez tego jedyną drogą do konta było logowanie — nowy klient
+          nie miał gdzie kliknąć, żeby je w ogóle założyć */}
+      <p className="text-sm text-sand-400 mt-6">
+        Nie masz konta?{' '}
+        <Link href="/rejestracja" className="text-ember-500 hover:text-ember-400 transition-colors">
+          Załóż je za darmo
+        </Link>
+      </p>
     </div>
   )
 }
