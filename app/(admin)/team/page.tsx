@@ -138,7 +138,11 @@ export default function TeamPage() {
 
       {error && <p className="text-sm text-rose-400 mb-4">{error}</p>}
 
-      <table className="w-full text-left text-sm mb-12">
+      {/* Tabela przewija się sama — bez tego rozpychała całą stronę */}
+
+      <div className="overflow-x-auto">
+
+        <table className="w-full text-left text-sm mb-12 min-w-[34rem]">
         <thead>
           <tr className="border-b border-espresso-700 text-sand-400">
             <th className="py-2">Użytkownik</th>
@@ -169,6 +173,7 @@ export default function TeamPage() {
           )}
         </tbody>
       </table>
+      </div>
 
       <h2 className="text-xl font-bold mb-1">Zaproś osobę</h2>
       <p className="text-sm text-sand-400 mb-4">

@@ -4,7 +4,12 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { apiFetch, clearTokens } from '@/lib/api'
 
-export default function Navbar() {
+interface Props {
+  onToggleMenu?: () => void
+  menuOtwarte?: boolean
+}
+
+export default function Navbar({ onToggleMenu, menuOtwarte }: Props) {
   const router = useRouter()
   const [tenantName, setTenantName] = useState('')
 
@@ -27,7 +32,24 @@ export default function Navbar() {
         borderBottom: '1px solid var(--border-subtle)',
       }}
     >
-      <div className="flex items-baseline gap-3">
+      <div className="flex items-center gap-3">
+        {/* Widoczny tylko tam, gdzie menu jest schowane */}
+        {onToggleMenu && (
+          <button
+            onClick={onToggleMenu}
+            aria-label={menuOtwarte ? 'Zamknij menu' : 'Otwórz menu'}
+            aria-expanded={menuOtwarte}
+            className="lg:hidden -ml-1 p-2 rounded-lg transition-colors"
+            style={{ color: 'var(--color-sand-300)' }}
+          >
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+              <path
+                d={menuOtwarte ? 'M5 5l10 10M15 5L5 15' : 'M3 6h14M3 10h14M3 14h14'}
+                stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"
+              />
+            </svg>
+          </button>
+        )}
         <span
           className="font-extrabold tracking-tight"
           style={{ fontFamily: 'var(--font-display)' }}

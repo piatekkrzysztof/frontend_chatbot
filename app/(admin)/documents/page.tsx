@@ -225,7 +225,11 @@ export default function DocumentsPage() {
 
       {error && <p className="text-sm text-rose-400 mb-4">{error}</p>}
 
-      <table className="w-full text-left text-sm mb-10">
+      {/* Tabela przewija się sama — bez tego rozpychała całą stronę */}
+
+      <div className="overflow-x-auto">
+
+        <table className="w-full text-left text-sm mb-10 min-w-[34rem]">
         <thead>
           <tr className="border-b border-espresso-700 text-sand-400">
             <th className="py-2">Nazwa</th>
@@ -252,6 +256,7 @@ export default function DocumentsPage() {
           )}
         </tbody>
       </table>
+      </div>
 
       <h2 className="text-xl font-bold mb-4">Strony WWW</h2>
       <p className="text-sm text-sand-400 mb-3">
@@ -277,7 +282,11 @@ export default function DocumentsPage() {
 
       {sourceError && <p className="text-sm text-rose-400 mb-4">{sourceError}</p>}
 
-      <table className="w-full text-left text-sm">
+      {/* Tabela przewija się sama — bez tego rozpychała całą stronę */}
+
+      <div className="overflow-x-auto">
+
+        <table className="w-full text-left text-sm min-w-[34rem]">
         <thead>
           <tr className="border-b border-espresso-700 text-sand-400">
             <th className="py-2">URL</th>
@@ -311,6 +320,7 @@ export default function DocumentsPage() {
           )}
         </tbody>
       </table>
+      </div>
     </div>
   )
 }

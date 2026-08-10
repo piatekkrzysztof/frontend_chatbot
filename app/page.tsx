@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { getToken } from '@/lib/api'
+import WidgetPreview from '@/components/widget/WidgetPreview'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api'
 
@@ -135,11 +136,16 @@ export default function StronaGlowna() {
         {/* Poświata za nagłówkiem — buduje głębię bez dokładania elementów */}
         <div
           aria-hidden
-          className="absolute left-1/2 -translate-x-1/2 -top-32 w-[720px] h-[720px] rounded-full pointer-events-none"
+          className="absolute -top-56 -right-40 w-[46rem] h-[46rem] rounded-full pointer-events-none"
           style={{ background: 'radial-gradient(circle, rgba(249,115,22,0.13) 0%, transparent 62%)' }}
         />
 
-        <div className="relative max-w-6xl mx-auto px-5 pt-10 pb-8 md:pt-14 md:pb-10">
+        <div className="relative max-w-6xl mx-auto px-5 pt-10 pb-8 md:pt-14 md:pb-10
+                        grid gap-10 lg:grid-cols-[1.15fr_auto] lg:items-center">
+          {/* Dwie kolumny, tak jak w hero agencjasm-art.pl. Sama kolumna tekstu
+              zostawiała pustą prawą połowę ekranu i cała strona czytała się
+              jako zepchnięta do lewej krawędzi. */}
+          <div>
           <span className="label-eyebrow wejscie">Asystent AI dla małych firm</span>
 
           <h1 className="mt-4 max-w-3xl text-[clamp(2rem,4.4vw,3.25rem)] leading-[1.02] wejscie"
@@ -169,7 +175,23 @@ export default function StronaGlowna() {
           {/* Bez pary przycisków w hero. Cennik jest tuż pod spodem, więc
               "Zobacz cennik" prowadziłby do czegoś, co już widać, a każda karta
               planu ma własne wezwanie. Wolne miejsce podnosi ceny wyżej. */}
+          </div>
 
+          {/* Ten sam komponent, który rysuje podgląd w panelu — odwiedzający
+              widzi dokładnie to, co dostanie, a nie wyretuszowaną makietę.
+              Poniżej 1024 px znika: zabierałby miejsce cenom. */}
+          <div className="hidden lg:block wejscie" style={{ animationDelay: '0.22s' }}>
+            <div style={{ filter: 'drop-shadow(0 24px 60px rgba(0,0,0,0.45))' }}>
+              <WidgetPreview
+                brandingMode="smart"
+                color="#F97316"
+                title="Sm-art"
+                footerText=""
+                welcomeMessage="Cześć! Pytaj o ceny, godziny i dostępność — odpowiem od razu."
+                suggestedQuestions={['Jakie macie godziny otwarcia?', 'Ile kosztuje przegląd?']}
+              />
+            </div>
+          </div>
         </div>
       </section>
 
