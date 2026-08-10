@@ -112,18 +112,18 @@ export default function AcceptInvitePage({
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-100">
-        <p className="text-gray-500">Sprawdzam zaproszenie...</p>
+      <div className="min-h-screen flex items-center justify-center bg-espresso-700">
+        <p className="text-sand-400">Sprawdzam zaproszenie...</p>
       </div>
     )
   }
 
   if (loadError || !preview) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-100 px-4">
-        <div className="w-full max-w-sm rounded-lg bg-white p-6 shadow">
+      <div className="min-h-screen flex items-center justify-center bg-espresso-700 px-4">
+        <div className="w-full max-w-sm rounded-lg bg-espresso-800 p-6 shadow">
           <h1 className="text-xl font-bold mb-2">Zaproszenie nieaktualne</h1>
-          <p className="text-sm text-gray-600">
+          <p className="text-sm text-sand-300">
             {loadError || 'Ten link zaproszenia jest nieprawidłowy.'} Poproś osobę, która
             Cię zapraszała, o nowy link.
           </p>
@@ -134,10 +134,10 @@ export default function AcceptInvitePage({
 
   if (!preview.is_valid) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-100 px-4">
-        <div className="w-full max-w-sm rounded-lg bg-white p-6 shadow">
+      <div className="min-h-screen flex items-center justify-center bg-espresso-700 px-4">
+        <div className="w-full max-w-sm rounded-lg bg-espresso-800 p-6 shadow">
           <h1 className="text-xl font-bold mb-2">Zaproszenie wygasło</h1>
-          <p className="text-sm text-gray-600">
+          <p className="text-sm text-sand-300">
             Link do zespołu {preview.company} stracił ważność albo został już wykorzystany.
             Poproś o nowy.
           </p>
@@ -147,16 +147,16 @@ export default function AcceptInvitePage({
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100 px-4">
-      <div className="w-full max-w-sm rounded-lg bg-white p-6 shadow">
+    <div className="min-h-screen flex items-center justify-center bg-espresso-700 px-4">
+      <div className="w-full max-w-sm rounded-lg bg-espresso-800 p-6 shadow">
         <h1 className="text-xl font-bold mb-1">Dołącz do zespołu</h1>
-        <p className="text-sm text-gray-600 mb-5">
+        <p className="text-sm text-sand-300 mb-5">
           Zaproszenie do <span className="font-medium">{preview.company}</span> w roli{' '}
           {ROLE_LABELS[preview.role] || preview.role}.
         </p>
 
         <form onSubmit={handleSubmit}>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <label className="label">
             Nazwa użytkownika
           </label>
           <input
@@ -164,34 +164,34 @@ export default function AcceptInvitePage({
             value={username}
             onChange={(e) => setUsername(e.target.value)}
             required
-            className="w-full rounded border border-gray-300 px-3 py-2 text-sm mb-4"
+            className="input mb-4"
           />
 
-          <label className="block text-sm font-medium text-gray-700 mb-1">E-mail</label>
+          <label className="label">E-mail</label>
           <input
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
-            className="w-full rounded border border-gray-300 px-3 py-2 text-sm mb-4"
+            className="input mb-4"
           />
 
-          <label className="block text-sm font-medium text-gray-700 mb-1">Hasło</label>
+          <label className="label">Hasło</label>
           <input
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
             minLength={8}
-            className="w-full rounded border border-gray-300 px-3 py-2 text-sm mb-5"
+            className="input mb-5"
           />
 
-          {error && <p className="text-sm text-red-600 mb-4">{error}</p>}
+          {error && <p className="text-sm text-rose-400 mb-4">{error}</p>}
 
           <button
             type="submit"
             disabled={submitting}
-            className="w-full rounded bg-gray-900 px-4 py-2 text-sm text-white font-medium disabled:opacity-50"
+            className="btn-primary w-full !py-2 !text-sm"
           >
             {submitting ? 'Zakładanie konta...' : 'Załóż konto'}
           </button>

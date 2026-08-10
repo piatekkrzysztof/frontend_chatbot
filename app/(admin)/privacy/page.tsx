@@ -91,26 +91,26 @@ export default function PrivacyPage() {
   return (
     <div className="max-w-2xl">
       <h1 className="text-2xl font-bold mb-1">Prywatność i dane</h1>
-      <p className="text-gray-600 mb-8">
+      <p className="text-sand-300 mb-8">
         Rozmowy odwiedzających to dane osobowe — zawierają treść pytań, skrócony adres IP
         i kontakty zostawione w czacie. To Ty jesteś ich administratorem, więc decydujesz,
         jak długo je przechowujemy.
       </p>
 
-      {error && <p className="text-sm text-red-600 mb-4">{error}</p>}
+      {error && <p className="text-sm text-rose-400 mb-4">{error}</p>}
 
       <form onSubmit={handleSave} className="mb-12">
         <div className="mb-5">
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <label className="label">
             Automatyczne usuwanie rozmów
           </label>
-          <p className="text-sm text-gray-500 mb-2">
+          <p className="text-sm text-sand-400 mb-2">
             Po tym czasie rozmowy, logi i zostawione kontakty znikają bezpowrotnie.
           </p>
           <select
             value={retention}
             onChange={(e) => setRetention(Number(e.target.value))}
-            className="rounded border border-gray-300 px-3 py-2 text-sm"
+            className="input"
           >
             {RETENTION_OPTIONS.map((option) => (
               <option key={option.value} value={option.value}>
@@ -119,7 +119,7 @@ export default function PrivacyPage() {
             ))}
           </select>
           {retention === 0 && (
-            <p className="text-sm text-amber-700 mt-2">
+            <p className="text-sm text-ember-400 mt-2">
               RODO nie pozwala trzymać danych osobowych bezterminowo. Wyłączaj tylko wtedy,
               gdy masz inną, udokumentowaną podstawę do ich przechowywania.
             </p>
@@ -127,10 +127,10 @@ export default function PrivacyPage() {
         </div>
 
         <div className="mb-5">
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <label className="label">
             Link do polityki prywatności
           </label>
-          <p className="text-sm text-gray-500 mb-2">
+          <p className="text-sm text-sand-400 mb-2">
             Pokazujemy go w oknie czatu. Odwiedzający musi wiedzieć, kto przetwarza jego dane,
             zanim je zostawi.
           </p>
@@ -139,7 +139,7 @@ export default function PrivacyPage() {
             value={policyUrl}
             onChange={(e) => setPolicyUrl(e.target.value)}
             placeholder="https://twojafirma.pl/polityka-prywatnosci"
-            className="w-full rounded border border-gray-300 px-3 py-2 text-sm"
+            className="input"
           />
         </div>
 
@@ -147,7 +147,7 @@ export default function PrivacyPage() {
           <button
             type="submit"
             disabled={saving}
-            className="rounded bg-gray-900 px-4 py-2 text-sm text-white font-medium disabled:opacity-50"
+            className="btn-primary !py-2 !px-4 !text-sm"
           >
             {saving ? 'Zapisywanie...' : 'Zapisz ustawienia'}
           </button>
@@ -156,7 +156,7 @@ export default function PrivacyPage() {
       </form>
 
       <h2 className="text-xl font-bold mb-1">Usunięcie danych na żądanie</h2>
-      <p className="text-sm text-gray-500 mb-4">
+      <p className="text-sm text-sand-400 mb-4">
         Gdy ktoś poprosi o usunięcie swoich danych, znajdź jego rozmowę w zakładce
         Konwersacje i wklej tutaj jej identyfikator. Kasujemy rozmowę razem ze wszystkimi
         logami i zostawionym kontaktem. Operacji nie da się cofnąć.
@@ -168,19 +168,19 @@ export default function PrivacyPage() {
           value={sessionId}
           onChange={(e) => setSessionId(e.target.value)}
           placeholder="Identyfikator rozmowy"
-          className="flex-1 rounded border border-gray-300 px-3 py-2 text-sm font-mono"
+          className="flex-1 rounded border border-espresso-600 px-3 py-2 text-sm font-mono"
         />
         <button
           type="submit"
           disabled={!sessionId.trim() || erasing}
-          className="rounded border border-red-600 px-4 py-2 text-sm text-red-600 font-medium disabled:opacity-50 shrink-0"
+          className="rounded border border-red-600 px-4 py-2 text-sm text-rose-400 font-medium disabled:opacity-50 shrink-0"
         >
           {erasing ? 'Usuwanie...' : 'Usuń dane'}
         </button>
       </form>
 
       {eraseResult && <p className="text-sm text-green-700 mt-3">{eraseResult}</p>}
-      {eraseError && <p className="text-sm text-red-600 mt-3">{eraseError}</p>}
+      {eraseError && <p className="text-sm text-rose-400 mt-3">{eraseError}</p>}
     </div>
   )
 }

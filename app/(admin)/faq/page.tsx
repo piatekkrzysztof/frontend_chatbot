@@ -75,57 +75,57 @@ export default function FAQPage() {
   return (
     <div>
       <h1 className="text-2xl font-bold mb-1">FAQ</h1>
-      <p className="text-gray-600 mb-6">
+      <p className="text-sand-300 mb-6">
         Gotowe pytania i odpowiedzi. Bot korzysta z nich w rozmowach, więc to
         najszybszy sposób, żeby nauczyć go czegoś, czego nie ma w dokumentach.
       </p>
 
       <form onSubmit={handleAdd} className="flex flex-col gap-3 max-w-2xl mb-8">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Pytanie</label>
+          <label className="label">Pytanie</label>
           <input
             type="text"
             value={question}
             onChange={(e) => setQuestion(e.target.value)}
             placeholder="Jakie są godziny otwarcia?"
-            className="w-full rounded border border-gray-300 px-3 py-2 text-sm"
+            className="input"
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Odpowiedź</label>
+          <label className="label">Odpowiedź</label>
           <textarea
             value={answer}
             onChange={(e) => setAnswer(e.target.value)}
             rows={3}
             placeholder="Pracujemy od poniedziałku do piątku w godzinach 9-17."
-            className="w-full rounded border border-gray-300 px-3 py-2 text-sm"
+            className="input"
           />
         </div>
         <button
           type="submit"
           disabled={saving || !question.trim() || !answer.trim()}
-          className="rounded bg-gray-900 px-4 py-2 text-sm text-white font-medium disabled:opacity-50 w-fit"
+          className="btn-primary w-fit !py-2 !px-4 !text-sm"
         >
           {saving ? 'Zapisywanie...' : 'Dodaj do FAQ'}
         </button>
       </form>
 
-      {error && <p className="text-sm text-red-600 mb-4">{error}</p>}
+      {error && <p className="text-sm text-rose-400 mb-4">{error}</p>}
 
       {items.length === 0 ? (
-        <p className="text-sm text-gray-400">Brak wpisów w FAQ.</p>
+        <p className="text-sm text-sand-400">Brak wpisów w FAQ.</p>
       ) : (
         <ul className="flex flex-col gap-3 max-w-2xl">
           {items.map((item) => (
-            <li key={item.id} className="rounded border border-gray-200 p-3">
+            <li key={item.id} className="rounded border border-espresso-700 p-3">
               <div className="flex items-start justify-between gap-3">
                 <div>
                   <p className="text-sm font-medium">{item.question}</p>
-                  <p className="text-sm text-gray-600 mt-1 whitespace-pre-wrap">{item.answer}</p>
+                  <p className="text-sm text-sand-300 mt-1 whitespace-pre-wrap">{item.answer}</p>
                 </div>
                 <button
                   onClick={() => handleDelete(item.id)}
-                  className="text-sm text-red-600 hover:underline shrink-0"
+                  className="text-sm text-rose-400 hover:underline shrink-0"
                 >
                   Usuń
                 </button>

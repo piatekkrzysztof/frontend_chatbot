@@ -1,6 +1,6 @@
 'use client'
 
-import { resolveTheme } from './theme'
+import { SMART_THEME, resolveTheme } from './theme'
 
 interface Props {
   brandingMode: 'smart' | 'white_label'
@@ -56,10 +56,14 @@ export default function WidgetPreview({
           <img src={logoUrl} alt="" className="h-5 w-5 rounded object-cover" />
         ) : (
           <span
+            aria-hidden="true"
             className="flex h-5 w-5 items-center justify-center rounded text-[11px] font-bold"
             style={{
               backgroundColor: theme.isWhiteLabel ? '#ffffff' : theme.accent,
-              color: theme.isWhiteLabel ? theme.accent : theme.headerText,
+              // Ciemny tekst na pomarańczu, tak jak w prawdziwym widgecie.
+              // Podgląd miał tu kremowy: pokazywał więc co innego, niż widzi
+              // odwiedzający, a przy okazji dawał kontrast 2,64:1 zamiast 4,5:1.
+              color: theme.isWhiteLabel ? theme.accent : SMART_THEME.bg,
             }}
           >
             {theme.name.charAt(0).toUpperCase()}

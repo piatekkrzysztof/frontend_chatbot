@@ -171,13 +171,13 @@ export default function DocumentsPage() {
   return (
     <div>
       <h1 className="text-2xl font-bold mb-1">Baza wiedzy</h1>
-      <p className="text-gray-600 mb-8">
+      <p className="text-sand-300 mb-8">
         Wszystko, na czym chatbot opiera odpowiedzi. Bez tych materiałów odmawia
         odpowiedzi na pytania o firmę — celowo, żeby ich nie zmyślać.
       </p>
 
       <h2 className="text-xl font-bold mb-1">Opis działalności</h2>
-      <p className="text-sm text-gray-500 mb-3">
+      <p className="text-sm text-sand-400 mb-3">
         Najważniejsze pole. Napisz własnymi słowami, czym zajmuje się firma, co oferuje
         i dla kogo. Bez tego bot nie odpowie nawet na „czym się zajmujecie?”.
       </p>
@@ -188,13 +188,13 @@ export default function DocumentsPage() {
           onChange={(e) => setDescription(e.target.value)}
           rows={5}
           placeholder="Np. Jesteśmy gabinetem kosmetycznym w Krakowie. Wykonujemy zabiegi na twarz, manicure i depilację laserową. Przyjmujemy pon-sob."
-          className="w-full rounded border border-gray-300 px-3 py-2 text-sm"
+          className="input"
         />
         <div className="flex items-center gap-3 mt-2">
           <button
             type="submit"
             disabled={savingDescription || description === savedDescription}
-            className="rounded bg-gray-900 px-4 py-2 text-sm text-white font-medium disabled:opacity-50"
+            className="btn-primary !py-2 !px-4 !text-sm"
           >
             {savingDescription ? 'Zapisywanie...' : 'Zapisz opis'}
           </button>
@@ -202,7 +202,7 @@ export default function DocumentsPage() {
             <span className="text-xs text-amber-600">Niezapisane zmiany</span>
           )}
         </div>
-        {descriptionError && <p className="text-sm text-red-600 mt-2">{descriptionError}</p>}
+        {descriptionError && <p className="text-sm text-rose-400 mt-2">{descriptionError}</p>}
       </form>
 
       <h2 className="text-xl font-bold mb-4">Dokumenty</h2>
@@ -217,17 +217,17 @@ export default function DocumentsPage() {
         <button
           type="submit"
           disabled={!file || uploading}
-          className="rounded bg-gray-900 px-4 py-2 text-sm text-white font-medium disabled:opacity-50"
+          className="btn-primary !py-2 !px-4 !text-sm"
         >
           {uploading ? 'Wgrywanie...' : 'Wgraj dokument'}
         </button>
       </form>
 
-      {error && <p className="text-sm text-red-600 mb-4">{error}</p>}
+      {error && <p className="text-sm text-rose-400 mb-4">{error}</p>}
 
       <table className="w-full text-left text-sm mb-10">
         <thead>
-          <tr className="border-b border-gray-200 text-gray-500">
+          <tr className="border-b border-espresso-700 text-sand-400">
             <th className="py-2">Nazwa</th>
             <th className="py-2">Status</th>
             <th className="py-2">Fragmenty</th>
@@ -236,7 +236,7 @@ export default function DocumentsPage() {
         </thead>
         <tbody>
           {documents.map((doc) => (
-            <tr key={doc.id} className="border-b border-gray-100">
+            <tr key={doc.id} className="border-b border-espresso-700">
               <td className="py-2">{doc.name}</td>
               <td className="py-2">{doc.status}</td>
               <td className="py-2">{doc.chunk_count}</td>
@@ -245,7 +245,7 @@ export default function DocumentsPage() {
           ))}
           {documents.length === 0 && (
             <tr>
-              <td colSpan={4} className="py-4 text-gray-400">
+              <td colSpan={4} className="py-4 text-sand-400">
                 Brak wgranych dokumentów.
               </td>
             </tr>
@@ -254,7 +254,7 @@ export default function DocumentsPage() {
       </table>
 
       <h2 className="text-xl font-bold mb-4">Strony WWW</h2>
-      <p className="text-sm text-gray-500 mb-3">
+      <p className="text-sm text-sand-400 mb-3">
         Podaj adres strony klienta — treść zostanie automatycznie pobrana i dodana do wiedzy chatbota.
       </p>
 
@@ -264,22 +264,22 @@ export default function DocumentsPage() {
           value={newUrl}
           onChange={(e) => setNewUrl(e.target.value)}
           placeholder="https://example.com"
-          className="flex-1 max-w-md rounded border border-gray-300 px-3 py-2 text-sm"
+          className="flex-1 max-w-md rounded border border-espresso-600 px-3 py-2 text-sm"
         />
         <button
           type="submit"
           disabled={!newUrl.trim() || addingSource}
-          className="rounded bg-gray-900 px-4 py-2 text-sm text-white font-medium disabled:opacity-50"
+          className="btn-primary !py-2 !px-4 !text-sm"
         >
           {addingSource ? 'Dodawanie...' : 'Dodaj stronę'}
         </button>
       </form>
 
-      {sourceError && <p className="text-sm text-red-600 mb-4">{sourceError}</p>}
+      {sourceError && <p className="text-sm text-rose-400 mb-4">{sourceError}</p>}
 
       <table className="w-full text-left text-sm">
         <thead>
-          <tr className="border-b border-gray-200 text-gray-500">
+          <tr className="border-b border-espresso-700 text-sand-400">
             <th className="py-2">URL</th>
             <th className="py-2">Status</th>
             <th className="py-2">Dodano</th>
@@ -288,14 +288,14 @@ export default function DocumentsPage() {
         </thead>
         <tbody>
           {sources.map((source) => (
-            <tr key={source.id} className="border-b border-gray-100">
+            <tr key={source.id} className="border-b border-espresso-700">
               <td className="py-2">{source.url}</td>
               <td className="py-2">{source.is_active ? 'Aktywna' : 'Wyłączona'}</td>
               <td className="py-2">{new Date(source.created_at).toLocaleString('pl-PL')}</td>
               <td className="py-2 text-right">
                 <button
                   onClick={() => handleRemoveSource(source.id)}
-                  className="text-red-600 hover:underline"
+                  className="text-rose-400 hover:underline"
                 >
                   Usuń
                 </button>
@@ -304,7 +304,7 @@ export default function DocumentsPage() {
           ))}
           {sources.length === 0 && (
             <tr>
-              <td colSpan={4} className="py-4 text-gray-400">
+              <td colSpan={4} className="py-4 text-sand-400">
                 Brak dodanych stron WWW.
               </td>
             </tr>

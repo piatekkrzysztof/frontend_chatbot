@@ -3,8 +3,8 @@ import { ReactNode } from 'react'
 
 export default function AuthLayout({ children }: { children: ReactNode }) {
   return (
-    <main className="min-h-screen flex items-center justify-center bg-gray-100">
-      <div className="w-full max-w-md bg-white p-6 rounded-lg shadow">
+    <main className="min-h-screen flex items-center justify-center bg-espresso-700">
+      <div className="w-full max-w-md bg-espresso-800 p-6 rounded-lg shadow">
         {children}
       </div>
     </main>

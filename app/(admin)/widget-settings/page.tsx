@@ -153,7 +153,7 @@ export default function WidgetSettingsPage() {
   return (
     <div>
       <h1 className="text-2xl font-bold mb-1">Widget czatu</h1>
-      <p className="text-gray-600 mb-6">
+      <p className="text-sand-300 mb-6">
         Podgląd po prawej pokazuje, co zobaczy odwiedzający — zmiany widać od razu,
         jeszcze przed zapisaniem.
       </p>
@@ -161,30 +161,31 @@ export default function WidgetSettingsPage() {
       {/* Na górze, bo to jedyna rzecz na tej stronie, bez której widget nie
           zadziała w ogóle. Wcześniej był pod formularzem i podglądem, czyli
           po kilkuset pikselach ustawień — nie dało się go znaleźć. */}
-      <div className="rounded-lg border border-gray-200 p-4 mb-8">
+      <div className="rounded-lg border border-espresso-700 p-4 mb-8">
         <div className="flex items-baseline justify-between mb-1">
           <h2 className="font-semibold">Kod do wklejenia na Twoją stronę</h2>
           {embedSnippet && (
             <button
               type="button"
               onClick={kopiujSnippet}
-              className="text-xs text-gray-600 hover:text-gray-900"
+              className="text-xs text-sand-300 hover:text-cream"
             >
               {skopiowano ? 'Skopiowano' : 'Kopiuj'}
             </button>
           )}
         </div>
-        <p className="text-xs text-gray-500 mb-3">
+        <p className="text-xs text-sand-400 mb-3">
           Wklej tuż przed zamknięciem znacznika &lt;/body&gt; na każdej stronie,
           na której ma działać czat.
         </p>
 
         {embedSnippet ? (
-          <pre className="bg-gray-900 text-gray-100 text-xs rounded p-4 overflow-x-auto">
+          <pre className="bg-espresso-900 text-cream text-xs rounded-lg p-4 overflow-x-auto"
+               style={{ border: '1px solid var(--border-subtle)' }}>
             {embedSnippet}
           </pre>
         ) : (
-          <p className="text-sm text-gray-500">
+          <p className="text-sm text-sand-400">
             {kluczBlad
               ? 'Nie udało się pobrać klucza API. Odśwież stronę albo zaloguj się ponownie.'
               : 'Wczytywanie klucza API...'}
@@ -195,7 +196,7 @@ export default function WidgetSettingsPage() {
       <div className="flex flex-wrap items-start gap-10">
       <form onSubmit={handleSubmit} className="flex flex-col gap-4 max-w-md mb-8">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">Branding</label>
+          <label className="label">Branding</label>
           <div className="flex flex-col gap-2">
             <label className="flex items-center gap-2 text-sm">
               <input
@@ -231,7 +232,7 @@ export default function WidgetSettingsPage() {
               />
               Ukryj stopkę „Powered by Sm-art"
             </label>
-            <p className="text-xs text-gray-500 mt-1">
+            <p className="text-xs text-sand-400 mt-1">
               {branding === 'wymagany'
                 ? 'Dostępne od planu Grow. W planie Start widget zachowuje naszą stopkę.'
                 : 'Okno czatu przestanie odsyłać odwiedzających do Sm-art.'}
@@ -242,36 +243,36 @@ export default function WidgetSettingsPage() {
         {brandingMode === 'white_label' && (
           <>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Nazwa widgetu</label>
+              <label className="label">Nazwa widgetu</label>
               <input
                 type="text"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
-                className="w-full rounded border border-gray-300 px-3 py-2"
+                className="input"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Kolor</label>
+              <label className="label">Kolor</label>
               <input
                 type="color"
                 value={color}
                 onChange={(e) => setColor(e.target.value)}
-                className="h-10 w-20 rounded border border-gray-300"
+                className="h-10 w-20 rounded border border-espresso-600"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Pozycja</label>
+              <label className="label">Pozycja</label>
               <select
                 value={position}
                 onChange={(e) => setPosition(e.target.value)}
-                className="w-full rounded border border-gray-300 px-3 py-2"
+                className="input"
               >
                 <option value="right">Prawa strona</option>
                 <option value="left">Lewa strona</option>
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Logo</label>
+              <label className="label">Logo</label>
               {logoUrl && !logoFile && (
                 // Plik wgrany przez klienta, serwowany przez backend/S3 — optymalizacja
                 // next/image wymagałaby listy dozwolonych domen i nic tu nie wnosi.
@@ -286,7 +287,7 @@ export default function WidgetSettingsPage() {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Awatar bota</label>
+              <label className="label">Awatar bota</label>
               {avatarUrl && !avatarFile && (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img src={avatarUrl} alt="Aktualny awatar" className="h-8 w-8 rounded-full mb-2" />
@@ -299,13 +300,13 @@ export default function WidgetSettingsPage() {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Stopka widgetu</label>
+              <label className="label">Stopka widgetu</label>
               <input
                 type="text"
                 value={footerText}
                 onChange={(e) => setFooterText(e.target.value)}
                 placeholder="np. Umów wizytę"
-                className="w-full rounded border border-gray-300 px-3 py-2"
+                className="input"
               />
             </div>
           </>
@@ -313,10 +314,10 @@ export default function WidgetSettingsPage() {
 
         {/* Wspólne dla obu wariantów brandingu — dotyczą treści, nie wyglądu */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <label className="label">
             Wiadomość powitalna
           </label>
-          <p className="text-xs text-gray-500 mb-1">
+          <p className="hint">
             Pierwsze, co widzi odwiedzający po otwarciu czatu. Zostaw puste, żeby okno
             otwierało się bez powitania.
           </p>
@@ -325,15 +326,15 @@ export default function WidgetSettingsPage() {
             onChange={(e) => setWelcomeMessage(e.target.value)}
             rows={2}
             placeholder="Cześć! W czym mogę pomóc?"
-            className="w-full rounded border border-gray-300 px-3 py-2 text-sm"
+            className="input"
           />
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <label className="label">
             Proponowane pytania
           </label>
-          <p className="text-xs text-gray-500 mb-1">
+          <p className="hint">
             Po jednym w wierszu, pokażemy do czterech. Klikalne od razu po otwarciu czatu —
             odwiedzający nie musi wymyślać pierwszego pytania.
           </p>
@@ -344,12 +345,12 @@ export default function WidgetSettingsPage() {
             placeholder={`Jakie macie godziny otwarcia?
 Ile kosztuje usługa?
 Gdzie was znaleźć?`}
-            className="w-full rounded border border-gray-300 px-3 py-2 text-sm"
+            className="input"
           />
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <label className="label">
             Języki odpowiedzi
           </label>
           <div className="flex flex-col gap-2 mb-3">
@@ -363,7 +364,7 @@ Gdzie was znaleźć?`}
               />
               <span>
                 Zawsze jeden język
-                <span className="block text-xs text-gray-500">
+                <span className="block text-xs text-sand-400">
                   Bot odpowiada wybranym językiem niezależnie od tego, w jakim
                   języku napisano pytanie.
                 </span>
@@ -379,7 +380,7 @@ Gdzie was znaleźć?`}
               />
               <span>
                 Dopasuj do języka pytania
-                <span className="block text-xs text-gray-500">
+                <span className="block text-xs text-sand-400">
                   Bot rozpozna język pytania i odpowie w nim — ale tylko w obrębie
                   zaznaczonych niżej.
                 </span>
@@ -388,10 +389,10 @@ Gdzie was znaleźć?`}
           </div>
 
           <div className="mb-3">
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="label">
               {languageMode === 'fixed' ? 'Język odpowiedzi' : 'Język zapasowy'}
             </label>
-            <p className="text-xs text-gray-500 mb-1">
+            <p className="hint">
               {languageMode === 'fixed'
                 ? 'Jedyny język, w którym bot będzie odpowiadał.'
                 : 'Użyjemy go, gdy pytanie przyjdzie w języku spoza zaznaczonych.'}
@@ -399,7 +400,7 @@ Gdzie was znaleźć?`}
             <select
               value={defaultLanguage}
               onChange={(e) => setDefaultLanguage(e.target.value)}
-              className="w-full rounded border border-gray-300 px-3 py-2 text-sm"
+              className="input"
             >
               {JEZYKI.map((jezyk) => (
                 <option key={jezyk.kod} value={jezyk.kod}>{jezyk.nazwa}</option>
@@ -409,7 +410,7 @@ Gdzie was znaleźć?`}
 
           {languageMode === 'auto' && (
             <div className="flex flex-col gap-1.5">
-              <p className="text-xs text-gray-500">
+              <p className="text-xs text-sand-400">
                 Zaznaczaj wyłącznie te, które obsłużysz, gdy odwiedzający poprosi
                 o kontakt z człowiekiem — inaczej obiecujesz obsługę, której nie ma.
               </p>
@@ -440,7 +441,7 @@ Gdzie was znaleźć?`}
         </div>
 
         <div>
-          <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-1">
+          <label className="flex items-center gap-2 text-sm font-medium text-cream mb-1">
             <input
               type="checkbox"
               checked={proactiveEnabled}
@@ -448,7 +449,7 @@ Gdzie was znaleźć?`}
             />
             Zaczepka dla odwiedzającego
           </label>
-          <p className="text-xs text-gray-500 mb-2">
+          <p className="hint">
             Dymek pokazywany sam z siebie, gdy ktoś jest na stronie dłuższą chwilę
             i nie zaczął rozmowy. To gotowy tekst, nie odpowiedź AI — nie zużywa
             limitu wiadomości z Twojego planu.
@@ -457,7 +458,7 @@ Gdzie was znaleźć?`}
           {proactiveEnabled && (
             <>
               <div className="mb-3">
-                <label className="block text-sm text-gray-700 mb-1">
+                <label className="block text-sm text-cream mb-1">
                   Pokaż po (sekundy)
                 </label>
                 <input
@@ -465,11 +466,11 @@ Gdzie was znaleźć?`}
                   min={0}
                   value={proactiveDelay}
                   onChange={(e) => setProactiveDelay(Number(e.target.value))}
-                  className="w-28 rounded border border-gray-300 px-3 py-2 text-sm"
+                  className="w-28 rounded border border-espresso-600 px-3 py-2 text-sm"
                 />
               </div>
 
-              <p className="text-xs text-gray-500 mb-2">
+              <p className="hint">
                 Wersję dobierzemy automatycznie do języka strony (atrybut
                 <code className="mx-1">lang</code> w kodzie Twojej witryny), więc na
                 anglojęzycznej podstronie pokaże się wersja angielska. Wypełnij te
@@ -478,7 +479,7 @@ Gdzie was znaleźć?`}
               <div className="flex flex-col gap-2">
                 {JEZYKI.map((jezyk) => (
                   <div key={jezyk.kod}>
-                    <label className="block text-xs text-gray-600 mb-1">
+                    <label className="block text-xs text-sand-300 mb-1">
                       {jezyk.nazwa}
                       {jezyk.kod === defaultLanguage && ' — domyślny'}
                     </label>
@@ -495,7 +496,7 @@ Gdzie was znaleźć?`}
                       placeholder={
                         jezyk.kod === 'pl' ? 'Cześć! Pomóc w czymś?' : ''
                       }
-                      className="w-full rounded border border-gray-300 px-3 py-2 text-sm"
+                      className="input"
                     />
                   </div>
                 ))}
@@ -504,19 +505,19 @@ Gdzie was znaleźć?`}
           )}
         </div>
 
-        {error && <p className="text-sm text-red-600">{error}</p>}
-        {saved && <p className="text-sm text-green-600">Zapisano.</p>}
+        {error && <p className="text-sm text-rose-400">{error}</p>}
+        {saved && <p className="text-sm text-mint-400">Zapisano.</p>}
         <button
           type="submit"
           disabled={saving}
-          className="rounded bg-gray-900 px-4 py-2 text-white font-medium disabled:opacity-50 w-fit"
+          className="btn-primary w-fit"
         >
           {saving ? 'Zapisywanie...' : 'Zapisz'}
         </button>
       </form>
 
       <div className="sticky top-6">
-        <p className="text-sm font-medium text-gray-700 mb-2">Podgląd</p>
+        <p className="text-sm font-medium text-cream mb-2">Podgląd</p>
         <WidgetPreview
           brandingMode={brandingMode}
           hideBranding={hideBranding}

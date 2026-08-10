@@ -59,40 +59,40 @@ export default function LeadsPage() {
   return (
     <div>
       <h1 className="text-2xl font-bold mb-1">Zapytania</h1>
-      <p className="text-gray-600 mb-6">
+      <p className="text-sand-300 mb-6">
         Kontakty zostawione przez odwiedzających, gdy bot nie potrafił pomóc.
         {pending.length > 0 && ` Nieobsłużone: ${pending.length}.`}
       </p>
 
-      {error && <p className="text-sm text-red-600 mb-4">{error}</p>}
+      {error && <p className="text-sm text-rose-400 mb-4">{error}</p>}
 
       {items.length === 0 ? (
-        <p className="text-sm text-gray-400">Brak zapytań.</p>
+        <p className="text-sm text-sand-400">Brak zapytań.</p>
       ) : (
         <ul className="flex flex-col gap-3 max-w-2xl">
           {items.map((item) => (
             <li
               key={item.id}
-              className={`rounded border p-3 ${item.handled ? 'border-gray-200 opacity-60' : 'border-gray-300'}`}
+              className={`rounded border p-3 ${item.handled ? 'border-espresso-700 opacity-60' : 'border-espresso-600'}`}
             >
               <div className="flex items-start justify-between gap-3">
                 <div>
                   <p className="text-sm font-medium">
                     {item.contact}
-                    {item.name && <span className="text-gray-500 font-normal"> — {item.name}</span>}
+                    {item.name && <span className="text-sand-400 font-normal"> — {item.name}</span>}
                   </p>
                   {item.message && (
-                    <p className="text-sm text-gray-600 mt-1">
+                    <p className="text-sm text-sand-300 mt-1">
                       Pytanie: {item.message}
                     </p>
                   )}
-                  <p className="text-xs text-gray-400 mt-1">
+                  <p className="text-xs text-sand-400 mt-1">
                     {new Date(item.created_at).toLocaleString('pl-PL')}
                   </p>
                 </div>
                 <button
                   onClick={() => toggleHandled(item)}
-                  className="text-sm text-gray-600 hover:underline shrink-0"
+                  className="text-sm text-sand-300 hover:underline shrink-0"
                 >
                   {item.handled ? 'Cofnij' : 'Obsłużone'}
                 </button>

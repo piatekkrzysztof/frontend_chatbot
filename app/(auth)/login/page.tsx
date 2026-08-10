@@ -42,30 +42,30 @@ export default function LoginPage() {
       <h1 className="text-2xl font-bold mb-4">Zaloguj się</h1>
       <form onSubmit={handleSubmit} className="flex flex-col gap-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">E-mail</label>
+          <label className="label">E-mail</label>
           <input
             type="email"
             required
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="w-full rounded border border-gray-300 px-3 py-2"
+            className="input"
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Hasło</label>
+          <label className="label">Hasło</label>
           <input
             type="password"
             required
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="w-full rounded border border-gray-300 px-3 py-2"
+            className="input"
           />
         </div>
-        {error && <p className="text-sm text-red-600">{error}</p>}
+        {error && <p className="text-sm text-rose-400">{error}</p>}
         <button
           type="submit"
           disabled={loading}
-          className="rounded bg-gray-900 px-4 py-2 text-white font-medium disabled:opacity-50"
+          className="btn-primary"
         >
           {loading ? 'Logowanie...' : 'Zaloguj się'}
         </button>

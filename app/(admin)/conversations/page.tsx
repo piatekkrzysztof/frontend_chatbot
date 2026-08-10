@@ -49,17 +49,17 @@ export default function ConversationsPage() {
   return (
     <div>
       <h1 className="text-2xl font-bold mb-1">Konwersacje</h1>
-      <p className="text-gray-600 mb-6">
+      <p className="text-sand-300 mb-6">
         Identyfikator rozmowy przydaje się, gdy ktoś poprosi o usunięcie swoich danych —
         wklej go w zakładce Prywatność.
       </p>
 
-      {error && <p className="text-sm text-red-600 mb-4">{error}</p>}
+      {error && <p className="text-sm text-rose-400 mb-4">{error}</p>}
 
       <div className="flex flex-col gap-3">
         {logs.map((log) => (
-          <div key={log.id} className="rounded border border-gray-200 p-4">
-            <div className="flex items-center justify-between text-xs text-gray-400 mb-2">
+          <div key={log.id} className="rounded border border-espresso-700 p-4">
+            <div className="flex items-center justify-between text-xs text-sand-400 mb-2">
               <span>{new Date(log.created_at).toLocaleString('pl-PL')}</span>
               <span className="uppercase">{log.source}</span>
             </div>
@@ -67,7 +67,7 @@ export default function ConversationsPage() {
               <span className="font-medium">Pytanie: </span>
               {log.prompt}
             </p>
-            <p className="text-sm text-gray-700">
+            <p className="text-sm text-cream">
               <span className="font-medium">Odpowiedź: </span>
               {log.response || '–'}
             </p>
@@ -75,7 +75,7 @@ export default function ConversationsPage() {
               <button
                 onClick={() => copySessionId(log.conversation_session_id!)}
                 title="Kopiuj identyfikator rozmowy"
-                className="mt-3 text-xs font-mono text-gray-400 hover:text-gray-700"
+                className="mt-3 text-xs font-mono text-sand-400 hover:text-cream"
               >
                 {copied === log.conversation_session_id
                   ? 'Skopiowano'
@@ -85,7 +85,7 @@ export default function ConversationsPage() {
           </div>
         ))}
         {logs.length === 0 && !error && (
-          <p className="text-gray-400">Brak zarejestrowanych konwersacji.</p>
+          <p className="text-sand-400">Brak zarejestrowanych konwersacji.</p>
         )}
       </div>
     </div>

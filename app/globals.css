@@ -1,1 +1,206 @@
 @import "tailwindcss";
+
+/* =========================================================
+   Sm-art Chatbot — system wizualny
+   Przeniesiony wprost z agencjasm-art.pl: paleta espresso
+   z pomarańczowym akcentem, Syne w nagłówkach, DM Sans
+   w treści, ziarno na całości. Klient ma poznać tę samą
+   markę, zanim jeszcze przeczyta nazwę.
+   ========================================================= */
+
+@theme {
+  /* Tło — cztery stopnie głębi zamiast jednego koloru.
+     Warstwy budują przestrzeń bez rysowania ramek wszędzie. */
+  --color-espresso-900: #110c04;
+  --color-espresso-800: #1a1108;
+  --color-espresso-700: #241a0e;
+  --color-espresso-600: #332612;
+
+  --color-ember-500: #f97316;
+  --color-ember-400: #fb923c;
+
+  --color-cream: #faf8f5;
+  /* Zmierzony kontrast: 5,10:1 na obszarze treści. Ciemniejszy wariant
+     z witryny agencji nie przechodził progu WCAG 2.1 AA, a European
+     Accessibility Act czyni z niego wymóg, nie zalecenie. */
+  --color-sand-300: #a89880;
+  --color-sand-400: #9a8a76;
+
+  --color-mint-400: #34d399;
+  --color-rose-400: #f87171;
+
+  --font-display: var(--font-syne), sans-serif;
+  --font-body: var(--font-dm-sans), sans-serif;
+
+  --radius-card: 14px;
+  --radius-pill: 100px;
+
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+:root {
+  --border-subtle: rgba(250, 248, 245, 0.06);
+  --border-strong: rgba(250, 248, 245, 0.1);
+  --ember-dim: rgba(249, 115, 22, 0.1);
+  --ember-bdr: rgba(249, 115, 22, 0.22);
+  --transition: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background: var(--color-espresso-900);
+  color: var(--color-cream);
+  font-family: var(--font-body);
+  line-height: 1.65;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Ziarno. Ledwo widoczne i o to chodzi — bez niego duże ciemne
+   płaszczyzny wyglądają na martwy plik graficzny, a nie na materiał. */
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 9998;
+  pointer-events: none;
+  opacity: 0.022;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size: 128px 128px;
+}
+
+h1, h2, h3, h4 {
+  font-family: var(--font-display);
+  font-weight: 800;
+  line-height: 1.08;
+  letter-spacing: -0.025em;
+  color: var(--color-cream);
+}
+
+::selection {
+  background: var(--color-ember-500);
+  color: var(--color-espresso-800);
+}
+
+/* Ognisko klawiatury musi być widoczne na ciemnym tle — domyślny
+   zarys przeglądarki na espresso praktycznie znika. */
+:focus-visible {
+  outline: 2px solid var(--color-ember-500);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+@layer components {
+  /* ─── Przyciski ─── */
+  /* Wspólna podstawa listą selektorów, nie przez @apply: Tailwind v4 nie
+     pozwala stosować własnej klasy komponentowej wewnątrz innej. */
+  .btn,
+  .btn-primary,
+  .btn-ghost {
+    @apply inline-flex items-center justify-center gap-2 rounded-full
+           font-semibold whitespace-nowrap transition-all;
+    font-family: var(--font-display);
+    padding: 0.75rem 1.5rem;
+    font-size: 0.9375rem;
+  }
+
+  .btn-primary {
+    color: var(--color-espresso-800);
+    background: var(--color-ember-500);
+    box-shadow: 0 4px 20px rgba(249, 115, 22, 0.25);
+  }
+  .btn-primary:hover:not(:disabled) {
+    background: var(--color-ember-400);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 30px rgba(249, 115, 22, 0.35), 0 0 0 4px rgba(249, 115, 22, 0.08);
+  }
+  .btn-primary:disabled {
+    @apply opacity-50 cursor-not-allowed;
+    box-shadow: none;
+  }
+
+  .btn-ghost {
+    color: var(--color-cream);
+    border: 1px solid var(--border-strong);
+  }
+  .btn-ghost:hover:not(:disabled) {
+    border-color: var(--ember-bdr);
+    background: rgba(249, 115, 22, 0.06);
+    color: var(--color-ember-400);
+  }
+
+  /* ─── Powierzchnie ─── */
+  .card {
+    background: var(--color-espresso-800);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-card);
+  }
+  .card-hover {
+    background: var(--color-espresso-800);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-card);
+    @apply transition-all;
+  }
+  .card-hover:hover {
+    border-color: var(--ember-bdr);
+    transform: translateY(-2px);
+  }
+
+  /* ─── Formularze ─── */
+  .label {
+    @apply block text-sm font-medium mb-1.5;
+    color: var(--color-cream);
+  }
+  .hint {
+    @apply text-xs mb-2;
+    color: var(--color-sand-400);
+  }
+  .input {
+    @apply w-full rounded-lg px-3.5 py-2.5 text-sm transition-colors;
+    background: var(--color-espresso-700);
+    border: 1px solid var(--border-strong);
+    color: var(--color-cream);
+    font-family: var(--font-body);
+  }
+  .input:focus {
+    outline: none;
+    border-color: var(--ember-bdr);
+    background: var(--color-espresso-600);
+  }
+  .input::placeholder {
+    color: var(--color-sand-400);
+  }
+
+  /* ─── Drobne elementy ─── */
+  .label-eyebrow {
+    @apply inline-block text-xs font-bold uppercase tracking-[0.14em];
+    color: var(--color-ember-500);
+    font-family: var(--font-display);
+  }
+  .pill {
+    @apply inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold;
+    background: var(--ember-dim);
+    color: var(--color-ember-500);
+  }
+}
+
+/* Wejście sekcji. Jedno dobrze zestrojone wejście strony robi więcej
+   niż rozsypane mikroanimacje — stąd wspólna klasa i opóźnienia. */
+@keyframes wejscie {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: none; }
+}
+
+.wejscie {
+  animation: wejscie 0.7s var(--ease-spring) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
