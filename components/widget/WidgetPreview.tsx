@@ -4,6 +4,7 @@ import { resolveTheme } from './theme'
 
 interface Props {
   brandingMode: 'smart' | 'white_label'
+  hideBranding?: boolean
   color: string
   title: string
   footerText: string
@@ -23,6 +24,7 @@ interface Props {
  */
 export default function WidgetPreview({
   brandingMode,
+  hideBranding,
   color,
   title,
   footerText,
@@ -36,6 +38,7 @@ export default function WidgetPreview({
     widget_color: color,
     widget_title: title,
     widget_footer_text: footerText,
+    widget_hide_branding: hideBranding,
   })
 
   const questions = suggestedQuestions.filter((q) => q.trim()).slice(0, 4)

@@ -21,6 +21,8 @@ export interface ThemeInput {
   widget_color?: string
   widget_title?: string
   widget_footer_text?: string
+  /** Środkowy próg cennika: stopkę można ukryć od planu Grow w górę. */
+  widget_hide_branding?: boolean
 }
 
 export function resolveTheme(branding: ThemeInput | null | undefined) {
@@ -40,7 +42,14 @@ export function resolveTheme(branding: ThemeInput | null | undefined) {
     footerBg: isWhiteLabel ? '#ffffff' : SMART_THEME.bg,
     footerBorder: isWhiteLabel ? '#eef2f6' : 'rgba(250,248,245,0.06)',
     inputHintColor: isWhiteLabel ? '#9fb0bd' : SMART_THEME.muted,
-    footerLabel: isWhiteLabel ? branding?.widget_footer_text || '' : 'Powered by Sm-art',
+    // W trybie smart stopka reklamuje nas — chyba że klient ma plan pozwalający
+    // ją ukryć. To środkowy próg cennika: Grow kupuje się właśnie po to, żeby
+    // widget nie odsyłał odwiedzających do cudzej firmy.
+    footerLabel: isWhiteLabel
+      ? branding?.widget_footer_text || ''
+      : branding?.widget_hide_branding
+        ? ''
+        : 'Powered by Sm-art',
     avatarBg: isWhiteLabel ? '#d7e3ee' : '#332612',
     pageBg: isWhiteLabel ? '#ffffff' : SMART_THEME.bg,
   }

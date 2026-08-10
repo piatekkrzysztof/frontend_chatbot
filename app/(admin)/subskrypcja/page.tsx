@@ -96,17 +96,34 @@ export default function SubskrypcjaPage() {
 
           <div className="h-2 rounded bg-gray-100 overflow-hidden">
             <div
-              className={`h-full ${wykorzystanie >= 90 ? 'bg-red-500' : 'bg-gray-900'}`}
+              className={`h-full ${
+                wykorzystanie >= 95
+                  ? 'bg-red-500'
+                  : wykorzystanie >= 80
+                    ? 'bg-amber-500'
+                    : 'bg-gray-900'
+              }`}
               style={{ width: `${wykorzystanie}%` }}
             />
           </div>
 
-          {wykorzystanie >= 90 && (
+          {/* Progi te same co w alertach mailowych (accounts/plans.py) — inaczej
+              klient widziałby w panelu inną historię niż w wiadomości od nas */}
+          {wykorzystanie >= 100 ? (
+            <p className="text-sm text-red-600 mt-2">
+              Limit wyczerpany — chatbot nie odpowiada już odwiedzającym.
+              Przejdź na wyższy plan, żeby go przywrócić.
+            </p>
+          ) : wykorzystanie >= 95 ? (
             <p className="text-sm text-red-600 mt-2">
               Limit prawie wyczerpany. Po jego przekroczeniu chatbot przestanie odpowiadać
               odwiedzającym Twoją stronę.
             </p>
-          )}
+          ) : wykorzystanie >= 80 ? (
+            <p className="text-sm text-amber-700 mt-2">
+              Zużyto {wykorzystanie}% limitu. Na razie wszystko działa normalnie.
+            </p>
+          ) : null}
 
           {current.plan && !current.in_catalogue && (
             <p className="text-sm text-gray-500 mt-2">

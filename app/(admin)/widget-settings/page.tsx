@@ -17,6 +17,11 @@ const JEZYKI = [
 
 export default function WidgetSettingsPage() {
   const [brandingMode, setBrandingMode] = useState<'smart' | 'white_label'>('smart')
+  const [hideBranding, setHideBranding] = useState(false)
+  // Poziom brandingu z planu — decyduje, czy checkbox ukrycia stopki jest
+  // w ogóle klikalny. Bez tego klient widziałby opcję, której backend
+  // i tak nie przyjmie, i dostawał niezrozumiały błąd przy zapisie.
+  const [branding, setBranding] = useState<string>('wlasny')
   const [position, setPosition] = useState('right')
   const [color, setColor] = useState('#000000')
   const [title, setTitle] = useState('Chatbot')
@@ -48,6 +53,7 @@ export default function WidgetSettingsPage() {
         setFooterText(data.widget_footer_text || '')
         setWelcomeMessage(data.widget_welcome_message || '')
         setSuggestedQuestions((data.widget_suggested_questions || []).join('\n'))
+        setHideBranding(Boolean(data.widget_hide_branding))
         // Bez tego formularz zawsze startuje z samym polskim, a zapis
         // po cichu kasuje pozostałe języki ustawione wcześniej
         setLanguages(data.widget_languages?.length ? data.widget_languages : ['pl'])
@@ -64,6 +70,15 @@ export default function WidgetSettingsPage() {
     apiFetch('/accounts/me/')
       .then((data) => setApiKey(data.tenant_api_key || ''))
       .catch(() => {})
+
+    // Poziom brandingu bierzemy z cennika, a nie z osobnej kopii w panelu —
+    // inaczej rozjechałby się z tym, co naprawdę egzekwuje backend
+    apiFetch('/billing/plans/')
+      .then((dane) => {
+        const biezacy = dane.plans?.find((p: { current: boolean }) => p.current)
+        if (biezacy?.branding) setBranding(biezacy.branding)
+      })
+      .catch(() => {})
   }, [])
 
   async function handleSubmit(e: FormEvent) {
@@ -75,6 +90,7 @@ export default function WidgetSettingsPage() {
     try {
       const formData = new FormData()
       formData.append('branding_mode', brandingMode)
+      formData.append('widget_hide_branding', String(hideBranding))
       formData.append('widget_position', position)
       formData.append('widget_color', color)
       formData.append('widget_title', title)
@@ -154,6 +170,27 @@ export default function WidgetSettingsPage() {
             </label>
           </div>
         </div>
+
+        {brandingMode === 'smart' && (
+          <div>
+            <label className="flex items-center gap-2 text-sm">
+              <input
+                type="checkbox"
+                checked={hideBranding}
+                // Odznaczyć wolno zawsze — po zejściu z planu klient musi móc
+                // cofnąć ustawienie, którego już mu nie wolno mieć
+                disabled={branding === 'wymagany' && !hideBranding}
+                onChange={(e) => setHideBranding(e.target.checked)}
+              />
+              Ukryj stopkę „Powered by Sm-art"
+            </label>
+            <p className="text-xs text-gray-500 mt-1">
+              {branding === 'wymagany'
+                ? 'Dostępne od planu Grow. W planie Start widget zachowuje naszą stopkę.'
+                : 'Okno czatu przestanie odsyłać odwiedzających do Sm-art.'}
+            </p>
+          </div>
+        )}
 
         {brandingMode === 'white_label' && (
           <>
@@ -435,6 +472,7 @@ Gdzie was znaleźć?`}
         <p className="text-sm font-medium text-gray-700 mb-2">Podgląd</p>
         <WidgetPreview
           brandingMode={brandingMode}
+          hideBranding={hideBranding}
           color={color}
           title={title}
           footerText={footerText}

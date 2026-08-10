@@ -19,6 +19,10 @@ interface Message {
 
 interface Branding {
   branding_mode: 'smart' | 'white_label'
+  // Środkowy próg cennika: od planu Grow stopka "Powered by Sm-art" znika.
+  // Pole musi być w tym interfejsie, bo resolveTheme czyta je z tego obiektu —
+  // bez niego TypeScript by je przepuścił, ale stopka nigdy by nie zniknęła.
+  widget_hide_branding: boolean
   widget_title: string
   widget_color: string
   widget_footer_text: string
