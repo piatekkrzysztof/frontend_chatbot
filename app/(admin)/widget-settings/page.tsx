@@ -39,6 +39,9 @@ export default function WidgetSettingsPage() {
   const [logoUrl, setLogoUrl] = useState<string | null>(null)
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null)
   const [apiKey, setApiKey] = useState('')
+  // Cichy błąd ukrywał cały blok bez słowa wyjaśnienia
+  const [kluczBlad, setKluczBlad] = useState(false)
+  const [skopiowano, setSkopiowano] = useState(false)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
   const [saved, setSaved] = useState(false)
@@ -69,7 +72,7 @@ export default function WidgetSettingsPage() {
 
     apiFetch('/accounts/me/')
       .then((data) => setApiKey(data.tenant_api_key || ''))
-      .catch(() => {})
+      .catch(() => setKluczBlad(true))
 
     // Poziom brandingu bierzemy z cennika, a nie z osobnej kopii w panelu —
     // inaczej rozjechałby się z tym, co naprawdę egzekwuje backend
@@ -124,6 +127,16 @@ export default function WidgetSettingsPage() {
     }
   }
 
+  async function kopiujSnippet() {
+    try {
+      await navigator.clipboard.writeText(embedSnippet)
+      setSkopiowano(true)
+      setTimeout(() => setSkopiowano(false), 2000)
+    } catch {
+      // Przeglądarka bez dostępu do schowka — kod i tak widać i da się zaznaczyć
+    }
+  }
+
   const origin = typeof window !== 'undefined' ? window.location.origin : ''
   // data-api jest potrzebne wiadomości proaktywnej: embed.js pobiera ją sam,
   // zanim powstanie ramka czatu — inaczej trzeba by ładować cały widget na
@@ -144,6 +157,40 @@ export default function WidgetSettingsPage() {
         Podgląd po prawej pokazuje, co zobaczy odwiedzający — zmiany widać od razu,
         jeszcze przed zapisaniem.
       </p>
+
+      {/* Na górze, bo to jedyna rzecz na tej stronie, bez której widget nie
+          zadziała w ogóle. Wcześniej był pod formularzem i podglądem, czyli
+          po kilkuset pikselach ustawień — nie dało się go znaleźć. */}
+      <div className="rounded-lg border border-gray-200 p-4 mb-8">
+        <div className="flex items-baseline justify-between mb-1">
+          <h2 className="font-semibold">Kod do wklejenia na Twoją stronę</h2>
+          {embedSnippet && (
+            <button
+              type="button"
+              onClick={kopiujSnippet}
+              className="text-xs text-gray-600 hover:text-gray-900"
+            >
+              {skopiowano ? 'Skopiowano' : 'Kopiuj'}
+            </button>
+          )}
+        </div>
+        <p className="text-xs text-gray-500 mb-3">
+          Wklej tuż przed zamknięciem znacznika &lt;/body&gt; na każdej stronie,
+          na której ma działać czat.
+        </p>
+
+        {embedSnippet ? (
+          <pre className="bg-gray-900 text-gray-100 text-xs rounded p-4 overflow-x-auto">
+            {embedSnippet}
+          </pre>
+        ) : (
+          <p className="text-sm text-gray-500">
+            {kluczBlad
+              ? 'Nie udało się pobrać klucza API. Odśwież stronę albo zaloguj się ponownie.'
+              : 'Wczytywanie klucza API...'}
+          </p>
+        )}
+      </div>
 
       <div className="flex flex-wrap items-start gap-10">
       <form onSubmit={handleSubmit} className="flex flex-col gap-4 max-w-md mb-8">
@@ -483,15 +530,6 @@ Gdzie was znaleźć?`}
         />
       </div>
       </div>
-
-      {embedSnippet && (
-        <div>
-          <h2 className="text-lg font-semibold mb-2">Kod do wklejenia na Twoją stronę</h2>
-          <pre className="bg-gray-900 text-gray-100 text-xs rounded p-4 overflow-x-auto">
-            {embedSnippet}
-          </pre>
-        </div>
-      )}
     </div>
   )
 }
