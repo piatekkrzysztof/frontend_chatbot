@@ -144,24 +144,24 @@ export default function StronaGlowna() {
           {/* Dwie kolumny, tak jak w hero agencjasm-art.pl. Sama kolumna tekstu
               zostawiała pustą prawą połowę ekranu i cała strona czytała się
               jako zepchnięta do lewej krawędzi. */}
-          <div>
+          <div className="text-center sm:text-left">
           <span className="label-eyebrow wejscie">Asystent AI dla małych firm</span>
 
-          <h1 className="mt-4 max-w-3xl text-[clamp(2rem,4.4vw,3.25rem)] leading-[1.02] wejscie"
+          <h1 className="mt-4 max-w-3xl text-[clamp(1.9rem,4.4vw,3.25rem)] leading-[1.05] text-balance wejscie"
               style={{ animationDelay: '0.08s' }}>
-            Twoja strona odpowiada
-            <br />
+            Twoja strona odpowiada{' '}
+            <br className="hidden sm:inline" />
             <span className="text-ember-500">zanim klient zdąży wyjść</span>
           </h1>
 
-          <p className="mt-5 max-w-xl text-sand-300 wejscie" style={{ animationDelay: '0.16s' }}>
+          <p className="mt-5 max-w-xl mx-auto sm:mx-0 text-sand-300 text-pretty wejscie" style={{ animationDelay: '0.16s' }}>
             Uczy się wyłącznie z Twoich materiałów. Wdrożenie to kilkanaście
             minut i jedna linijka kodu.
           </p>
 
           {/* Cztery zdania zamiast osobnej sekcji. Cennik ma być tuż pod
               zgięciem, a nie po przewinięciu przez listę funkcji. */}
-          <ul className="mt-6 grid gap-x-7 gap-y-2 sm:grid-cols-2 lg:grid-cols-4 max-w-5xl text-sm wejscie"
+          <ul className="mt-6 grid gap-x-7 gap-y-2 sm:grid-cols-2 lg:grid-cols-4 max-w-5xl text-sm text-left inline-grid sm:grid wejscie"
               style={{ animationDelay: '0.2s' }}>
             {KORZYSCI_SKROT.map((k) => (
               <li key={k} className="flex gap-2.5 text-sand-300">
@@ -200,7 +200,7 @@ export default function StronaGlowna() {
           <div className="flex flex-wrap items-end justify-between gap-6">
             {/* Bez nadnagłówka "Cennik" — samo zdanie mówi, o czym jest sekcja,
                 a każdy zaoszczędzony wiersz podnosi ceny bliżej pierwszego ekranu */}
-            <h2 className="text-[clamp(1.4rem,2.6vw,2rem)]">Płacisz za rozmowy, nie za obietnice</h2>
+            <h2 className="text-[clamp(1.4rem,2.6vw,2rem)] text-balance">Płacisz za rozmowy, nie za obietnice</h2>
 
             {/* Przełącznik okresu. Rabat roczny podany wprost, bo to
                 najczęstsze pytanie przy wyborze planu. */}
@@ -304,9 +304,9 @@ export default function StronaGlowna() {
 
       {/* ─── Korzyści ─── */}
       <section className="relative py-20 md:py-28" style={{ background: 'var(--color-espresso-800)' }}>
-        <div className="max-w-6xl mx-auto px-5">
+        <div className="max-w-6xl mx-auto px-5 text-center sm:text-left">
           <span className="label-eyebrow">Co z tego masz</span>
-          <h2 className="mt-4 max-w-2xl text-[clamp(1.75rem,4vw,3rem)]">
+          <h2 className="mt-4 max-w-2xl mx-auto sm:mx-0 text-[clamp(1.6rem,4vw,3rem)] text-balance">
             Mniej powtarzalnych pytań, więcej domkniętych spraw
           </h2>
 
@@ -316,7 +316,7 @@ export default function StronaGlowna() {
               <div key={k.tytul} className="p-8 md:p-10 transition-colors hover:bg-espresso-700"
                    style={{ background: 'var(--color-espresso-800)' }}>
                 <h3 className="text-xl">{k.tytul}</h3>
-                <p className="mt-3 text-sand-300">{k.tresc}</p>
+                <p className="mt-3 text-sand-300 text-pretty">{k.tresc}</p>
               </div>
             ))}
           </div>
@@ -325,9 +325,9 @@ export default function StronaGlowna() {
 
       {/* ─── Jak to działa ─── */}
       <section className="py-20 md:py-28">
-        <div className="max-w-6xl mx-auto px-5">
+        <div className="max-w-6xl mx-auto px-5 text-center sm:text-left">
           <span className="label-eyebrow">Wdrożenie</span>
-          <h2 className="mt-4 max-w-2xl text-[clamp(1.75rem,4vw,3rem)]">
+          <h2 className="mt-4 max-w-2xl mx-auto sm:mx-0 text-[clamp(1.6rem,4vw,3rem)] text-balance">
             Trzy kroki, żadnego wdrożeniowca
           </h2>
 
@@ -339,7 +339,7 @@ export default function StronaGlowna() {
                   {krok.numer}
                 </span>
                 <h3 className="mt-2 text-lg">{krok.tytul}</h3>
-                <p className="mt-2 text-sand-300 text-sm">{krok.tresc}</p>
+                <p className="mt-2 text-sand-300 text-sm text-pretty">{krok.tresc}</p>
               </div>
             ))}
           </div>
@@ -349,10 +349,10 @@ export default function StronaGlowna() {
       {/* ─── Zamknięcie ─── */}
       <section className="py-24 md:py-32">
         <div className="max-w-3xl mx-auto px-5 text-center">
-          <h2 className="text-[clamp(1.75rem,4.5vw,3.25rem)]">
+          <h2 className="text-[clamp(1.6rem,4.5vw,3.25rem)] text-balance">
             Ile pytań zostało dziś bez odpowiedzi?
           </h2>
-          <p className="mt-5 text-lg text-sand-300">
+          <p className="mt-5 text-lg text-sand-300 text-pretty">
             Wgraj cennik, wklej jedną linijkę i zobacz, o co naprawdę pytają
             odwiedzający Twoją stronę.
           </p>
