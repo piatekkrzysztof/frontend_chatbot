@@ -198,8 +198,8 @@ export default function DashboardPage() {
                 <span style={{ width: `${coverage || 0}%` }} />
               </div>
               <div className="source-legend">
-                <span><i className="legend-dot is-teal" /> Dokumenty <strong>{sources?.document || 0}</strong></span>
-                <span><i className="legend-dot is-lime" /> FAQ <strong>{sources?.faq || 0}</strong></span>
+                <span><i className="legend-dot is-orange" /> Dokumenty <strong>{sources?.document || 0}</strong></span>
+                <span><i className="legend-dot is-amber" /> FAQ <strong>{sources?.faq || 0}</strong></span>
                 <span><i className="legend-dot is-muted" /> Model AI <strong>{sources?.gpt || 0}</strong></span>
               </div>
             </article>
