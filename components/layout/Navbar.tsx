@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import { apiFetch, clearTokens } from '@/lib/api'
 import Logo from './Logo'
 
@@ -10,9 +10,25 @@ interface Props {
   menuOtwarte?: boolean
 }
 
+const PAGE_NAMES: Record<string, string> = {
+  '/dashboard': 'Pulpit',
+  '/documents': 'Baza wiedzy',
+  '/faq': 'FAQ',
+  '/widget-settings': 'Widget',
+  '/conversations': 'Konwersacje',
+  '/leads': 'Zapytania',
+  '/team': 'Zespół',
+  '/subskrypcja': 'Subskrypcja',
+  '/privacy': 'Prywatność',
+}
+
 export default function Navbar({ onToggleMenu, menuOtwarte }: Props) {
   const router = useRouter()
+  const pathname = usePathname()
   const [tenantName, setTenantName] = useState('')
+
+  const currentPage = Object.entries(PAGE_NAMES).find(([path]) => pathname?.startsWith(path))?.[1] || 'Panel'
+  const initials = (tenantName || 'SM').slice(0, 2).toUpperCase()
 
   useEffect(() => {
     apiFetch('/accounts/me/')
@@ -26,46 +42,40 @@ export default function Navbar({ onToggleMenu, menuOtwarte }: Props) {
   }
 
   return (
-    <header
-      className="sticky top-0 z-40 flex items-center justify-between px-6 h-[68px] backdrop-blur-lg"
-      style={{
-        background: 'color-mix(in srgb, var(--tlo) 82%, transparent)',
-        borderBottom: '1px solid var(--obramowanie)',
-      }}
-    >
-      <div className="flex items-center gap-3">
-        {/* Widoczny tylko tam, gdzie menu jest schowane */}
+    <header className="admin-navbar">
+      <div className="admin-navbar-left">
         {onToggleMenu && (
           <button
             onClick={onToggleMenu}
             aria-label={menuOtwarte ? 'Zamknij menu' : 'Otwórz menu'}
             aria-expanded={menuOtwarte}
-            className="lg:hidden -ml-1 p-2 rounded-lg transition-colors"
-            style={{ color: 'var(--tekst-drugi)' }}
+            className="admin-menu-button lg:hidden"
           >
-            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true">
-              <path
-                d={menuOtwarte ? 'M5 5l10 10M15 5L5 15' : 'M3 6h14M3 10h14M3 14h14'}
-                stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"
-              />
-            </svg>
+            <span aria-hidden="true">{menuOtwarte ? '×' : '≡'}</span>
           </button>
         )}
-        <Logo wysokosc={26} />
+        <Logo wysokosc={25} className="lg:hidden" />
+        <div className="admin-breadcrumb hidden lg:flex">
+          <span>Workspace</span>
+          <span aria-hidden="true">/</span>
+          <strong>{currentPage}</strong>
+        </div>
       </div>
 
-      {/* Nazwa firmy po prawej, przy wylogowaniu: to informacja o tym, na czyim
-          koncie jesteś, więc stoi tam, gdzie reszta spraw konta. Po lewej,
-          zaraz obok logo, konkurowała z nim o to samo miejsce. */}
-      <div className="flex items-center gap-4">
-        {tenantName && (
-          <span className="text-sm hidden sm:inline tekst-drugi">{tenantName}</span>
-        )}
-        <button
-          onClick={handleLogout}
-          className="text-sm transition-colors tekst-slaby hover:text-[color:var(--tekst)]"
-        >
-          Wyloguj
+      <div className="admin-navbar-actions">
+        <span className="admin-live-badge hidden md:inline-flex">
+          <span className="status-dot" /> Live
+        </span>
+        <div className="admin-account hidden sm:flex">
+          <span className="admin-avatar">{initials}</span>
+          <span className="admin-account-copy">
+            <strong>{tenantName || 'Twoje konto'}</strong>
+            <small>Administrator</small>
+          </span>
+        </div>
+        <button onClick={handleLogout} className="admin-logout" title="Wyloguj">
+          <span className="hidden sm:inline">Wyloguj</span>
+          <span aria-hidden="true">↗</span>
         </button>
       </div>
     </header>
