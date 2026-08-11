@@ -1,6 +1,7 @@
 'use client'
 
-import { SMART_THEME, resolveTheme } from './theme'
+import { resolveTheme } from './theme'
+import { BabelBota, Etykieta, KANT, PasekTytulu, Stopka, Sugestie } from './chrome'
 
 interface Props {
   brandingMode: 'smart' | 'white_label'
@@ -19,8 +20,9 @@ interface Props {
  *
  * Nie rozmawia z API — pokazuje wygląd dla wartości aktualnie wpisanych
  * w formularzu, więc efekt zmiany koloru czy tytułu widać przed zapisaniem
- * i bez wchodzenia na stronę klienta. Kolory bierze z tego samego modułu
- * co prawdziwy widget, żeby podgląd nie obiecywał czegoś innego.
+ * i bez wchodzenia na stronę klienta. Nagłówek, dymek i pasek wysyłania to
+ * te same komponenty co w prawdziwym widgecie (chrome.tsx), żeby podgląd
+ * nie obiecywał czegoś innego, niż zobaczy odwiedzający.
  */
 export default function WidgetPreview({
   brandingMode,
@@ -42,126 +44,71 @@ export default function WidgetPreview({
   })
 
   const questions = suggestedQuestions.filter((q) => q.trim()).slice(0, 4)
+  const awatar = theme.isWhiteLabel ? avatarUrl : null
 
   return (
     <div
-      className="flex flex-col rounded-lg overflow-hidden border border-gray-200 shadow-sm"
-      style={{ width: 320, height: 460, backgroundColor: theme.pageBg }}
+      className="flex flex-col overflow-hidden"
+      style={{
+        width: 320,
+        height: 460,
+        background: theme.canvas,
+        border: `1px solid ${theme.lineStrong}`,
+        borderRadius: KANT,
+        fontFamily: 'var(--font-body)',
+      }}
     >
-      <div
-        className="flex items-center gap-2 px-3 py-2.5 text-sm font-semibold shrink-0"
-        style={{ backgroundColor: theme.headerBg, color: theme.headerText }}
-      >
-        {theme.isWhiteLabel && logoUrl ? (
-          <img src={logoUrl} alt="" className="h-5 w-5 rounded object-cover" />
-        ) : (
-          <span
-            aria-hidden="true"
-            className="flex h-5 w-5 items-center justify-center rounded text-[11px] font-bold"
-            style={{
-              backgroundColor: theme.isWhiteLabel ? '#ffffff' : theme.accent,
-              // Ciemny tekst na pomarańczu, tak jak w prawdziwym widgecie.
-              // Podgląd miał tu kremowy: pokazywał więc co innego, niż widzi
-              // odwiedzający, a przy okazji dawał kontrast 2,64:1 zamiast 4,5:1.
-              color: theme.isWhiteLabel ? theme.accent : SMART_THEME.bg,
-            }}
-          >
-            {theme.name.charAt(0).toUpperCase()}
-          </span>
-        )}
-        <span className="min-w-0">
-          <span className="block truncate">{theme.name}</span>
-          {/* To samo ujawnienie co w prawdziwym widgecie — podgląd nie może
-              pokazywać mniej, niż zobaczy odwiedzający stronę klienta. */}
-          <span className="block text-[10px] font-normal opacity-80 leading-tight">
-            Asystent AI — odpowiada automatycznie
-          </span>
-        </span>
-      </div>
+      <PasekTytulu theme={theme} logoUrl={theme.isWhiteLabel ? logoUrl : null} />
 
-      <div
-        className="flex-1 overflow-y-auto p-3"
-        style={{ backgroundColor: theme.messageAreaBg }}
-      >
+      <div className="flex-1 overflow-y-auto px-3.5 py-4">
         {welcomeMessage ? (
-          <div className="flex items-start gap-2 max-w-[85%]">
-            {theme.isWhiteLabel && avatarUrl ? (
-              <img src={avatarUrl} alt="" className="h-6 w-6 rounded-full object-cover shrink-0" />
-            ) : (
-              <span
-                className="h-6 w-6 rounded-full shrink-0"
-                style={{ backgroundColor: theme.avatarBg }}
+          <div className="flex items-start gap-2">
+            {awatar && (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={awatar}
+                alt=""
+                className="h-6 w-6 shrink-0 object-cover mt-0.5"
+                style={{ borderRadius: KANT }}
               />
             )}
-            <div
-              className="rounded-lg px-3 py-2 text-sm"
-              style={{ backgroundColor: theme.botBubbleBg, color: theme.botBubbleText }}
-            >
-              {welcomeMessage}
+            <div className="min-w-0 flex-1">
+              <BabelBota theme={theme}>{welcomeMessage}</BabelBota>
             </div>
           </div>
         ) : (
-          <p className="text-sm text-center mt-2" style={{ color: theme.inputHintColor }}>
+          <p className="text-[13px]" style={{ color: theme.textMuted }}>
             Napisz wiadomość, aby rozpocząć rozmowę.
           </p>
         )}
 
-        {questions.length > 0 && (
-          <div className="flex flex-col gap-1.5 items-start mt-3">
-            {questions.map((question) => (
-              <span
-                key={question}
-                className="rounded-full border px-3 py-1.5 text-xs"
-                style={{ borderColor: theme.accent, color: theme.accent }}
-              >
-                {question}
-              </span>
-            ))}
-          </div>
-        )}
+        <Sugestie theme={theme} pytania={questions} />
       </div>
 
       <div
-        className="flex items-center gap-2 p-2 shrink-0"
-        style={{ backgroundColor: theme.footerBg, borderTop: `0.5px solid ${theme.footerBorder}` }}
+        className="shrink-0 flex items-stretch gap-2 px-3.5 py-2.5"
+        style={{ background: theme.surface, borderTop: `1px solid ${theme.lineStrong}` }}
       >
         <div
-          className="flex-1 rounded border px-3 py-2 text-sm"
+          className="flex-1 min-w-0 px-3 py-2 text-[13px]"
           style={{
-            borderColor: theme.footerBorder,
-            backgroundColor: theme.isWhiteLabel ? '#ffffff' : '#241a0e',
-            color: theme.inputHintColor,
+            border: `1px solid ${theme.line}`,
+            borderRadius: KANT,
+            background: theme.canvas,
+            color: theme.textMuted,
           }}
         >
-          Napisz wiadomość...
+          Napisz wiadomość…
         </div>
         <span
-          className="rounded px-4 py-2 text-sm font-medium"
-          style={{
-            backgroundColor: theme.accent,
-            color: theme.isWhiteLabel ? '#ffffff' : '#110c04',
-          }}
+          className="px-4 shrink-0 grid place-items-center"
+          style={{ background: theme.accent, color: theme.onAccent, borderRadius: KANT }}
         >
-          Wyślij
+          <Etykieta>Wyślij</Etykieta>
         </span>
       </div>
 
-      {theme.footerLabel && (
-        <div
-          className="px-3 pb-2 text-right shrink-0"
-          style={{ backgroundColor: theme.footerBg }}
-        >
-          <span
-            className="text-xs"
-            style={{
-              color: theme.isWhiteLabel ? theme.accent : '#A89880',
-              fontWeight: theme.isWhiteLabel ? 500 : 400,
-            }}
-          >
-            {theme.footerLabel}
-          </span>
-        </div>
-      )}
+      <Stopka theme={theme} />
     </div>
   )
 }

@@ -3,7 +3,16 @@
 import { useEffect, useRef, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
 
-import { SMART_THEME, resolveTheme } from './theme'
+import { resolveTheme } from './theme'
+import {
+  BabelBota,
+  BabelUzytkownika,
+  Etykieta,
+  KANT,
+  PasekTytulu,
+  Stopka,
+  Sugestie,
+} from './chrome'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api'
 
@@ -277,59 +286,32 @@ export default function WidgetChat() {
     }
   }
 
+  const theme = resolveTheme(branding)
+
   if (!apiKey) {
     return (
-      <div className="flex h-screen items-center justify-center text-sm text-gray-500 p-4 text-center">
+      <div
+        className="flex h-screen items-center justify-center p-6 text-center text-[13px]"
+        style={{ background: theme.canvas, color: theme.textSecondary }}
+      >
         Brak klucza widgetu. Sprawdź kod osadzania na stronie.
       </div>
     )
   }
 
-  const {
-    isWhiteLabel, accent, name, headerBg, headerText, messageAreaBg,
-    botBubbleBg, botBubbleText, userBubbleText, footerBg, footerBorder,
-    inputHintColor, footerLabel, avatarBg,
-  } = resolveTheme(branding)
+  /* Awatar klienta ma sens tylko w białej etykiecie — w trybie Sm-art rolę
+     znacznika bota pełni pomarańczowa krawędź dymka. Gdy awatar jest, dymki
+     dostają stałą rynnę po lewej, żeby ich krawędzie wciąż stały w jednej osi. */
+  const awatar = theme.isWhiteLabel ? branding?.widget_avatar : null
 
   return (
     <div
       role="region"
       aria-label="Okno czatu"
       className="flex h-screen flex-col"
-      style={{ backgroundColor: isWhiteLabel ? '#ffffff' : SMART_THEME.bg }}
+      style={{ background: theme.canvas, fontFamily: 'var(--font-body)' }}
     >
-      <header
-        style={{ backgroundColor: headerBg, color: headerText }}
-        className="px-4 py-3 flex items-center gap-2"
-      >
-        {isWhiteLabel && branding?.widget_logo ? (
-          // Logo klienta z backendu/S3 — widget działa w iframe, optymalizacja
-          // next/image tylko dokładałaby zależność od konfiguracji domen.
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={branding.widget_logo} alt="" className="h-6" />
-        ) : (
-          <span
-            aria-hidden="true"
-            style={{
-              backgroundColor: isWhiteLabel ? '#ffffff' : accent,
-              color: isWhiteLabel ? accent : SMART_THEME.bg,
-            }}
-            className="h-6 w-6 rounded flex items-center justify-center text-xs font-medium shrink-0"
-          >
-            {name.charAt(0).toUpperCase()}
-          </span>
-        )}
-        <span className="min-w-0">
-          <span className="font-medium block truncate">{name}</span>
-          {/* Ujawnienie wymagane przez art. 50 EU AI Act od 2 sierpnia 2026:
-              odwiedzający musi wiedzieć, że rozmawia z AI. Celowo nie jest
-              konfigurowalne ani wyłączalne — to obowiązek prawny także po
-              stronie klienta, więc nie może zależeć od jego ustawień. */}
-          <span className="block text-xs opacity-80 leading-tight">
-            Asystent AI — odpowiada automatycznie
-          </span>
-        </span>
-      </header>
+      <PasekTytulu theme={theme} logoUrl={theme.isWhiteLabel ? branding?.widget_logo : null} />
 
       {/* aria-live sprawia, że czytnik ekranu ogłasza odpowiedzi w miarę ich
           napływania — bez tego niewidomy użytkownik nie wie, że bot odpowiedział.
@@ -339,72 +321,63 @@ export default function WidgetChat() {
         aria-live="polite"
         aria-relevant="additions text"
         aria-label="Historia rozmowy"
-        className="flex-1 overflow-y-auto p-3 flex flex-col gap-2"
-        style={{ backgroundColor: messageAreaBg }}
+        className="flex-1 overflow-y-auto px-3.5 py-4 flex flex-col gap-3"
       >
         {messages.length === 0 && (
-          <div className="mt-2">
+          <div>
             {branding?.widget_welcome_message ? (
-              <div
-                className="rounded-lg px-3 py-2 text-sm mb-3"
-                style={{ backgroundColor: botBubbleBg, color: botBubbleText }}
-              >
-                {branding.widget_welcome_message}
-              </div>
+              <BabelBota theme={theme}>{branding.widget_welcome_message}</BabelBota>
             ) : (
-              <p className="text-sm text-center mt-2 mb-3" style={{ color: inputHintColor }}>
+              <p className="text-[13px]" style={{ color: theme.textMuted }}>
                 Napisz wiadomość, aby rozpocząć rozmowę.
               </p>
             )}
 
             {/* Gotowe pytania zdejmują z odwiedzającego konieczność wymyślenia
                 pierwszego kroku — bez nich puste okno najczęściej się zamyka. */}
-            {branding?.widget_suggested_questions?.length ? (
-              <div className="flex flex-col gap-1.5 items-start">
-                {branding.widget_suggested_questions.map((question) => (
-                  <button
-                    key={question}
-                    onClick={() => handleSend(question)}
-                    disabled={sending}
-                    className="rounded-full border px-3 py-1.5 text-xs text-left disabled:opacity-50"
-                    style={{ borderColor: accent, color: accent }}
-                  >
-                    {question}
-                  </button>
-                ))}
-              </div>
-            ) : null}
+            <Sugestie
+              theme={theme}
+              pytania={branding?.widget_suggested_questions ?? []}
+              onWybierz={handleSend}
+              zablokowane={sending}
+            />
           </div>
         )}
+
         {messages.map((m, i) => (
-          <div key={i} className="flex items-start gap-2 max-w-[85%]" style={m.sender === 'user' ? { alignSelf: 'flex-end', flexDirection: 'row-reverse' } : undefined}>
-            {m.sender === 'bot' && (
-              isWhiteLabel && branding?.widget_avatar ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={branding.widget_avatar} alt="" className="h-6 w-6 rounded-full shrink-0" />
-              ) : (
-                <span className="h-6 w-6 rounded-full shrink-0" style={{ backgroundColor: avatarBg }} />
-              )
-            )}
-            <div className="flex flex-col gap-1">
-              <div
-                className="rounded-lg px-3 py-2 text-sm whitespace-pre-wrap"
-                style={{
-                  backgroundColor: m.sender === 'user' ? accent : botBubbleBg,
-                  color: m.sender === 'user' ? userBubbleText : botBubbleText,
-                }}
-              >
-                {m.text}
-                {m.sender === 'bot' && m.text === '' && (
-                  <span className="opacity-60">…</span>
+          <div
+            key={i}
+            className={`flex flex-col gap-1.5 ${m.sender === 'user' ? 'self-end items-end max-w-[85%]' : 'self-stretch'}`}
+          >
+            {m.sender === 'user' ? (
+              <BabelUzytkownika theme={theme}>{m.text}</BabelUzytkownika>
+            ) : (
+              <div className="flex items-start gap-2">
+                {awatar && (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={awatar}
+                    alt=""
+                    className="h-6 w-6 shrink-0 object-cover mt-0.5"
+                    style={{ borderRadius: KANT }}
+                  />
                 )}
+                <div className="min-w-0 flex-1">
+                  <BabelBota theme={theme}>
+                    {m.text}
+                    {m.text === '' && <span style={{ color: theme.textMuted }}>…</span>}
+                  </BabelBota>
+                </div>
               </div>
-              {m.sources && m.sources.length > 0 && (
-                <p className="text-xs px-1" style={{ color: inputHintColor }}>
-                  Na podstawie:{' '}
+            )}
+
+            {m.sources && m.sources.length > 0 && (
+              <p className={awatar ? 'pl-8' : ''}>
+                <Etykieta style={{ color: theme.accentText }}>Na podstawie</Etykieta>{' '}
+                <span className="text-[11px]" style={{ color: theme.textMuted }}>
                   {m.sources.map((zrodlo, i) => (
                     <span key={`${zrodlo.name}-${i}`}>
-                      {i > 0 && ', '}
+                      {i > 0 && ' · '}
                       {/* Link tylko dla treści, które i tak są publiczne.
                           Wgrane pliki nie mają adresu celowo — link do cennika
                           czy procedur firmy udostępniłby je każdemu. */}
@@ -413,7 +386,7 @@ export default function WidgetChat() {
                           href={zrodlo.url}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="underline"
+                          className="underline underline-offset-2"
                         >
                           {zrodlo.name}
                         </a>
@@ -422,73 +395,71 @@ export default function WidgetChat() {
                       )}
                     </span>
                   ))}
-                </p>
-              )}
+                </span>
+              </p>
+            )}
 
-              {/* Ocena pojawia się dopiero, gdy odpowiedź jest kompletna: przy
-                  pustym tekście strumień jeszcze leci i nie ma czego oceniać. */}
-              {m.sender === 'bot' && m.messageId && m.text !== '' && (
-                <div className="flex items-center gap-1 px-1">
-                  {m.rating ? (
-                    <span className="text-xs" style={{ color: inputHintColor }}>
-                      {m.rating === 'up' ? 'Dziękujemy za ocenę' : 'Dziękujemy, przekażemy to firmie'}
-                    </span>
-                  ) : (
-                    <>
-                      <button
-                        onClick={() => handleRate(m.messageId!, 'up')}
-                        aria-label="Ta odpowiedź była pomocna"
-                        title="Pomocna"
-                        className="text-xs px-1.5 py-0.5 rounded hover:opacity-100 opacity-60"
-                        style={{ color: inputHintColor }}
-                      >
-                        👍
-                      </button>
-                      <button
-                        onClick={() => handleRate(m.messageId!, 'down')}
-                        aria-label="Ta odpowiedź nie była pomocna"
-                        title="Niepomocna"
-                        className="text-xs px-1.5 py-0.5 rounded hover:opacity-100 opacity-60"
-                        style={{ color: inputHintColor }}
-                      >
-                        👎
-                      </button>
-                    </>
-                  )}
-                </div>
-              )}
-            </div>
+            {/* Ocena pojawia się dopiero, gdy odpowiedź jest kompletna: przy
+                pustym tekście strumień jeszcze leci i nie ma czego oceniać. */}
+            {m.sender === 'bot' && m.messageId && m.text !== '' && (
+              <div className={`flex items-center gap-3 ${awatar ? 'pl-8' : ''}`}>
+                {m.rating ? (
+                  <Etykieta style={{ color: theme.textMuted }}>
+                    {m.rating === 'up' ? 'Dziękujemy za ocenę' : 'Dziękujemy, przekażemy to firmie'}
+                  </Etykieta>
+                ) : (
+                  <>
+                    <Etykieta style={{ color: theme.textMuted }}>Czy to pomogło?</Etykieta>
+                    <button
+                      onClick={() => handleRate(m.messageId!, 'up')}
+                      className="underline underline-offset-2"
+                    >
+                      <Etykieta style={{ color: theme.accentText }}>Tak</Etykieta>
+                    </button>
+                    <button
+                      onClick={() => handleRate(m.messageId!, 'down')}
+                      className="underline underline-offset-2"
+                    >
+                      <Etykieta style={{ color: theme.accentText }}>Nie</Etykieta>
+                    </button>
+                  </>
+                )}
+              </div>
+            )}
           </div>
         ))}
+
         {sending && messages[messages.length - 1]?.sender === 'user' && (
-          <div className="self-start text-sm" style={{ color: inputHintColor }}>Piszę...</div>
+          <Etykieta className="self-start" style={{ color: theme.textMuted }}>
+            Piszę…
+          </Etykieta>
         )}
 
         {contactSent && (
-          <div
-            className="rounded-lg px-3 py-2 text-sm self-start"
-            style={{ backgroundColor: botBubbleBg, color: botBubbleText }}
-          >
+          <BabelBota theme={theme}>
             Dziękujemy — przekazaliśmy Twój kontakt. Odezwiemy się wkrótce.
-          </div>
+          </BabelBota>
         )}
 
         {offerContact && !contactSent && !sending && (
-          <div className="self-start w-full">
+          <div>
             {!contactOpen ? (
-              <button
-                onClick={() => setContactOpen(true)}
-                className="text-xs underline"
-                style={{ color: inputHintColor }}
-              >
-                Nie znalazłeś odpowiedzi? Zostaw kontakt do siebie
+              <button onClick={() => setContactOpen(true)} className="underline underline-offset-2">
+                <Etykieta style={{ color: theme.accentText }}>
+                  Nie znalazłeś odpowiedzi? Zostaw kontakt
+                </Etykieta>
               </button>
             ) : (
               <div
-                className="rounded-lg p-3 flex flex-col gap-2"
-                style={{ backgroundColor: botBubbleBg }}
+                className="p-3 flex flex-col gap-2.5"
+                style={{
+                  background: theme.surface,
+                  border: `1px solid ${theme.line}`,
+                  borderLeft: `2px solid ${theme.accent}`,
+                  borderRadius: KANT,
+                }}
               >
-                <p className="text-xs" style={{ color: botBubbleText }}>
+                <p className="text-[13px] leading-snug" style={{ color: theme.text }}>
                   Zostaw e-mail lub telefon — odezwiemy się z odpowiedzią.
                 </p>
                 <input
@@ -497,28 +468,31 @@ export default function WidgetChat() {
                   onChange={(e) => setContactValue(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && handleContactSubmit()}
                   placeholder="jan@firma.pl lub 500 100 200"
-                  className="rounded border px-2 py-1 text-sm"
+                  aria-label="Twój e-mail lub telefon"
+                  className="px-2.5 py-2 text-[13px] placeholder:text-[color:var(--podpowiedz)]"
                   style={{
-                    borderColor: footerBorder,
-                    backgroundColor: isWhiteLabel ? '#ffffff' : SMART_THEME.messageAreaBg,
-                    color: isWhiteLabel ? '#1c2b36' : SMART_THEME.white,
+                    border: `1px solid ${theme.lineStrong}`,
+                    borderRadius: KANT,
+                    background: theme.canvas,
+                    color: theme.text,
+                    ['--podpowiedz' as string]: theme.textMuted,
                   }}
                 />
-                <div className="flex gap-2">
+                <div className="flex items-center gap-3">
                   <button
                     onClick={handleContactSubmit}
                     disabled={!contactValue.trim()}
-                    style={{ backgroundColor: accent, color: isWhiteLabel ? '#ffffff' : SMART_THEME.bg }}
-                    className="rounded px-3 py-1 text-xs font-medium disabled:opacity-50"
+                    style={{
+                      background: theme.accent,
+                      color: theme.onAccent,
+                      borderRadius: KANT,
+                    }}
+                    className="px-3 py-1.5 disabled:opacity-50"
                   >
-                    Wyślij
+                    <Etykieta>Wyślij</Etykieta>
                   </button>
-                  <button
-                    onClick={() => { setContactOpen(false); setOfferContact(false) }}
-                    className="text-xs"
-                    style={{ color: inputHintColor }}
-                  >
-                    Nie teraz
+                  <button onClick={() => { setContactOpen(false); setOfferContact(false) }}>
+                    <Etykieta style={{ color: theme.textMuted }}>Nie teraz</Etykieta>
                   </button>
                 </div>
               </div>
@@ -530,60 +504,39 @@ export default function WidgetChat() {
       </div>
 
       <div
-        style={{ backgroundColor: footerBg, borderTop: `0.5px solid ${footerBorder}` }}
-        className="flex items-center gap-2 p-3"
+        className="shrink-0 flex items-stretch gap-2 px-3.5 py-2.5"
+        style={{ background: theme.surface, borderTop: `1px solid ${theme.lineStrong}` }}
       >
         <input
           type="text"
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={(e) => e.key === 'Enter' && handleSend()}
-          placeholder="Napisz wiadomość..."
+          placeholder="Napisz wiadomość…"
           aria-label="Treść wiadomości"
-          className="flex-1 rounded border px-3 py-2 text-sm"
-          style={{ borderColor: footerBorder, backgroundColor: isWhiteLabel ? '#ffffff' : SMART_THEME.messageAreaBg, color: isWhiteLabel ? '#1c2b36' : SMART_THEME.white }}
+          // Kolor podpowiedzi jawnie, bo domyślnie przeglądarka bierze kolor
+          // tekstu z 50% krycia — na kremowym dawało to 3,25:1, poniżej progu.
+          className="flex-1 min-w-0 px-3 py-2 text-[13px] placeholder:text-[color:var(--podpowiedz)]"
+          style={{
+            border: `1px solid ${theme.line}`,
+            borderRadius: KANT,
+            background: theme.canvas,
+            color: theme.text,
+            ['--podpowiedz' as string]: theme.textMuted,
+          }}
         />
         <button
           onClick={() => handleSend()}
           disabled={sending || !input.trim()}
           aria-label="Wyślij wiadomość"
-          style={{ backgroundColor: accent, color: isWhiteLabel ? '#ffffff' : SMART_THEME.bg }}
-          className="rounded px-4 py-2 text-sm font-medium disabled:opacity-50"
+          style={{ background: theme.accent, color: theme.onAccent, borderRadius: KANT }}
+          className="px-4 shrink-0 disabled:opacity-50"
         >
-          Wyślij
+          <Etykieta>Wyślij</Etykieta>
         </button>
       </div>
 
-      {(footerLabel || branding?.privacy_policy_url) && (
-        <div
-          style={{ backgroundColor: footerBg }}
-          className="flex items-center justify-between gap-2 px-3 pb-2"
-        >
-          {/* RODO: odwiedzający ma być poinformowany o przetwarzaniu tam, gdzie
-              zostawia dane — czyli w oknie czatu, a nie dopiero w stopce strony. */}
-          {branding?.privacy_policy_url ? (
-            <a
-              href={branding.privacy_policy_url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-xs underline"
-              style={{ color: isWhiteLabel ? '#6b7a88' : '#6B5A48' }}
-            >
-              Przetwarzanie danych
-            </a>
-          ) : (
-            <span />
-          )}
-          {footerLabel && (
-            <span
-              className="text-xs"
-              style={{ color: isWhiteLabel ? accent : '#A89880', fontWeight: isWhiteLabel ? 500 : 400 }}
-            >
-              {footerLabel}
-            </span>
-          )}
-        </div>
-      )}
+      <Stopka theme={theme} privacyUrl={branding?.privacy_policy_url} />
     </div>
   )
 }

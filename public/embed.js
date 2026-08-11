@@ -42,6 +42,13 @@
     } catch (e) { /* brak pamięci sesji nie może wywrócić widgetu */ }
   }
 
+  // Paleta z agencjasm-art.pl. Kolor klienta w białej etykiecie dociąga
+  // zaplanujZaczepke() — do tego czasu stoi espresso, nie przypadkowy granat.
+  var ESPRESSO = '#110c04';
+  var EMBER = '#F97316';
+  var KREM = '#FAF8F5';
+  var KANT = '2px';
+
   var button = document.createElement('button');
   button.setAttribute('type', 'button');
   // aria-expanded mówi czytnikowi ekranu, czy okno jest otwarte. Bez tego
@@ -54,16 +61,24 @@
     position + ':20px',
     'width:56px',
     'height:56px',
-    'border-radius:50%',
-    'background:#111827',
-    'color:#fff',
+    // Kant zamiast koła i kreska u dołu zamiast cienia — ten sam język,
+    // co reszta okna czatu. Emoji zastąpione rysunkiem, bo 💬 wygląda
+    // inaczej na każdym systemie i psuje wrażenie gotowego produktu.
+    'border-radius:' + KANT,
+    'background:' + ESPRESSO,
     'border:none',
-    'box-shadow:0 4px 12px rgba(0,0,0,0.25)',
+    'border-bottom:2px solid ' + EMBER,
+    'box-shadow:0 6px 20px rgba(17,12,4,0.28)',
     'cursor:pointer',
     'z-index:2147483000',
-    'font-size:24px',
+    'display:flex',
+    'align-items:center',
+    'justify-content:center',
+    'padding:0',
   ].join(';');
-  button.textContent = '💬';
+  button.innerHTML = '<svg width="24" height="24" viewBox="0 0 24 24" fill="none"'
+    + ' aria-hidden="true"><path d="M4 5h16v11H9l-5 4V5z" stroke="' + KREM
+    + '" stroke-width="1.8" stroke-linejoin="round"/></svg>';
 
   /**
    * Ramkę tworzymy dopiero, gdy jest potrzebna.
@@ -93,8 +108,8 @@
       'max-width:calc(100vw - 40px)',
       'max-height:calc(100vh - 120px)',
       'border:none',
-      'border-radius:12px',
-      'box-shadow:0 8px 30px rgba(0,0,0,0.25)',
+      'border-radius:' + KANT,
+      'box-shadow:0 12px 40px rgba(17,12,4,0.26)',
       'z-index:2147483000',
       'display:none',
     ].join(';');
@@ -150,11 +165,13 @@
       position + ':20px',
       'max-width:260px',
       'padding:12px 34px 12px 14px',
-      'background:#fff',
-      'color:#111827',
-      'font:14px/1.4 system-ui,-apple-system,Segoe UI,sans-serif',
-      'border-radius:12px',
-      'box-shadow:0 8px 30px rgba(0,0,0,0.18)',
+      'background:#ffffff',
+      'color:#241a0e',
+      'font:13px/1.55 system-ui,-apple-system,Segoe UI,sans-serif',
+      'border:1px solid rgba(36,26,14,0.12)',
+      'border-left:2px solid ' + EMBER,
+      'border-radius:' + KANT,
+      'box-shadow:0 8px 30px rgba(17,12,4,0.16)',
       'z-index:2147483000',
       'cursor:pointer',
     ].join(';');
@@ -170,7 +187,7 @@
       'right:6px',
       'border:none',
       'background:none',
-      'color:#6b7280',
+      'color:#6b5a48',
       'font-size:18px',
       'line-height:1',
       'cursor:pointer',
@@ -202,8 +219,39 @@
    * powstanie ramka czatu — inaczej trzeba by ładować cały widget na każdej
    * podstronie i lazy loading traci sens. To jedno małe zapytanie GET.
    */
+  /**
+   * Czerń albo biel — to, co lepiej czyta się na kolorze klienta.
+   * Ten sam rachunek co w theme.ts; tu bez importu, bo embed.js jest
+   * czystym plikiem czytanym wprost przez przeglądarkę.
+   */
+  function naWypelnieniu(kolor) {
+    var m = /^#?([0-9a-f]{6})$/i.exec(String(kolor).trim());
+    if (!m) return KREM;
+    var n = parseInt(m[1], 16);
+    var k = [(n >> 16) & 255, (n >> 8) & 255, n & 255].map(function (w) {
+      var u = w / 255;
+      return u <= 0.03928 ? u / 12.92 : Math.pow((u + 0.055) / 1.055, 2.4);
+    });
+    var l = 0.2126 * k[0] + 0.7152 * k[1] + 0.0722 * k[2];
+    // Próg 0.179 to punkt, w którym biel i czerń dają ten sam kontrast
+    return l > 0.179 ? '#1a1108' : KREM;
+  }
+
+  function zastosujMarke(dane) {
+    if (!dane || dane.branding_mode !== 'white_label') return;
+    var kolor = dane.widget_color;
+    if (!/^#?[0-9a-f]{6}$/i.test(String(kolor || '').trim())) return;
+
+    // Klient płaci za to, żeby widget nie wyglądał na nasz — z pomarańczową
+    // krawędzią i tak by wyglądał
+    button.style.background = kolor;
+    button.style.borderBottom = 'none';
+    var rysunek = button.querySelector('path');
+    if (rysunek) rysunek.setAttribute('stroke', naWypelnieniu(kolor));
+  }
+
   function zaplanujZaczepke() {
-    if (!apiUrl || zaczepkaOdrzucona()) return;
+    if (!apiUrl) return;
 
     var adres = apiUrl.replace(/\/$/, '') + '/widget-settings/'
       + (langStrony ? '?lang=' + encodeURIComponent(langStrony) : '');
@@ -213,6 +261,8 @@
         return odpowiedz.ok ? odpowiedz.json() : null;
       })
       .then(function (dane) {
+        zastosujMarke(dane);
+        if (zaczepkaOdrzucona()) return;
         if (!dane || !dane.widget_proactive_enabled) return;
         var tekst = dane.widget_proactive_text;
         if (!tekst) return;
