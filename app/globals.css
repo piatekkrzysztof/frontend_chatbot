@@ -44,6 +44,53 @@
   --ember-dim: rgba(249, 115, 22, 0.1);
   --ember-bdr: rgba(249, 115, 22, 0.22);
   --transition: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* ─── Tokeny semantyczne ───
+     Komponenty nie znają konkretnych kolorów, tylko role: tło, powierzchnia,
+     tekst główny, tekst drugorzędny. Dzięki temu zmiana motywu to podmiana
+     kilku wartości, a nie przepisywanie klas na każdej stronie.
+     Wartości domyślne = motyw ciemny (strona sprzedażowa, widget). */
+  --tlo: var(--color-espresso-900);
+  --powierzchnia: var(--color-espresso-800);
+  --powierzchnia-2: var(--color-espresso-700);
+  --tekst: var(--color-cream);
+  --tekst-drugi: var(--color-sand-300);
+  --tekst-slaby: var(--color-sand-400);
+  --obramowanie: var(--border-subtle);
+  --obramowanie-mocne: var(--border-strong);
+  /* Pomarańcz do tekstu bywa inny niż do wypełnień — na jasnym tle
+     ten sam odcień nie przechodzi progu kontrastu. */
+  --akcent: var(--color-ember-500);
+  --akcent-tekst: var(--color-ember-500);
+  --na-akcencie: var(--color-espresso-800);
+}
+
+/* ─── Motyw jasny dla panelu ───
+   Panel to narzędzie pracy: tabele, formularze i długie teksty, przy których
+   siedzi się dłużej niż dwie minuty. Odbiorcą jest właścicielka salonu
+   albo mechanik, a nie deweloper — jasny interfejs czyta się tam jako
+   „poważne oprogramowanie", ciemny jako narzędzie techniczne.
+   Paleta zostaje ta sama: kremowe tło to ten sam kolor, którym w motywie
+   ciemnym piszemy tekst. */
+.motyw-jasny {
+  --tlo: #faf8f5;
+  --powierzchnia: #ffffff;
+  --powierzchnia-2: #f4f0ea;
+  --tekst: #241a0e;
+  --tekst-drugi: #5f5346;
+  --tekst-slaby: #6b5a48;
+  --obramowanie: rgba(36, 26, 14, 0.09);
+  --obramowanie-mocne: rgba(36, 26, 14, 0.16);
+  --ember-dim: rgba(249, 115, 22, 0.12);
+  --ember-bdr: rgba(249, 115, 22, 0.35);
+  /* #F97316 na bieli daje 3,0:1 — za mało na tekst wedle WCAG 2.1 AA.
+     Do wypełnień zostaje, do liter schodzi o dwa tony. */
+  --akcent: var(--color-ember-500);
+  --akcent-tekst: #b8480c;
+  --na-akcencie: #ffffff;
+
+  background: var(--tlo);
+  color: var(--tekst);
 }
 
 html {
@@ -76,7 +123,9 @@ h1, h2, h3, h4 {
   font-weight: 800;
   line-height: 1.08;
   letter-spacing: -0.025em;
-  color: var(--color-cream);
+  /* Token, nie stała: przy zaszytym kolorze kremowym nagłówki w jasnym
+     motywie miały kontrast 1,0 — czyli znikały w tle. */
+  color: var(--tekst);
 }
 
 ::selection {
@@ -107,8 +156,8 @@ h1, h2, h3, h4 {
   }
 
   .btn-primary {
-    color: var(--color-espresso-800);
-    background: var(--color-ember-500);
+    color: var(--na-akcencie);
+    background: var(--akcent);
     box-shadow: 0 4px 20px rgba(249, 115, 22, 0.25);
   }
   .btn-primary:hover:not(:disabled) {
@@ -122,8 +171,8 @@ h1, h2, h3, h4 {
   }
 
   .btn-ghost {
-    color: var(--color-cream);
-    border: 1px solid var(--border-strong);
+    color: var(--tekst);
+    border: 1px solid var(--obramowanie-mocne);
   }
   .btn-ghost:hover:not(:disabled) {
     border-color: var(--ember-bdr);
@@ -133,13 +182,13 @@ h1, h2, h3, h4 {
 
   /* ─── Powierzchnie ─── */
   .card {
-    background: var(--color-espresso-800);
-    border: 1px solid var(--border-subtle);
+    background: var(--powierzchnia);
+    border: 1px solid var(--obramowanie);
     border-radius: var(--radius-card);
   }
   .card-hover {
-    background: var(--color-espresso-800);
-    border: 1px solid var(--border-subtle);
+    background: var(--powierzchnia);
+    border: 1px solid var(--obramowanie);
     border-radius: var(--radius-card);
     @apply transition-all;
   }
@@ -151,39 +200,47 @@ h1, h2, h3, h4 {
   /* ─── Formularze ─── */
   .label {
     @apply block text-sm font-medium mb-1.5;
-    color: var(--color-cream);
+    color: var(--tekst);
   }
   .hint {
     @apply text-xs mb-2;
-    color: var(--color-sand-400);
+    color: var(--tekst-slaby);
   }
   .input {
     @apply w-full rounded-lg px-3.5 py-2.5 text-sm transition-colors;
-    background: var(--color-espresso-700);
-    border: 1px solid var(--border-strong);
-    color: var(--color-cream);
+    background: var(--powierzchnia-2);
+    border: 1px solid var(--obramowanie-mocne);
+    color: var(--tekst);
     font-family: var(--font-body);
   }
   .input:focus {
     outline: none;
     border-color: var(--ember-bdr);
-    background: var(--color-espresso-600);
+    background: var(--powierzchnia);
   }
   .input::placeholder {
-    color: var(--color-sand-400);
+    color: var(--tekst-slaby);
   }
 
   /* ─── Drobne elementy ─── */
   .label-eyebrow {
     @apply inline-block text-xs font-bold uppercase tracking-[0.14em];
-    color: var(--color-ember-500);
+    color: var(--akcent-tekst);
     font-family: var(--font-display);
   }
   .pill {
     @apply inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold;
     background: var(--ember-dim);
-    color: var(--color-ember-500);
+    color: var(--akcent-tekst);
   }
+
+  /* Pomocnicze klasy dla stron, żeby nie wpisywać zmiennych w atrybut style */
+  .tekst-drugi { color: var(--tekst-drugi); }
+  .tekst-slaby { color: var(--tekst-slaby); }
+  .akcent { color: var(--akcent-tekst); }
+  .powierzchnia { background: var(--powierzchnia); }
+  .powierzchnia-2 { background: var(--powierzchnia-2); }
+  .obramowanie { border-color: var(--obramowanie); }
 }
 
 /* Wejście sekcji. Jedno dobrze zestrojone wejście strony robi więcej

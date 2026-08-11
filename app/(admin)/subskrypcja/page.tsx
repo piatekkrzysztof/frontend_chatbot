@@ -97,35 +97,39 @@ export default function SubskrypcjaPage() {
     current && current.limit > 0 ? Math.min(100, Math.round((current.used / current.limit) * 100)) : 0
 
   return (
+    // Prototyp jasnego motywu panelu. Klasa przełącza tokeny semantyczne,
+    // więc reszta strony nie zna już konkretnych kolorów — rozszerzenie na
+    // pozostałe strony to zamiana klas na te same nazwy ról.
+    <div className="motyw-jasny -m-4 sm:-m-6 p-4 sm:p-8 min-h-[calc(100vh-68px)]">
     <div className="max-w-4xl">
       <h1 className="text-2xl font-bold mb-1">Subskrypcja</h1>
-      <p className="text-sand-300 mb-8">
+      <p className="tekst-drugi mb-8">
         Limit dotyczy wiadomości wysłanych przez odwiedzających Twoją stronę w danym miesiącu.
       </p>
 
-      {error && <p className="text-sm text-rose-400 mb-4">{error}</p>}
+      {error && <p className="text-sm text-[#c0392b] mb-4">{error}</p>}
 
       {current && (
-        <div className="rounded-lg border border-espresso-700 p-4 mb-8">
+        <div className="card p-5 mb-6">
           <div className="flex items-baseline justify-between mb-2">
             <p className="font-medium">
               Twój plan: {current.name || 'brak'}
               {!current.is_active && (
-                <span className="ml-2 text-sm text-rose-400 font-normal">nieaktywny</span>
+                <span className="ml-2 text-sm text-[#c0392b] font-normal">nieaktywny</span>
               )}
             </p>
-            <p className="text-sm text-sand-400">
+            <p className="text-sm tekst-slaby">
               {current.used} / {current.limit} wiadomości
             </p>
           </div>
 
-          <div className="h-2 rounded bg-espresso-700 overflow-hidden">
+          <div className="h-2 rounded powierzchnia-2 overflow-hidden">
             <div
               className={`h-full ${
                 wykorzystanie >= 95
-                  ? 'bg-rose-400'
+                  ? 'bg-[#c0392b]'
                   : wykorzystanie >= 80
-                    ? 'bg-ember-400'
+                    ? 'bg-[#e8890b]'
                     : 'bg-ember-500'
               }`}
               style={{ width: `${wykorzystanie}%` }}
@@ -135,23 +139,23 @@ export default function SubskrypcjaPage() {
           {/* Progi te same co w alertach mailowych (accounts/plans.py) — inaczej
               klient widziałby w panelu inną historię niż w wiadomości od nas */}
           {wykorzystanie >= 100 ? (
-            <p className="text-sm text-rose-400 mt-2">
+            <p className="text-sm text-[#c0392b] mt-2">
               Limit wyczerpany — chatbot nie odpowiada już odwiedzającym.
               Przejdź na wyższy plan, żeby go przywrócić.
             </p>
           ) : wykorzystanie >= 95 ? (
-            <p className="text-sm text-rose-400 mt-2">
+            <p className="text-sm text-[#c0392b] mt-2">
               Limit prawie wyczerpany. Po jego przekroczeniu chatbot przestanie odpowiadać
               odwiedzającym Twoją stronę.
             </p>
           ) : wykorzystanie >= 80 ? (
-            <p className="text-sm text-ember-400 mt-2">
+            <p className="text-sm text-[color:var(--akcent-tekst)] mt-2">
               Zużyto {wykorzystanie}% limitu. Na razie wszystko działa normalnie.
             </p>
           ) : null}
 
           {current.plan && !current.in_catalogue && (
-            <p className="text-sm text-sand-400 mt-2">
+            <p className="text-sm tekst-slaby mt-2">
               To plan spoza aktualnego cennika — zachowuje swoje warunki.
             </p>
           )}
@@ -159,32 +163,32 @@ export default function SubskrypcjaPage() {
       )}
 
       {domeny && (
-        <div className="rounded-lg border border-espresso-700 p-4 mb-8">
+        <div className="card p-5 mb-6">
           <div className="flex items-baseline justify-between mb-1">
             <p className="font-medium">Witryny z widgetem</p>
-            <p className="text-sm text-sand-400">
+            <p className="text-sm tekst-slaby">
               {domeny.length}
               {limitDomen !== null ? ` / ${limitDomen}` : ''} witryn
             </p>
           </div>
-          <p className="text-xs text-sand-400 mb-3">
+          <p className="text-xs tekst-slaby mb-3">
             Wykrywamy je automatycznie, gdy widget pierwszy raz zapyta z danej strony.
             Adresy lokalne nie liczą się do limitu. Usunięcie zwalnia miejsce — witryna
             wróci na listę, jeśli widget znów z niej zapyta.
           </p>
 
           {domeny.length === 0 ? (
-            <p className="text-sm text-sand-400">
+            <p className="text-sm tekst-slaby">
               Jeszcze nic nie wykryliśmy. Wklej kod widgetu na swoją stronę i odśwież ją.
             </p>
           ) : (
-            <ul className="flex flex-col divide-y divide-espresso-700">
+            <ul className="flex flex-col divide-y divide-[color:var(--obramowanie)]">
               {domeny.map((domena) => (
                 <li key={domena.id} className="flex items-center justify-between py-2">
                   <span className="text-sm">{domena.host}</span>
                   <button
                     onClick={() => usunDomene(domena.id)}
-                    className="text-xs text-sand-400 hover:text-rose-400"
+                    className="text-xs tekst-slaby hover:text-[#c0392b]"
                   >
                     Usuń
                   </button>
@@ -199,26 +203,26 @@ export default function SubskrypcjaPage() {
         {data?.plans.map((plan) => (
           <div
             key={plan.code}
-            className={`rounded-lg border p-5 flex flex-col ${
-              plan.current ? 'border-ember-500 border-2' : 'border-espresso-700'
+            className={`card p-5 flex flex-col ${
+              plan.current ? 'border-[color:var(--akcent)] border-2' : ''
             }`}
           >
             <h2 className="font-semibold text-lg">{plan.name}</h2>
             <p className="text-3xl font-bold mt-2 mb-1">
-              {plan.price_pln} <span className="text-base font-normal text-sand-400">zł/mies.</span>
+              {plan.price_pln} <span className="text-base font-normal tekst-slaby">zł/mies.</span>
             </p>
 
-            <ul className="text-sm text-sand-300 flex flex-col gap-1 mt-4 mb-6">
+            <ul className="text-sm tekst-drugi flex flex-col gap-1 mt-4 mb-6">
               <li>{plan.message_limit.toLocaleString('pl-PL')} wiadomości miesięcznie</li>
               <li>Nieograniczona liczba dokumentów i FAQ</li>
-              <li className={plan.white_label ? '' : 'text-sand-400'}>
+              <li className={plan.white_label ? '' : 'tekst-slaby'}>
                 {plan.white_label ? 'Widget w Twojej marce' : 'Widget w marce Sm-art'}
               </li>
             </ul>
 
             <div className="mt-auto">
               {plan.current ? (
-                <p className="text-sm text-center text-sand-400 py-2">Twój obecny plan</p>
+                <p className="text-sm text-center tekst-slaby py-2">Twój obecny plan</p>
               ) : plan.available ? (
                 <button
                   onClick={() => handleBuy(plan.code)}
@@ -229,7 +233,7 @@ export default function SubskrypcjaPage() {
                 </button>
               ) : (
                 <p
-                  className="text-xs text-center text-sand-400 py-2"
+                  className="text-xs text-center tekst-slaby py-2"
                   title="Brak skonfigurowanej ceny w Stripe"
                 >
                   Wkrótce dostępny
@@ -240,9 +244,10 @@ export default function SubskrypcjaPage() {
         ))}
       </div>
 
-      <p className="text-xs text-sand-400 mt-6">
+      <p className="text-xs tekst-slaby mt-6">
         Płatność obsługuje Stripe. Danych karty nie przechowujemy ani nie widzimy.
       </p>
+    </div>
     </div>
   )
 }
