@@ -57,18 +57,18 @@ export default function PlatnoscSukcesPage() {
       <h1 className="text-2xl font-bold mb-2">Dziękujemy za płatność</h1>
 
       {czekamy && (
-        <p className="text-sand-300 mb-6">Aktywuję Twój plan — chwileczkę...</p>
+        <p className="tekst-drugi mb-6">Aktywuję Twój plan — chwileczkę...</p>
       )}
 
       {!czekamy && plan && (
-        <p className="text-sand-300 mb-6">
+        <p className="tekst-drugi mb-6">
           Plan <span className="font-medium">{plan}</span> jest już aktywny. Nowy limit
           wiadomości obowiązuje od teraz.
         </p>
       )}
 
       {!czekamy && !plan && (
-        <p className="text-sand-300 mb-6">
+        <p className="tekst-drugi mb-6">
           Płatność przyjęta. Aktywacja planu potrafi zająć chwilę dłużej — odśwież za
           moment zakładkę Subskrypcja. Jeśli po kilku minutach nic się nie zmieni, napisz
           do nas, sprawdzimy to.
@@ -84,7 +84,7 @@ export default function PlatnoscSukcesPage() {
         </Link>
         <Link
           href="/dashboard"
-          className="rounded border border-espresso-600 px-4 py-2 text-sm font-medium"
+          className="rounded border border-[color:var(--obramowanie-mocne)] px-4 py-2 text-sm font-medium"
         >
           Wróć do panelu
         </Link>

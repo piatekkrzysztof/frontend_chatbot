@@ -24,10 +24,10 @@ interface Analytics {
 
 function Metric({ label, value, hint }: { label: string; value: string | number; hint?: string }) {
   return (
-    <div className="rounded-lg bg-espresso-900 p-4">
+    <div className="rounded-lg bg-[color:var(--tlo)] p-4">
       <p className="hint">{label}</p>
       <p className="text-2xl font-medium">{value}</p>
-      {hint && <p className="text-xs text-sand-400 mt-1">{hint}</p>}
+      {hint && <p className="text-xs tekst-slaby mt-1">{hint}</p>}
     </div>
   )
 }
@@ -63,8 +63,8 @@ function KnowledgeNotice({ knowledge }: { knowledge: Knowledge }) {
 
   if (!knowledge.has_description) {
     return (
-      <div className="rounded-lg border border-espresso-600 bg-espresso-900 p-4 mb-6">
-        <p className="text-sm text-cream">
+      <div className="rounded-lg border border-[color:var(--obramowanie-mocne)] bg-[color:var(--tlo)] p-4 mb-6">
+        <p className="text-sm text-[color:var(--tekst)]">
           Nie masz uzupełnionego opisu działalności. Bot odpowie na pytania z dokumentów
           i FAQ, ale na ogólne „czym się zajmujecie?” powie, że nie wie.{' '}
           <Link href="/documents" className="underline font-medium">Uzupełnij opis</Link>.
@@ -75,8 +75,8 @@ function KnowledgeNotice({ knowledge }: { knowledge: Knowledge }) {
 
   if (pendingDocs) {
     return (
-      <div className="rounded-lg border border-espresso-600 bg-espresso-900 p-4 mb-6">
-        <p className="text-sm text-cream">
+      <div className="rounded-lg border border-[color:var(--obramowanie-mocne)] bg-[color:var(--tlo)] p-4 mb-6">
+        <p className="text-sm text-[color:var(--tekst)]">
           Twoje dokumenty czekają na przetworzenie — bot jeszcze z nich nie korzysta.
         </p>
       </div>
@@ -124,9 +124,9 @@ export default function DashboardPage() {
       <h1 className="text-2xl font-bold mb-1">
         {tenantName ? `Witaj, ${tenantName}` : 'Panel główny'}
       </h1>
-      <p className="text-sand-300 mb-6">Podsumowanie działania Twojego chatbota.</p>
+      <p className="tekst-drugi mb-6">Podsumowanie działania Twojego chatbota.</p>
 
-      {error && <p className="text-sm text-rose-400 mb-4">{error}</p>}
+      {error && <p className="text-sm text-[#c0392b] mb-4">{error}</p>}
 
       {data && (
         <>
@@ -148,21 +148,21 @@ export default function DashboardPage() {
           </div>
 
           <h2 className="text-lg font-semibold mb-1">Pytania bez pokrycia w materiałach</h2>
-          <p className="text-sm text-sand-400 mb-3">
+          <p className="text-sm tekst-slaby mb-3">
             Na te pytania bot odpowiadał bez oparcia w Twoich dokumentach ani FAQ.
             Dodaj brakujące informacje, żeby odpowiadał trafniej.
           </p>
 
           {data.unanswered.length === 0 ? (
-            <p className="text-sm text-sand-400">
+            <p className="text-sm tekst-slaby">
               Brak takich pytań — bot znajdował odpowiedzi w Twoich materiałach.
             </p>
           ) : (
             <ul className="flex flex-col gap-2">
               {data.unanswered.map((item) => (
-                <li key={item.id} className="rounded border border-espresso-700 px-3 py-2">
+                <li key={item.id} className="rounded border obramowanie px-3 py-2">
                   <p className="text-sm">{item.question}</p>
-                  <p className="text-xs text-sand-400 mt-1">
+                  <p className="text-xs tekst-slaby mt-1">
                     {new Date(item.asked_at).toLocaleString('pl-PL')}
                   </p>
                 </li>

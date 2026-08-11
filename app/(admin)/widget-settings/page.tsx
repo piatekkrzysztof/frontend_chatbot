@@ -153,7 +153,7 @@ export default function WidgetSettingsPage() {
   return (
     <div>
       <h1 className="text-2xl font-bold mb-1">Widget czatu</h1>
-      <p className="text-sand-300 mb-6">
+      <p className="tekst-drugi mb-6">
         Podgląd po prawej pokazuje, co zobaczy odwiedzający — zmiany widać od razu,
         jeszcze przed zapisaniem.
       </p>
@@ -161,31 +161,31 @@ export default function WidgetSettingsPage() {
       {/* Na górze, bo to jedyna rzecz na tej stronie, bez której widget nie
           zadziała w ogóle. Wcześniej był pod formularzem i podglądem, czyli
           po kilkuset pikselach ustawień — nie dało się go znaleźć. */}
-      <div className="rounded-lg border border-espresso-700 p-4 mb-8">
+      <div className="rounded-lg border obramowanie p-4 mb-8">
         <div className="flex items-baseline justify-between mb-1">
           <h2 className="font-semibold">Kod do wklejenia na Twoją stronę</h2>
           {embedSnippet && (
             <button
               type="button"
               onClick={kopiujSnippet}
-              className="text-xs text-sand-300 hover:text-cream"
+              className="text-xs tekst-drugi hover:text-[color:var(--tekst)]"
             >
               {skopiowano ? 'Skopiowano' : 'Kopiuj'}
             </button>
           )}
         </div>
-        <p className="text-xs text-sand-400 mb-3">
+        <p className="text-xs tekst-slaby mb-3">
           Wklej tuż przed zamknięciem znacznika &lt;/body&gt; na każdej stronie,
           na której ma działać czat.
         </p>
 
         {embedSnippet ? (
-          <pre className="bg-espresso-900 text-cream text-xs rounded-lg p-4 overflow-x-auto"
+          <pre className="bg-[color:var(--tlo)] text-[color:var(--tekst)] text-xs rounded-lg p-4 overflow-x-auto"
                style={{ border: '1px solid var(--border-subtle)' }}>
             {embedSnippet}
           </pre>
         ) : (
-          <p className="text-sm text-sand-400">
+          <p className="text-sm tekst-slaby">
             {kluczBlad
               ? 'Nie udało się pobrać klucza API. Odśwież stronę albo zaloguj się ponownie.'
               : 'Wczytywanie klucza API...'}
@@ -232,7 +232,7 @@ export default function WidgetSettingsPage() {
               />
               Ukryj stopkę „Powered by Sm-art"
             </label>
-            <p className="text-xs text-sand-400 mt-1">
+            <p className="text-xs tekst-slaby mt-1">
               {branding === 'wymagany'
                 ? 'Dostępne od planu Grow. W planie Start widget zachowuje naszą stopkę.'
                 : 'Okno czatu przestanie odsyłać odwiedzających do Sm-art.'}
@@ -257,7 +257,7 @@ export default function WidgetSettingsPage() {
                 type="color"
                 value={color}
                 onChange={(e) => setColor(e.target.value)}
-                className="h-10 w-20 rounded border border-espresso-600"
+                className="h-10 w-20 rounded border border-[color:var(--obramowanie-mocne)]"
               />
             </div>
             <div>
@@ -364,7 +364,7 @@ Gdzie was znaleźć?`}
               />
               <span>
                 Zawsze jeden język
-                <span className="block text-xs text-sand-400">
+                <span className="block text-xs tekst-slaby">
                   Bot odpowiada wybranym językiem niezależnie od tego, w jakim
                   języku napisano pytanie.
                 </span>
@@ -380,7 +380,7 @@ Gdzie was znaleźć?`}
               />
               <span>
                 Dopasuj do języka pytania
-                <span className="block text-xs text-sand-400">
+                <span className="block text-xs tekst-slaby">
                   Bot rozpozna język pytania i odpowie w nim — ale tylko w obrębie
                   zaznaczonych niżej.
                 </span>
@@ -410,7 +410,7 @@ Gdzie was znaleźć?`}
 
           {languageMode === 'auto' && (
             <div className="flex flex-col gap-1.5">
-              <p className="text-xs text-sand-400">
+              <p className="text-xs tekst-slaby">
                 Zaznaczaj wyłącznie te, które obsłużysz, gdy odwiedzający poprosi
                 o kontakt z człowiekiem — inaczej obiecujesz obsługę, której nie ma.
               </p>
@@ -441,7 +441,7 @@ Gdzie was znaleźć?`}
         </div>
 
         <div>
-          <label className="flex items-center gap-2 text-sm font-medium text-cream mb-1">
+          <label className="flex items-center gap-2 text-sm font-medium text-[color:var(--tekst)] mb-1">
             <input
               type="checkbox"
               checked={proactiveEnabled}
@@ -458,7 +458,7 @@ Gdzie was znaleźć?`}
           {proactiveEnabled && (
             <>
               <div className="mb-3">
-                <label className="block text-sm text-cream mb-1">
+                <label className="block text-sm text-[color:var(--tekst)] mb-1">
                   Pokaż po (sekundy)
                 </label>
                 <input
@@ -466,7 +466,7 @@ Gdzie was znaleźć?`}
                   min={0}
                   value={proactiveDelay}
                   onChange={(e) => setProactiveDelay(Number(e.target.value))}
-                  className="w-28 rounded border border-espresso-600 px-3 py-2 text-sm"
+                  className="w-28 rounded border border-[color:var(--obramowanie-mocne)] px-3 py-2 text-sm"
                 />
               </div>
 
@@ -479,7 +479,7 @@ Gdzie was znaleźć?`}
               <div className="flex flex-col gap-2">
                 {JEZYKI.map((jezyk) => (
                   <div key={jezyk.kod}>
-                    <label className="block text-xs text-sand-300 mb-1">
+                    <label className="block text-xs tekst-drugi mb-1">
                       {jezyk.nazwa}
                       {jezyk.kod === defaultLanguage && ' — domyślny'}
                     </label>
@@ -505,8 +505,8 @@ Gdzie was znaleźć?`}
           )}
         </div>
 
-        {error && <p className="text-sm text-rose-400">{error}</p>}
-        {saved && <p className="text-sm text-mint-400">Zapisano.</p>}
+        {error && <p className="text-sm text-[#c0392b]">{error}</p>}
+        {saved && <p className="text-sm text-[#1f7a4d]">Zapisano.</p>}
         <button
           type="submit"
           disabled={saving}
@@ -517,7 +517,7 @@ Gdzie was znaleźć?`}
       </form>
 
       <div className="sticky top-6">
-        <p className="text-sm font-medium text-cream mb-2">Podgląd</p>
+        <p className="text-sm font-medium text-[color:var(--tekst)] mb-2">Podgląd</p>
         <WidgetPreview
           brandingMode={brandingMode}
           hideBranding={hideBranding}

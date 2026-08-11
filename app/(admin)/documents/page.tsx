@@ -184,13 +184,13 @@ export default function DocumentsPage() {
   return (
     <div>
       <h1 className="text-2xl font-bold mb-1">Baza wiedzy</h1>
-      <p className="text-sand-300 mb-8">
+      <p className="tekst-drugi mb-8">
         Wszystko, na czym chatbot opiera odpowiedzi. Bez tych materiałów odmawia
         odpowiedzi na pytania o firmę — celowo, żeby ich nie zmyślać.
       </p>
 
       <h2 className="text-xl font-bold mb-1">Opis działalności</h2>
-      <p className="text-sm text-sand-400 mb-3">
+      <p className="text-sm tekst-slaby mb-3">
         Najważniejsze pole. Napisz własnymi słowami, czym zajmuje się firma, co oferuje
         i dla kogo. Bez tego bot nie odpowie nawet na „czym się zajmujecie?”.
       </p>
@@ -215,7 +215,7 @@ export default function DocumentsPage() {
             <span className="text-xs text-amber-600">Niezapisane zmiany</span>
           )}
         </div>
-        {descriptionError && <p className="text-sm text-rose-400 mt-2">{descriptionError}</p>}
+        {descriptionError && <p className="text-sm text-[#c0392b] mt-2">{descriptionError}</p>}
       </form>
 
       <h2 className="text-xl font-bold mb-4">Dokumenty</h2>
@@ -236,7 +236,7 @@ export default function DocumentsPage() {
         </button>
       </form>
 
-      {error && <p className="text-sm text-rose-400 mb-4">{error}</p>}
+      {error && <p className="text-sm text-[#c0392b] mb-4">{error}</p>}
 
       {/* Tabela przewija się sama — bez tego rozpychała całą stronę */}
 
@@ -244,7 +244,7 @@ export default function DocumentsPage() {
 
         <table className="w-full text-left text-sm mb-10 min-w-[34rem]">
         <thead>
-          <tr className="border-b border-espresso-700 text-sand-400">
+          <tr className="border-b obramowanie tekst-slaby">
             <th className="py-2">Nazwa</th>
             <th className="py-2">Status</th>
             <th className="py-2">Fragmenty</th>
@@ -253,7 +253,7 @@ export default function DocumentsPage() {
         </thead>
         <tbody>
           {documents.map((doc) => (
-            <tr key={doc.id} className="border-b border-espresso-700">
+            <tr key={doc.id} className="border-b obramowanie">
               <td className="py-2">{doc.name}</td>
               <td className="py-2">{doc.status}</td>
               <td className="py-2">{doc.chunk_count}</td>
@@ -262,7 +262,7 @@ export default function DocumentsPage() {
           ))}
           {documents.length === 0 && (
             <tr>
-              <td colSpan={4} className="py-4 text-sand-400">
+              <td colSpan={4} className="py-4 tekst-slaby">
                 Brak wgranych dokumentów.
               </td>
             </tr>
@@ -272,7 +272,7 @@ export default function DocumentsPage() {
       </div>
 
       <h2 className="text-xl font-bold mb-4">Strony WWW</h2>
-      <p className="text-sm text-sand-400 mb-3">
+      <p className="text-sm tekst-slaby mb-3">
         Podaj adres strony klienta — treść zostanie automatycznie pobrana i dodana do wiedzy chatbota.
       </p>
 
@@ -282,7 +282,7 @@ export default function DocumentsPage() {
           value={newUrl}
           onChange={(e) => setNewUrl(e.target.value)}
           placeholder="https://example.com"
-          className="flex-1 max-w-md rounded border border-espresso-600 px-3 py-2 text-sm"
+          className="flex-1 max-w-md rounded border border-[color:var(--obramowanie-mocne)] px-3 py-2 text-sm"
         />
         <button
           type="submit"
@@ -293,7 +293,7 @@ export default function DocumentsPage() {
         </button>
       </form>
 
-      {sourceError && <p className="text-sm text-rose-400 mb-4">{sourceError}</p>}
+      {sourceError && <p className="text-sm text-[#c0392b] mb-4">{sourceError}</p>}
 
       {/* Tabela przewija się sama — bez tego rozpychała całą stronę */}
 
@@ -301,7 +301,7 @@ export default function DocumentsPage() {
 
         <table className="w-full text-left text-sm min-w-[34rem]">
         <thead>
-          <tr className="border-b border-espresso-700 text-sand-400">
+          <tr className="border-b obramowanie tekst-slaby">
             <th className="py-2">URL</th>
             <th className="py-2">Status</th>
             <th className="py-2">Dodano</th>
@@ -310,7 +310,7 @@ export default function DocumentsPage() {
         </thead>
         <tbody>
           {sources.map((source) => (
-            <tr key={source.id} className="border-b border-espresso-700">
+            <tr key={source.id} className="border-b obramowanie">
               <td className="py-2">{source.url}</td>
               <td className="py-2">{source.is_active ? 'Aktywna' : 'Wyłączona'}</td>
               <td className="py-2">{new Date(source.created_at).toLocaleString('pl-PL')}</td>
@@ -320,13 +320,13 @@ export default function DocumentsPage() {
                 <button
                   onClick={() => odswiezZrodlo(source.id)}
                   disabled={odswiezane === source.id}
-                  className="text-xs text-sand-400 hover:text-ember-500 transition-colors mr-4 disabled:opacity-50"
+                  className="text-xs tekst-slaby hover:text-[color:var(--akcent-tekst)] transition-colors mr-4 disabled:opacity-50"
                 >
                   {odswiezane === source.id ? 'Odświeżam...' : 'Odśwież'}
                 </button>
                 <button
                   onClick={() => handleRemoveSource(source.id)}
-                  className="text-rose-400 hover:underline"
+                  className="text-[#c0392b] hover:underline"
                 >
                   Usuń
                 </button>
@@ -335,7 +335,7 @@ export default function DocumentsPage() {
           ))}
           {sources.length === 0 && (
             <tr>
-              <td colSpan={4} className="py-4 text-sand-400">
+              <td colSpan={4} className="py-4 tekst-slaby">
                 Brak dodanych stron WWW.
               </td>
             </tr>

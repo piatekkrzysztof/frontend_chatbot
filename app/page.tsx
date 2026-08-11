@@ -334,7 +334,11 @@ export default function StronaGlowna() {
           <div className="mt-14 grid gap-8 md:grid-cols-3">
             {KROKI.map((krok) => (
               <div key={krok.numer} className="relative">
-                <span className="font-display text-6xl font-extrabold"
+                {/* Ozdoba, nie treść: numer powiela kolejność, którą widać
+                    w układzie, i jest celowo ledwo widoczny (1,12:1). Zamiast
+                    udawać, że przechodzi próg kontrastu, deklarujemy go jako
+                    element dekoracyjny i zabieramy czytnikom ekranu. */}
+                <span aria-hidden="true" className="font-display text-6xl font-extrabold"
                       style={{ color: 'var(--ember-dim)' }}>
                   {krok.numer}
                 </span>

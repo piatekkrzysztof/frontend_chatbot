@@ -6,10 +6,16 @@ import { usePathname } from 'next/navigation'
 /**
  * Nawigacja panelu, pogrupowana według tego, po co klient wchodzi.
  *
- * Wcześniej było dziewięć pozycji jednym ciągiem — a to nie jest lista równych
- * sobie rzeczy. "Baza wiedzy" i "Widget" to konfiguracja robiona raz, a
- * "Konwersacje" i "Zapytania" to codzienny powód wejścia do panelu. Grupy
- * pokazują tę różnicę bez dokładania kliknięć.
+ * "Baza wiedzy" i "Widget" to konfiguracja robiona raz, a "Konwersacje"
+ * i "Zapytania" to codzienny powód wejścia do panelu. Grupy pokazują tę
+ * różnicę bez dokładania kliknięć.
+ *
+ * Kolumna jest pomarańczowa — to jedyne miejsce w panelu, gdzie marka
+ * wchodzi płaszczyzną, a nie akcentem. Reszta interfejsu jest spokojna,
+ * więc mocny kolor ma tu gdzie wybrzmieć, nie walcząc z treścią.
+ *
+ * Tekst jest ciemny, nie biały. Biel na #F97316 daje 2,8:1 i nie przechodzi
+ * progu WCAG; ciemne espresso na tym samym tle daje ponad 6:1.
  */
 const GRUPY = [
   {
@@ -46,16 +52,27 @@ export default function Sidebar() {
 
   return (
     <aside
-      className="w-60 shrink-0 min-h-screen px-4 py-6"
-      style={{ borderRight: '1px solid var(--border-subtle)' }}
+      className="w-60 shrink-0 min-h-full px-3 py-6"
+      style={{
+        // Delikatny spad ku dołowi — płaski pomarańcz na całej wysokości
+        // ekranu wygląda jak wypełnienie, gradient jak powierzchnia.
+        background: 'linear-gradient(170deg, #F97316 0%, #EA6A0C 100%)',
+      }}
     >
-      <nav className="flex flex-col gap-7">
+      <nav className="flex flex-col gap-6">
         {GRUPY.map((grupa, i) => (
-          <div key={grupa.tytul ?? i} className="flex flex-col gap-1">
+          <div key={grupa.tytul ?? i} className="flex flex-col gap-0.5">
             {grupa.tytul && (
               <p
-                className="px-3 mb-1 text-[0.6875rem] font-bold uppercase tracking-[0.12em]"
-                style={{ color: 'var(--color-sand-400)', fontFamily: 'var(--font-display)' }}
+                className="px-3 mb-1.5 text-[0.6875rem] font-bold uppercase tracking-[0.12em]"
+                style={{
+                  // Przygaszona czerń, nie biel: na pomarańczu biel wygląda
+                  // na wyblakłą, a przygaszona czerń czyta się jak nadruk.
+                  // 0,62 dawało 3,39:1 przy wymaganych 4,5 — te etykiety są
+                  // małe i pogrubione, więc nie łapią się na próg dla dużego tekstu.
+                  color: 'rgba(26, 17, 8, 0.82)',
+                  fontFamily: 'var(--font-display)',
+                }}
               >
                 {grupa.tytul}
               </p>
@@ -68,22 +85,17 @@ export default function Sidebar() {
                   key={link.href}
                   href={link.href}
                   aria-current={aktywny ? 'page' : undefined}
-                  className="relative rounded-lg px-3 py-2 text-sm transition-all"
+                  className="rounded-lg px-3 py-2 text-sm transition-all"
                   style={{
-                    color: aktywny ? 'var(--color-cream)' : 'var(--color-sand-300)',
-                    background: aktywny ? 'var(--color-espresso-700)' : 'transparent',
-                    fontWeight: aktywny ? 600 : 400,
+                    // Aktywna pozycja to jasny kafelek na pomarańczu —
+                    // odwrotność tego, co robi reszta panelu, więc od razu
+                    // widać, gdzie się jest
+                    background: aktywny ? 'rgba(255,255,255,0.92)' : 'transparent',
+                    color: aktywny ? '#B8480C' : 'rgba(26, 17, 8, 0.88)',
+                    fontWeight: aktywny ? 700 : 500,
+                    boxShadow: aktywny ? '0 2px 8px rgba(120, 50, 0, 0.18)' : 'none',
                   }}
                 >
-                  {/* Pomarańczowy znacznik zamiast wypełnienia całego pola —
-                      przy dziewięciu pozycjach pełne tło krzyczałoby za mocno */}
-                  {aktywny && (
-                    <span
-                      aria-hidden
-                      className="absolute left-0 top-1/2 -translate-y-1/2 h-4 w-[3px] rounded-full"
-                      style={{ background: 'var(--color-ember-500)' }}
-                    />
-                  )}
                   {link.label}
                 </Link>
               )

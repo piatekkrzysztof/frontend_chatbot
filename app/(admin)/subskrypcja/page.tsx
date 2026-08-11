@@ -97,10 +97,6 @@ export default function SubskrypcjaPage() {
     current && current.limit > 0 ? Math.min(100, Math.round((current.used / current.limit) * 100)) : 0
 
   return (
-    // Prototyp jasnego motywu panelu. Klasa przełącza tokeny semantyczne,
-    // więc reszta strony nie zna już konkretnych kolorów — rozszerzenie na
-    // pozostałe strony to zamiana klas na te same nazwy ról.
-    <div className="motyw-jasny -m-4 sm:-m-6 p-4 sm:p-8 min-h-[calc(100vh-68px)]">
     <div className="max-w-4xl">
       <h1 className="text-2xl font-bold mb-1">Subskrypcja</h1>
       <p className="tekst-drugi mb-8">
@@ -247,7 +243,6 @@ export default function SubskrypcjaPage() {
       <p className="text-xs tekst-slaby mt-6">
         Płatność obsługuje Stripe. Danych karty nie przechowujemy ani nie widzimy.
       </p>
-    </div>
     </div>
   )
 }

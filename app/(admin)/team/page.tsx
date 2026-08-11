@@ -132,11 +132,11 @@ export default function TeamPage() {
   return (
     <div className="max-w-3xl">
       <h1 className="text-2xl font-bold mb-1">Zespół</h1>
-      <p className="text-sand-300 mb-8">
+      <p className="tekst-drugi mb-8">
         Osoby z dostępem do panelu Twojego chatbota.
       </p>
 
-      {error && <p className="text-sm text-rose-400 mb-4">{error}</p>}
+      {error && <p className="text-sm text-[#c0392b] mb-4">{error}</p>}
 
       {/* Tabela przewija się sama — bez tego rozpychała całą stronę */}
 
@@ -144,7 +144,7 @@ export default function TeamPage() {
 
         <table className="w-full text-left text-sm mb-12 min-w-[34rem]">
         <thead>
-          <tr className="border-b border-espresso-700 text-sand-400">
+          <tr className="border-b obramowanie tekst-slaby">
             <th className="py-2">Użytkownik</th>
             <th className="py-2">E-mail</th>
             <th className="py-2">Rola</th>
@@ -153,11 +153,11 @@ export default function TeamPage() {
         </thead>
         <tbody>
           {members.map((member) => (
-            <tr key={member.id} className="border-b border-espresso-700">
+            <tr key={member.id} className="border-b obramowanie">
               <td className="py-2">{member.username}</td>
-              <td className="py-2 text-sand-300">{member.email}</td>
+              <td className="py-2 tekst-drugi">{member.email}</td>
               <td className="py-2">{ROLE_LABELS[member.role] || member.role}</td>
-              <td className="py-2 text-sand-400">
+              <td className="py-2 tekst-slaby">
                 {member.last_login
                   ? new Date(member.last_login).toLocaleString('pl-PL')
                   : 'nigdy'}
@@ -166,7 +166,7 @@ export default function TeamPage() {
           ))}
           {members.length === 0 && (
             <tr>
-              <td colSpan={4} className="py-4 text-sand-400">
+              <td colSpan={4} className="py-4 tekst-slaby">
                 Brak użytkowników.
               </td>
             </tr>
@@ -176,7 +176,7 @@ export default function TeamPage() {
       </div>
 
       <h2 className="text-xl font-bold mb-1">Zaproś osobę</h2>
-      <p className="text-sm text-sand-400 mb-4">
+      <p className="text-sm tekst-slaby mb-4">
         Wyślemy e-mail z linkiem. Link dostajesz też tutaj — na wypadek gdyby wiadomość
         nie dotarła.
       </p>
@@ -227,10 +227,10 @@ export default function TeamPage() {
         </button>
       </form>
 
-      {inviteError && <p className="text-sm text-rose-400 mb-4">{inviteError}</p>}
+      {inviteError && <p className="text-sm text-[#c0392b] mb-4">{inviteError}</p>}
 
       {lastInvite && (
-        <div className="rounded border border-espresso-600 bg-espresso-900 p-3 mb-8">
+        <div className="rounded border border-[color:var(--obramowanie-mocne)] bg-[color:var(--tlo)] p-3 mb-8">
           <p className="text-sm mb-2">
             {lastInvite.emailSent
               ? 'Zaproszenie wysłane. Możesz też przekazać link bezpośrednio:'
@@ -238,7 +238,7 @@ export default function TeamPage() {
           </p>
           <button
             onClick={() => copyLink(lastInvite.url)}
-            className="text-xs font-mono text-sand-300 hover:text-cream break-all text-left"
+            className="text-xs font-mono tekst-drugi hover:text-[color:var(--tekst)] break-all text-left"
           >
             {copied === lastInvite.url ? 'Skopiowano' : lastInvite.url}
           </button>
@@ -252,31 +252,31 @@ export default function TeamPage() {
             {invitations.map((invite) => (
               <li
                 key={invite.id}
-                className={`rounded border p-3 ${invite.is_valid ? 'border-espresso-600' : 'border-espresso-700 opacity-60'}`}
+                className={`rounded border p-3 ${invite.is_valid ? 'border-[color:var(--obramowanie-mocne)]' : 'obramowanie opacity-60'}`}
               >
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
                     <p className="text-sm font-medium">
                       {invite.email}
-                      <span className="text-sand-400 font-normal">
+                      <span className="tekst-slaby font-normal">
                         {' '}— {ROLE_LABELS[invite.role] || invite.role}
                       </span>
                     </p>
-                    <p className="text-xs text-sand-400 mt-1">
+                    <p className="text-xs tekst-slaby mt-1">
                       {invite.is_valid
                         ? `ważne do ${invite.expires_at ? new Date(invite.expires_at).toLocaleString('pl-PL') : '—'}`
                         : 'wygasło lub wykorzystane'}
                     </p>
                     <button
                       onClick={() => copyLink(invite.accept_url)}
-                      className="text-xs font-mono text-sand-400 hover:text-cream break-all text-left mt-1"
+                      className="text-xs font-mono tekst-slaby hover:text-[color:var(--tekst)] break-all text-left mt-1"
                     >
                       {copied === invite.accept_url ? 'Skopiowano' : invite.accept_url}
                     </button>
                   </div>
                   <button
                     onClick={() => handleRevoke(invite.id)}
-                    className="text-sm text-rose-400 hover:underline shrink-0"
+                    className="text-sm text-[#c0392b] hover:underline shrink-0"
                   >
                     Cofnij
                   </button>

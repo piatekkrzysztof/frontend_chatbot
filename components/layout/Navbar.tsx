@@ -29,8 +29,8 @@ export default function Navbar({ onToggleMenu, menuOtwarte }: Props) {
     <header
       className="sticky top-0 z-40 flex items-center justify-between px-6 h-[68px] backdrop-blur-lg"
       style={{
-        background: 'rgba(17,12,4,0.72)',
-        borderBottom: '1px solid var(--border-subtle)',
+        background: 'color-mix(in srgb, var(--tlo) 82%, transparent)',
+        borderBottom: '1px solid var(--obramowanie)',
       }}
     >
       <div className="flex items-center gap-3">
@@ -41,7 +41,7 @@ export default function Navbar({ onToggleMenu, menuOtwarte }: Props) {
             aria-label={menuOtwarte ? 'Zamknij menu' : 'Otwórz menu'}
             aria-expanded={menuOtwarte}
             className="lg:hidden -ml-1 p-2 rounded-lg transition-colors"
-            style={{ color: 'var(--color-sand-300)' }}
+            style={{ color: 'var(--tekst-drugi)' }}
           >
             <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true">
               <path
@@ -52,25 +52,22 @@ export default function Navbar({ onToggleMenu, menuOtwarte }: Props) {
           </button>
         )}
         <Logo wysokosc={26} />
-        {tenantName && (
-          <>
-            <span style={{ color: 'var(--color-sand-400)' }}>/</span>
-            <span className="text-sm" style={{ color: 'var(--color-sand-300)' }}>
-              {tenantName}
-            </span>
-          </>
-        )}
       </div>
 
-      <button
-        onClick={handleLogout}
-        className="text-sm transition-colors"
-        style={{ color: 'var(--color-sand-300)' }}
-        onMouseEnter={(e) => (e.currentTarget.style.color = 'var(--color-cream)')}
-        onMouseLeave={(e) => (e.currentTarget.style.color = 'var(--color-sand-300)')}
-      >
-        Wyloguj
-      </button>
+      {/* Nazwa firmy po prawej, przy wylogowaniu: to informacja o tym, na czyim
+          koncie jesteś, więc stoi tam, gdzie reszta spraw konta. Po lewej,
+          zaraz obok logo, konkurowała z nim o to samo miejsce. */}
+      <div className="flex items-center gap-4">
+        {tenantName && (
+          <span className="text-sm hidden sm:inline tekst-drugi">{tenantName}</span>
+        )}
+        <button
+          onClick={handleLogout}
+          className="text-sm transition-colors tekst-slaby hover:text-[color:var(--tekst)]"
+        >
+          Wyloguj
+        </button>
+      </div>
     </header>
   )
 }

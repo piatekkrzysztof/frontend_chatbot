@@ -87,7 +87,10 @@
      Do wypełnień zostaje, do liter schodzi o dwa tony. */
   --akcent: var(--color-ember-500);
   --akcent-tekst: #b8480c;
-  --na-akcencie: #ffffff;
+  /* Ciemny napis na pomarańczowym przycisku, tak jak w .btn-primary na
+     agencjasm-art.pl. Biel dawała 2,80:1 — ten sam błąd, przed którym
+     chroni --akcent-tekst, tylko popełniony po drugiej stronie. */
+  --na-akcencie: #1a1108;
 
   background: var(--tlo);
   color: var(--tekst);

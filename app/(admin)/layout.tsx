@@ -17,7 +17,10 @@ function AdminLayout({ children }: { children: ReactNode }) {
   const [menuOtwarte, setMenuOtwarte] = useState(false)
 
   return (
-    <div className="min-h-screen flex flex-col">
+    // Jasny motyw obejmuje cały panel. Strona sprzedażowa i widget zostają
+    // ciemne: tam liczy się rozpoznawalność marki, tu czytelność przy dłuższej
+    // pracy z tabelami i formularzami.
+    <div className="motyw-jasny min-h-screen flex flex-col">
       <Navbar onToggleMenu={() => setMenuOtwarte((v) => !v)} menuOtwarte={menuOtwarte} />
 
       <div className="flex flex-1">
@@ -38,7 +41,7 @@ function AdminLayout({ children }: { children: ReactNode }) {
             />
             <div
               className="lg:hidden fixed left-0 top-[68px] bottom-0 z-50 overflow-y-auto"
-              style={{ background: 'var(--color-espresso-900)' }}
+              style={{ background: 'var(--tlo)' }}
               onClick={() => setMenuOtwarte(false)}
             >
               <Sidebar />
@@ -46,7 +49,7 @@ function AdminLayout({ children }: { children: ReactNode }) {
           </>
         )}
 
-        <main className="flex-1 min-w-0 p-4 sm:p-6">{children}</main>
+        <main className="flex-1 min-w-0 p-4 sm:p-8">{children}</main>
       </div>
     </div>
   )

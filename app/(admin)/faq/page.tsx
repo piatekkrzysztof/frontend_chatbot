@@ -75,7 +75,7 @@ export default function FAQPage() {
   return (
     <div>
       <h1 className="text-2xl font-bold mb-1">FAQ</h1>
-      <p className="text-sand-300 mb-6">
+      <p className="tekst-drugi mb-6">
         Gotowe pytania i odpowiedzi. Bot korzysta z nich w rozmowach, więc to
         najszybszy sposób, żeby nauczyć go czegoś, czego nie ma w dokumentach.
       </p>
@@ -110,22 +110,22 @@ export default function FAQPage() {
         </button>
       </form>
 
-      {error && <p className="text-sm text-rose-400 mb-4">{error}</p>}
+      {error && <p className="text-sm text-[#c0392b] mb-4">{error}</p>}
 
       {items.length === 0 ? (
-        <p className="text-sm text-sand-400">Brak wpisów w FAQ.</p>
+        <p className="text-sm tekst-slaby">Brak wpisów w FAQ.</p>
       ) : (
         <ul className="flex flex-col gap-3 max-w-2xl">
           {items.map((item) => (
-            <li key={item.id} className="rounded border border-espresso-700 p-3">
+            <li key={item.id} className="rounded border obramowanie p-3">
               <div className="flex items-start justify-between gap-3">
                 <div>
                   <p className="text-sm font-medium">{item.question}</p>
-                  <p className="text-sm text-sand-300 mt-1 whitespace-pre-wrap">{item.answer}</p>
+                  <p className="text-sm tekst-drugi mt-1 whitespace-pre-wrap">{item.answer}</p>
                 </div>
                 <button
                   onClick={() => handleDelete(item.id)}
-                  className="text-sm text-rose-400 hover:underline shrink-0"
+                  className="text-sm text-[#c0392b] hover:underline shrink-0"
                 >
                   Usuń
                 </button>

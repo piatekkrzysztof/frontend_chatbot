@@ -5,7 +5,7 @@ export default function PlatnoscAnulowanoPage() {
   return (
     <div className="max-w-lg">
       <h1 className="text-2xl font-bold mb-2">Płatność przerwana</h1>
-      <p className="text-sand-300 mb-6">
+      <p className="tekst-drugi mb-6">
         Nic nie zostało pobrane, a Twój dotychczasowy plan działa bez zmian. Możesz wrócić
         do wyboru w dowolnym momencie.
       </p>
@@ -19,7 +19,7 @@ export default function PlatnoscAnulowanoPage() {
         </Link>
         <Link
           href="/dashboard"
-          className="rounded border border-espresso-600 px-4 py-2 text-sm font-medium"
+          className="rounded border border-[color:var(--obramowanie-mocne)] px-4 py-2 text-sm font-medium"
         >
           Panel
         </Link>
