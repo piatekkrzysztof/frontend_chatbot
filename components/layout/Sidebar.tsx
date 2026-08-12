@@ -72,7 +72,13 @@ export default function Sidebar() {
         <div className="admin-support-card">
           <span className="admin-support-kicker">Wsparcie priorytetowe</span>
           <p>Potrzebujesz pomocy z konfiguracją?</p>
-          <a href="mailto:biuro@sm-art.pl">Napisz do nas <span aria-hidden="true">↗</span></a>
+          <a
+            href="mailto:krzysztof@agencjasm-art.pl"
+            aria-label="Napisz do nas na krzysztof@agencjasm-art.pl"
+          >
+            Napisz do nas <span aria-hidden="true">↗</span>
+          </a>
+          <span className="admin-support-email">krzysztof@agencjasm-art.pl</span>
         </div>
         <div className="admin-system-state">
           <span className="status-dot" />

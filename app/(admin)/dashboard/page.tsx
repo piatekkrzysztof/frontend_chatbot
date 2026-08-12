@@ -22,6 +22,49 @@ interface Analytics {
   unanswered: { id: number; question: string; asked_at: string }[]
 }
 
+interface PromptLog {
+  id: number
+  created_at: string
+}
+
+interface DailyQuestions {
+  date: string
+  label: string
+  fullLabel: string
+  count: number
+}
+
+function buildDailyQuestions(logs: PromptLog[]): DailyQuestions[] {
+  const formatter = new Intl.DateTimeFormat('pl-PL', { weekday: 'short' })
+  const fullFormatter = new Intl.DateTimeFormat('pl-PL', { day: 'numeric', month: 'long' })
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+
+  const days = Array.from({ length: 7 }, (_, index) => {
+    const day = new Date(today)
+    day.setDate(today.getDate() - (6 - index))
+    const date = `${day.getFullYear()}-${String(day.getMonth() + 1).padStart(2, '0')}-${String(day.getDate()).padStart(2, '0')}`
+
+    return {
+      date,
+      label: formatter.format(day).replace('.', ''),
+      fullLabel: fullFormatter.format(day),
+      count: 0,
+    }
+  })
+
+  const byDate = new Map(days.map((day) => [day.date, day]))
+  logs.forEach((log) => {
+    const createdAt = new Date(log.created_at)
+    if (Number.isNaN(createdAt.getTime())) return
+    const localDate = `${createdAt.getFullYear()}-${String(createdAt.getMonth() + 1).padStart(2, '0')}-${String(createdAt.getDate()).padStart(2, '0')}`
+    const day = byDate.get(localDate)
+    if (day) day.count += 1
+  })
+
+  return days
+}
+
 interface MetricProps {
   index: string
   label: string
@@ -78,6 +121,7 @@ function DashboardSkeleton() {
 export default function DashboardPage() {
   const [tenantName, setTenantName] = useState('')
   const [data, setData] = useState<Analytics | null>(null)
+  const [dailyQuestions, setDailyQuestions] = useState<DailyQuestions[] | null>()
   const [error, setError] = useState('')
 
   useEffect(() => {
@@ -92,6 +136,16 @@ export default function DashboardPage() {
     apiFetch('/analytics/')
       .then((d) => {
         if (active) setData(d)
+      })
+
+    apiFetch('/chat/logs/')
+      .then((response) => {
+        if (!active) return
+        const logs = (Array.isArray(response) ? response : response.results || []) as PromptLog[]
+        setDailyQuestions(buildDailyQuestions(logs))
+      })
+      .catch(() => {
+        if (active) setDailyQuestions(null)
       })
       .catch((err) => {
         if (active) setError(err instanceof Error ? err.message : 'Nie udało się pobrać statystyk.')
@@ -116,6 +170,8 @@ export default function DashboardPage() {
       + (data.knowledge.faqs > 0 ? 20 : 0)
       + (data.knowledge.websites > 0 ? 20 : 0))
     : 0
+  const maxDailyQuestions = Math.max(0, ...(dailyQuestions?.map((day) => day.count) || []))
+  const chartTotal = dailyQuestions?.reduce((sum, day) => sum + day.count, 0) ?? null
 
   return (
     <div className="dashboard-page">
@@ -150,14 +206,36 @@ export default function DashboardPage() {
               </p>
             </div>
             <div className="command-visual">
-              <div className="signal-chart" aria-label={`${data.conversations.last_7d} rozmów w ostatnim tygodniu`}>
-                {[38, 55, 44, 72, 61, 84, 68, 92].map((height, index) => (
-                  <span key={index} style={{ height: `${height}%` }} />
-                ))}
-              </div>
+              {dailyQuestions ? (
+                <div className="signal-chart" aria-label={`${chartTotal} pytań w ostatnich 7 dniach`}>
+                  {dailyQuestions.map((day) => {
+                    const height = maxDailyQuestions > 0 ? (day.count / maxDailyQuestions) * 100 : 0
+                    return (
+                      <div className="signal-column" key={day.date}>
+                        <span className="signal-value">{day.count}</span>
+                        <span
+                          className={`signal-bar ${day.count === 0 ? 'is-zero' : ''}`}
+                          style={{ height: day.count === 0 ? '2px' : `${Math.max(height, 8)}%` }}
+                          title={`${day.fullLabel}: ${day.count} ${day.count === 1 ? 'pytanie' : 'pytań'}`}
+                        />
+                        <span className="signal-label">{day.label}</span>
+                      </div>
+                    )
+                  })}
+                </div>
+              ) : dailyQuestions === undefined ? (
+                <div className="signal-chart-empty is-loading" role="status">
+                  <span>Ładowanie aktywności…</span>
+                </div>
+              ) : (
+                <div className="signal-chart-empty">
+                  <span>Brak danych wykresu</span>
+                  <p>Nie udało się pobrać dziennej aktywności.</p>
+                </div>
+              )}
               <div className="command-number">
-                <strong>{data.conversations.last_7d}</strong>
-                <span>rozmów / 7 dni</span>
+                <strong>{chartTotal ?? '—'}</strong>
+                <span>pytań / 7 dni</span>
               </div>
             </div>
           </section>
