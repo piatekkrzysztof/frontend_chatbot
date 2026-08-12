@@ -9,9 +9,14 @@ interface Props {
 export default function Logo({ wysokosc = 30, jakoLink = false, className = '' }: Props) {
   const znak = (
     <span className={`brand-lockup ${className}`} style={{ minHeight: wysokosc }}>
-      <span className="brand-wordmark" style={{ fontSize: wysokosc * 0.82 }}>
-        SM<span className="brand-accent">—</span>art
-      </span>
+      {/* Właściwy znak SM-art, współdzielony ze stroną agencji. */}
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src="/img/logo.svg"
+        alt="SM-art"
+        className="brand-logo-image"
+        style={{ height: wysokosc, width: 'auto' }}
+      />
       <span className="brand-product" style={{ fontSize: Math.max(9, wysokosc * 0.31) }}>
         AI Concierge
       </span>

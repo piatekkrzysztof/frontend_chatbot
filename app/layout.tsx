@@ -1,5 +1,6 @@
 import './globals.css'
 import { ReactNode } from 'react'
+import type { Metadata } from 'next'
 import { Syne, DM_Sans } from 'next/font/google'
 
 /**
@@ -21,13 +22,35 @@ const dmSans = DM_Sans({
   display: 'swap',
 })
 
-export const metadata = {
+export const metadata: Metadata = {
   title: 'Sm-art Chatbot — asystent AI dla Twojej strony',
   description:
     'Chatbot, który odpowiada klientom na podstawie wiedzy Twojej firmy. '
     + 'Wdrożenie w kilkanaście minut, bez programisty.',
-  // Ten sam znak, który stoi w karcie przeglądarki na agencjasm-art.pl
-  icons: { icon: '/img/favicon.svg' },
+  icons: {
+    icon: [{ url: '/img/favicon.svg', type: 'image/svg+xml' }],
+    shortcut: '/img/favicon.svg',
+  },
+  openGraph: {
+    title: 'Sm-art Chatbot — asystent AI dla Twojej strony',
+    description: 'Chatbot oparty na wiedzy Twojej firmy, gotowy do obsługi klientów 24/7.',
+    type: 'website',
+    locale: 'pl_PL',
+    images: [
+      {
+        url: '/img/og-image.svg',
+        width: 1200,
+        height: 600,
+        alt: 'SM-art — technologia, automatyzacja i marketing',
+      },
+    ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Sm-art Chatbot — asystent AI dla Twojej strony',
+    description: 'Chatbot oparty na wiedzy Twojej firmy, gotowy do obsługi klientów 24/7.',
+    images: ['/img/og-image.svg'],
+  },
 }
 
 export default function RootLayout({ children }: { children: ReactNode }) {

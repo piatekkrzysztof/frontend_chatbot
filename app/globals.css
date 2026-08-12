@@ -277,16 +277,11 @@ h1, h2, h3, h4 {
   line-height: 1;
 }
 
-.brand-wordmark {
-  font-family: var(--font-display);
-  font-weight: 800;
-  letter-spacing: -0.075em;
-  white-space: nowrap;
-}
-
-.brand-accent {
-  color: #f97316;
-  margin-inline: 0.04em;
+.brand-logo-image {
+  display: block;
+  max-width: 8.5rem;
+  flex: 0 0 auto;
+  object-fit: contain;
 }
 
 .brand-product {
