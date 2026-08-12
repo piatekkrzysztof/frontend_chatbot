@@ -14,6 +14,7 @@ interface Knowledge {
 }
 
 interface Analytics {
+  tenant_name?: string
   knowledge: Knowledge
   conversations: { total: number; last_7d: number; last_30d: number }
   questions: {
@@ -114,18 +115,11 @@ function DashboardSkeleton() {
 }
 
 export default function DashboardPage() {
-  const [tenantName, setTenantName] = useState('')
   const [data, setData] = useState<Analytics | null>(null)
   const [error, setError] = useState('')
 
   useEffect(() => {
     let active = true
-
-    apiFetch('/accounts/me/')
-      .then((d) => {
-        if (active) setTenantName(d.tenant_name || '')
-      })
-      .catch(() => {})
 
     apiFetch('/analytics/')
       .then((d) => {
@@ -165,7 +159,7 @@ export default function DashboardPage() {
       <section className="dashboard-heading wejscie">
         <div>
           <span className="section-kicker">Centrum operacyjne / 01</span>
-          <h1>{tenantName ? `Dzień dobry, ${tenantName}.` : 'Dzień dobry.'}</h1>
+          <h1>{data?.tenant_name ? `Dzień dobry, ${data.tenant_name}.` : 'Dzień dobry.'}</h1>
           <p>Najważniejsze sygnały z obsługi klienta — bez szumu, w jednym miejscu.</p>
         </div>
         <div className="dashboard-heading-actions">
