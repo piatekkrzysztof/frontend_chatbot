@@ -16,15 +16,14 @@ interface Knowledge {
 interface Analytics {
   knowledge: Knowledge
   conversations: { total: number; last_7d: number; last_30d: number }
-  questions: { total: number; last_7d: number }
+  questions: {
+    total: number
+    last_7d: number
+    daily?: { date: string; count: number }[]
+  }
   answer_sources: { document: number; faq: number; gpt: number }
   usage: { used: number; limit: number | null; plan: string | null }
   unanswered: { id: number; question: string; asked_at: string }[]
-}
-
-interface PromptLog {
-  id: number
-  created_at: string
 }
 
 interface DailyQuestions {
@@ -34,7 +33,7 @@ interface DailyQuestions {
   count: number
 }
 
-function buildDailyQuestions(logs: PromptLog[]): DailyQuestions[] {
+function buildDailyQuestions(counts: { date: string; count: number }[]): DailyQuestions[] {
   const formatter = new Intl.DateTimeFormat('pl-PL', { weekday: 'short' })
   const fullFormatter = new Intl.DateTimeFormat('pl-PL', { day: 'numeric', month: 'long' })
   const today = new Date()
@@ -53,13 +52,9 @@ function buildDailyQuestions(logs: PromptLog[]): DailyQuestions[] {
     }
   })
 
-  const byDate = new Map(days.map((day) => [day.date, day]))
-  logs.forEach((log) => {
-    const createdAt = new Date(log.created_at)
-    if (Number.isNaN(createdAt.getTime())) return
-    const localDate = `${createdAt.getFullYear()}-${String(createdAt.getMonth() + 1).padStart(2, '0')}-${String(createdAt.getDate()).padStart(2, '0')}`
-    const day = byDate.get(localDate)
-    if (day) day.count += 1
+  const countByDate = new Map(counts.map((item) => [item.date, item.count]))
+  days.forEach((day) => {
+    day.count = countByDate.get(day.date) || 0
   })
 
   return days
@@ -121,7 +116,6 @@ function DashboardSkeleton() {
 export default function DashboardPage() {
   const [tenantName, setTenantName] = useState('')
   const [data, setData] = useState<Analytics | null>(null)
-  const [dailyQuestions, setDailyQuestions] = useState<DailyQuestions[] | null>()
   const [error, setError] = useState('')
 
   useEffect(() => {
@@ -135,17 +129,7 @@ export default function DashboardPage() {
 
     apiFetch('/analytics/')
       .then((d) => {
-        if (active) setData(d)
-      })
-
-    apiFetch('/chat/logs/')
-      .then((response) => {
-        if (!active) return
-        const logs = (Array.isArray(response) ? response : response.results || []) as PromptLog[]
-        setDailyQuestions(buildDailyQuestions(logs))
-      })
-      .catch(() => {
-        if (active) setDailyQuestions(null)
+        if (active) setData(d as Analytics)
       })
       .catch((err) => {
         if (active) setError(err instanceof Error ? err.message : 'Nie udało się pobrać statystyk.')
@@ -170,6 +154,9 @@ export default function DashboardPage() {
       + (data.knowledge.faqs > 0 ? 20 : 0)
       + (data.knowledge.websites > 0 ? 20 : 0))
     : 0
+  const dailyQuestions = data?.questions.daily
+    ? buildDailyQuestions(data.questions.daily)
+    : null
   const maxDailyQuestions = Math.max(0, ...(dailyQuestions?.map((day) => day.count) || []))
   const chartTotal = dailyQuestions?.reduce((sum, day) => sum + day.count, 0) ?? null
 
@@ -223,14 +210,10 @@ export default function DashboardPage() {
                     )
                   })}
                 </div>
-              ) : dailyQuestions === undefined ? (
-                <div className="signal-chart-empty is-loading" role="status">
-                  <span>Ładowanie aktywności…</span>
-                </div>
               ) : (
                 <div className="signal-chart-empty">
-                  <span>Brak danych wykresu</span>
-                  <p>Nie udało się pobrać dziennej aktywności.</p>
+                  <span>Brak danych dziennych</span>
+                  <p>Wykres pojawi się po aktualizacji API analitycznego.</p>
                 </div>
               )}
               <div className="command-number">
