@@ -1680,3 +1680,95 @@ h1, h2, h3, h4 {
     flex-direction: column;
   }
 }
+
+/* ═══ Stan systemu ═══
+   Kolory semantyczne, osobne od pomarańczu marki: akcent oznacza „to jest
+   nasze", a nie „to jest w porządku". Gdyby stan sprawny był pomarańczowy,
+   nie dałoby się odróżnić informacji od ostrzeżenia. */
+.stan-ok     { --stan: #2f6f4f; --stan-tlo: rgba(47, 111, 79, 0.10); }
+.stan-uwaga  { --stan: #8a5a00; --stan-tlo: rgba(138, 90, 0, 0.10); }
+.stan-awaria { --stan: #b3261e; --stan-tlo: rgba(179, 38, 30, 0.09); }
+
+.stan-kropka {
+  display: inline-block;
+  width: 0.5rem;
+  height: 0.5rem;
+  flex: 0 0 auto;
+  border-radius: 50%;
+  background: var(--stan, var(--tekst-slaby));
+}
+
+/* Werdykt dostaje pasek z boku, nie samo tło: kolorowa płaszczyzna na całą
+   szerokość czyta się jak alarm nawet wtedy, gdy wszystko jest w porządku. */
+.stan-werdykt {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 1.05rem 1.25rem;
+  border: 1px solid var(--admin-line);
+  border-left: 3px solid var(--stan);
+  background: var(--stan-tlo);
+}
+.stan-werdykt .stan-kropka { margin-top: 0.5rem; }
+.stan-werdykt p { margin: 0; font-size: 0.95rem; line-height: 1.55; }
+
+.stan-siatka {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: 1fr;
+}
+@media (min-width: 52rem) {
+  .stan-siatka { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+
+.stan-karta {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 1.15rem;
+  border: 1px solid var(--admin-line);
+  background: rgba(255, 255, 255, 0.8);
+}
+.stan-karta-gora {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+.stan-karta h3 { font-size: 1.02rem; margin: 0; }
+.stan-karta p { margin: 0; font-size: 0.9rem; line-height: 1.55; }
+
+.stan-etykieta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  color: var(--stan);
+  background: var(--stan-tlo);
+  font-family: var(--font-display);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 0.2rem 0.5rem;
+  white-space: nowrap;
+}
+
+.stan-szczegoly {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  margin: 0.35rem 0 0;
+  color: var(--tekst-slaby);
+  font-size: 0.82rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.stan-blad {
+  font-family: var(--font-body);
+  font-size: 0.8rem !important;
+  color: #b3261e;
+  word-break: break-word;
+}
+
+.stan-podpowiedz { font-size: 0.85rem; margin-top: 0.6rem; }
+.stan-stopka { font-size: 0.8rem; }

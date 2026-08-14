@@ -30,6 +30,7 @@ const GRUPY = [
       { href: '/team', label: 'Zespół', kod: '07' },
       { href: '/subskrypcja', label: 'Subskrypcja', kod: '08' },
       { href: '/privacy', label: 'Prywatność', kod: '09' },
+      { href: '/stan', label: 'Stan systemu', kod: '10' },
     ],
   },
 ]
