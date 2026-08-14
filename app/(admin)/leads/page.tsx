@@ -10,6 +10,8 @@ interface ContactRequest {
   message: string
   handled: boolean
   created_at: string
+  powiadomiono_at: string | null
+  blad_powiadomienia: string
 }
 
 export default function LeadsPage() {
@@ -89,6 +91,15 @@ export default function LeadsPage() {
                   <p className="text-xs tekst-slaby mt-1">
                     {new Date(item.created_at).toLocaleString('pl-PL')}
                   </p>
+                  {/* Ostrzeżenie o niedoręczonym powiadomieniu. Bez tego
+                      właściciel czeka na maila, który nigdy nie przyszedł,
+                      i nie ma jak się dowiedzieć, że nie przyjdzie. */}
+                  {item.blad_powiadomienia && (
+                    <p className="text-xs mt-1.5 text-[#b3261e]">
+                      Nie udało się wysłać powiadomienia o tym zapytaniu.
+                      Sprawdź adres e-mail w ustawieniach konta.
+                    </p>
+                  )}
                 </div>
                 <button
                   onClick={() => toggleHandled(item)}
