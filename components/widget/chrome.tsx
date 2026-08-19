@@ -229,6 +229,37 @@ export function Sugestie({
 }
 
 /** Stopka: adres polityki prywatności i podpis, oba w mikro-wersalikach. */
+export function PasekKontaktu({
+  theme,
+  onClick,
+}: {
+  theme: WidgetTheme
+  onClick?: () => void
+}) {
+  /*
+    Wyjście „zostaw kontakt" dostępne przez cały czas rozmowy.
+
+    Nie w pasku tytułu, choć tam się prosiło: przy 320 px przycisk ściskał
+    nazwę firmy do 93 px, przez co ujawnienie „Asystent AI · odpowiada
+    automatycznie" zawijało się na trzy wiersze. Tamten napis jest wymagany
+    przez art. 50 AI Act i nie może przegrywać miejsca z niczym.
+
+    Tutaj, tuż nad polem wpisywania, jest równie stale widoczny — pasek nie
+    odjeżdża razem z historią — a niczego nie wypycha.
+  */
+  return (
+    <div
+      className="shrink-0 flex justify-end px-3.5 py-1.5"
+      style={{ background: theme.surface, borderTop: `1px solid ${theme.line}` }}
+    >
+      <button type="button" onClick={onClick} className="underline underline-offset-2">
+        <Etykieta style={{ color: theme.accentText }}>Zostaw kontakt</Etykieta>
+      </button>
+    </div>
+  )
+}
+
+
 export function Stopka({
   theme,
   privacyUrl,

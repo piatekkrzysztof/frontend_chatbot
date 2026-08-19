@@ -9,6 +9,7 @@ import {
   BabelUzytkownika,
   Etykieta,
   KANT,
+  PasekKontaktu,
   PasekTytulu,
   Stopka,
   Sugestie,
@@ -155,6 +156,12 @@ export default function WidgetChat() {
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages])
+
+  // Formularz doklejamy pod historią, więc otwarty z paska tytułu wypadłby
+  // poza kadrem przy dłuższej rozmowie — czyli klik wyglądałby na martwy.
+  useEffect(() => {
+    if (contactOpen) bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
+  }, [contactOpen])
 
   async function handleSend(presetText?: string) {
     const text = (presetText ?? input).trim()
@@ -441,15 +448,22 @@ export default function WidgetChat() {
           </BabelBota>
         )}
 
-        {offerContact && !contactSent && !sending && (
-          <div>
-            {!contactOpen ? (
-              <button onClick={() => setContactOpen(true)} className="underline underline-offset-2">
-                <Etykieta style={{ color: theme.accentText }}>
-                  Nie znalazłeś odpowiedzi? Zostaw kontakt
-                </Etykieta>
-              </button>
-            ) : (
+        {/* Zaczepka w strumieniu: pojawia się sama, gdy bot nie pomógł.
+            Przycisk w pasku jest zawsze — ta dochodzi tam, gdzie akurat patrzy
+            odwiedzający, czyli pod nieudaną odpowiedzią. */}
+        {offerContact && !contactOpen && !contactSent && !sending && (
+          <button
+            onClick={() => setContactOpen(true)}
+            className="self-start underline underline-offset-2"
+          >
+            <Etykieta style={{ color: theme.accentText }}>
+              Nie znalazłeś odpowiedzi? Zostaw kontakt
+            </Etykieta>
+          </button>
+        )}
+
+        {/* Jeden formularz, dwa wejścia: pasek tytułu i zaczepka wyżej */}
+        {contactOpen && !contactSent && (
               <div
                 className="p-3 flex flex-col gap-2.5"
                 style={{
@@ -496,12 +510,18 @@ export default function WidgetChat() {
                   </button>
                 </div>
               </div>
-            )}
-          </div>
         )}
 
         <div ref={bottomRef} />
       </div>
+
+      {/* Wykrywanie „bot nie pomógł" opiera się na tym, czy model przyzna się
+          do niewiedzy — sprawdza się w większości przypadków, ale nie jest
+          gwarancją. Poza tym ktoś może chcieć zostawić numer od razu, bez
+          odpytywania bota. To wyjście nie zależy od niczego. */}
+      {!contactSent && !contactOpen && (
+        <PasekKontaktu theme={theme} onClick={() => setContactOpen(true)} />
+      )}
 
       <div
         className="shrink-0 flex items-stretch gap-2 px-3.5 py-2.5"

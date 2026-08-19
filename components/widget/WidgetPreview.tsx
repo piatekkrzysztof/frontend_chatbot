@@ -1,7 +1,7 @@
 'use client'
 
 import { resolveTheme } from './theme'
-import { BabelBota, Etykieta, KANT, PasekTytulu, Stopka, Sugestie } from './chrome'
+import { BabelBota, Etykieta, KANT, PasekKontaktu, PasekTytulu, Stopka, Sugestie } from './chrome'
 
 interface Props {
   brandingMode: 'smart' | 'white_label'
@@ -84,6 +84,10 @@ export default function WidgetPreview({
 
         <Sugestie theme={theme} pytania={questions} />
       </div>
+
+      {/* Podgląd ma pokazywać to, co zobaczy odwiedzający — bez tego klient
+          projektuje wygląd okna, którego jego goście nigdy nie widzą. */}
+      <PasekKontaktu theme={theme} />
 
       <div
         className="shrink-0 flex items-stretch gap-2 px-3.5 py-2.5"
