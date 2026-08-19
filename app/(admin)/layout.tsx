@@ -36,4 +36,5 @@ function AdminLayout({ children }: { children: ReactNode }) {
   )
 }
 
+
 export default withAuth(AdminLayout)
