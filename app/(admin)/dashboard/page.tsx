@@ -24,7 +24,9 @@ interface Analytics {
   }
   answer_sources: { document: number; faq: number; gpt: number }
   usage: { used: number; limit: number | null; plan: string | null }
-  unanswered: { id: number; question: string; asked_at: string }[]
+  // Pozycje są sklejone po treści pytania, więc nie mają id pojedynczego
+  // wpisu — kluczem jest sama treść, a `count` mówi, ile razy padło.
+  unanswered: { question: string; count: number; asked_at: string }[]
 }
 
 interface DailyQuestions {
@@ -120,6 +122,14 @@ export default function DashboardPage() {
   // null = jeszcze nie wiadomo; bez tego przełącznik mrugałby z pozycji
   // „wyłączone" na faktyczną w trakcie wczytywania
   const [raportTygodniowy, setRaportTygodniowy] = useState<boolean | null>(null)
+  // Treść pytania, do którego klient właśnie pisze odpowiedź (null = żadne)
+  const [odpowiadaNa, setOdpowiadaNa] = useState<string | null>(null)
+  const [odpowiedz, setOdpowiedz] = useState('')
+  const [zapisuje, setZapisuje] = useState(false)
+  // Pytania załatwione w tej sesji. Znikają z listy od razu, bez czekania na
+  // przeliczenie statystyk — te i tak liczą wstecz, więc pozycja wróciłaby
+  // przy odświeżeniu i wyglądało to jak niezapisana zmiana.
+  const [zalatwione, setZalatwione] = useState<string[]>([])
 
   useEffect(() => {
     let active = true
@@ -145,6 +155,26 @@ export default function DashboardPage() {
       active = false
     }
   }, [])
+
+  async function zapiszOdpowiedz(pytanie: string) {
+    const tresc = odpowiedz.trim()
+    if (!tresc) return
+
+    setZapisuje(true)
+    try {
+      await apiFetch('/faq/', {
+        method: 'POST',
+        body: JSON.stringify({ question: pytanie, answer: tresc }),
+      })
+      setZalatwione((poprzednie) => [...poprzednie, pytanie])
+      setOdpowiadaNa(null)
+      setOdpowiedz('')
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Nie udało się zapisać odpowiedzi.')
+    } finally {
+      setZapisuje(false)
+    }
+  }
 
   async function przelaczRaport(wlaczony: boolean) {
     // Optymistycznie, żeby kliknięcie było natychmiastowe; przy błędzie wracamy
@@ -329,12 +359,60 @@ export default function DashboardPage() {
               </div>
             ) : (
               <div className="unanswered-list">
-                {data.unanswered.slice(0, 5).map((item, index) => (
-                  <article key={item.id} className="unanswered-row">
+                {data.unanswered
+                  .filter((item) => !zalatwione.includes(item.question))
+                  .slice(0, 5)
+                  .map((item, index) => (
+                  <article key={item.question} className="unanswered-row">
                     <span className="row-index">{String(index + 1).padStart(2, '0')}</span>
-                    <p>{item.question}</p>
+                    <p>
+                      {item.question}
+                      {/* Krotność mówi, co uzupełnić najpierw. Przy jednym
+                          wystąpieniu pomijamy ją — "1×" to szum. */}
+                      {item.count > 1 && (
+                        <strong className="row-count">{item.count}× pytano</strong>
+                      )}
+                    </p>
                     <time dateTime={item.asked_at}>{new Date(item.asked_at).toLocaleString('pl-PL')}</time>
-                    <Link href="/faq" aria-label={`Dodaj odpowiedź do pytania: ${item.question}`}>↗</Link>
+                    <button
+                      type="button"
+                      className="row-answer"
+                      onClick={() => {
+                        setOdpowiadaNa(odpowiadaNa === item.question ? null : item.question)
+                        setOdpowiedz('')
+                      }}
+                      aria-expanded={odpowiadaNa === item.question}
+                    >
+                      {odpowiadaNa === item.question ? 'Anuluj' : 'Odpowiedz'}
+                    </button>
+
+                    {/* Formularz w tym samym wierszu, nie na osobnej stronie.
+                        Przepisywanie pytania ręcznie do zakładki FAQ było
+                        największym tarciem w tej pętli — a to ona decyduje,
+                        czy bot z czasem staje się lepszy. */}
+                    {odpowiadaNa === item.question && (
+                      <div className="row-answer-form">
+                        <textarea
+                          value={odpowiedz}
+                          onChange={(e) => setOdpowiedz(e.target.value)}
+                          rows={3}
+                          autoFocus
+                          placeholder="Odpowiedź, którą bot ma podawać na to pytanie"
+                          aria-label={`Odpowiedź na pytanie: ${item.question}`}
+                        />
+                        <div>
+                          <button
+                            type="button"
+                            className="btn-primary"
+                            disabled={zapisuje || !odpowiedz.trim()}
+                            onClick={() => zapiszOdpowiedz(item.question)}
+                          >
+                            {zapisuje ? 'Zapisywanie…' : 'Dodaj do bazy wiedzy'}
+                          </button>
+                          <span>Trafi do FAQ i od razu zacznie działać w czacie.</span>
+                        </div>
+                      </div>
+                    )}
                   </article>
                 ))}
               </div>
