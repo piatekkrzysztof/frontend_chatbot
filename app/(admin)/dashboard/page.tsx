@@ -117,6 +117,9 @@ function DashboardSkeleton() {
 export default function DashboardPage() {
   const [data, setData] = useState<Analytics | null>(null)
   const [error, setError] = useState('')
+  // null = jeszcze nie wiadomo; bez tego przełącznik mrugałby z pozycji
+  // „wyłączone" na faktyczną w trakcie wczytywania
+  const [raportTygodniowy, setRaportTygodniowy] = useState<boolean | null>(null)
 
   useEffect(() => {
     let active = true
@@ -129,10 +132,33 @@ export default function DashboardPage() {
         if (active) setError(err instanceof Error ? err.message : 'Nie udało się pobrać statystyk.')
       })
 
+    apiFetch('/widget-settings/mine/')
+      .then((d) => {
+        if (active) setRaportTygodniowy(Boolean((d as { raport_tygodniowy?: boolean }).raport_tygodniowy))
+      })
+      .catch(() => {
+        // Cicho: to ustawienie poboczne, pulpit ma się pokazać nawet wtedy,
+        // gdy nie udało się odczytać preferencji powiadomień
+      })
+
     return () => {
       active = false
     }
   }, [])
+
+  async function przelaczRaport(wlaczony: boolean) {
+    // Optymistycznie, żeby kliknięcie było natychmiastowe; przy błędzie wracamy
+    const poprzedni = raportTygodniowy
+    setRaportTygodniowy(wlaczony)
+    try {
+      const dane = new FormData()
+      dane.append('raport_tygodniowy', String(wlaczony))
+      await apiFetch('/widget-settings/mine/', { method: 'PATCH', body: dane })
+    } catch (err) {
+      setRaportTygodniowy(poprzedni)
+      setError(err instanceof Error ? err.message : 'Nie udało się zapisać ustawienia.')
+    }
+  }
 
   const sources = data?.answer_sources
   const answeredFromContent = sources ? sources.document + sources.faq : 0
@@ -313,6 +339,25 @@ export default function DashboardPage() {
                 ))}
               </div>
             )}
+
+            {/* Ten sam wybór, który list zapowiada w stopce. Stoi tutaj, przy
+                danych, których dotyczy — nie w ustawieniach widgetu, gdzie
+                nie ma nic wspólnego z wyglądem okna czatu. */}
+            <label className="raport-przelacznik">
+              <input
+                type="checkbox"
+                checked={raportTygodniowy === true}
+                disabled={raportTygodniowy === null}
+                onChange={(e) => przelaczRaport(e.target.checked)}
+              />
+              <span>
+                Przysyłaj mi to w poniedziałki mailem
+                <small>
+                  Jeden list tygodniowo, wyłącznie wtedy, gdy pojawią się nowe
+                  pytania bez pokrycia.
+                </small>
+              </span>
+            </label>
           </section>
         </div>
       )}

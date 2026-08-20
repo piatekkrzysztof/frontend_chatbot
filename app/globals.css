@@ -1772,3 +1772,30 @@ h1, h2, h3, h4 {
 
 .stan-podpowiedz { font-size: 0.85rem; margin-top: 0.6rem; }
 .stan-stopka { font-size: 0.8rem; }
+
+/* Wyłącznik cotygodniowego raportu luk, na dole panelu „Pytania bez pokrycia".
+   Stoi przy danych, których dotyczy, ale nie może z nimi konkurować o uwagę —
+   stąd rozmiar i kolor drugoplanowy oraz kreska oddzielająca go od listy. */
+.raport-przelacznik {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.625rem;
+  margin-top: 1.25rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--admin-line);
+  font-size: 0.8125rem;
+  color: var(--tekst);
+  cursor: pointer;
+}
+
+.raport-przelacznik input {
+  margin-top: 0.1875rem;
+  flex-shrink: 0;
+}
+
+.raport-przelacznik small {
+  display: block;
+  margin-top: 0.125rem;
+  font-size: 0.75rem;
+  color: var(--tekst-slaby);
+}
