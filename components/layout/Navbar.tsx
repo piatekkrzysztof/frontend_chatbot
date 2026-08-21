@@ -49,7 +49,7 @@ export default function Navbar({ onToggleMenu, menuOtwarte }: Props) {
             onClick={onToggleMenu}
             aria-label={menuOtwarte ? 'Zamknij menu' : 'Otwórz menu'}
             aria-expanded={menuOtwarte}
-            className="admin-menu-button lg:hidden"
+            className="admin-menu-button inline-flex lg:hidden"
           >
             <span aria-hidden="true">{menuOtwarte ? '×' : '≡'}</span>
           </button>

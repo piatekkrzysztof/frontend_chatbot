@@ -549,10 +549,20 @@ h1, h2, h3, h4 {
 
 .admin-navbar-left,
 .admin-navbar-actions,
-.admin-account,
-.admin-account-copy,
-.admin-breadcrumb {
+.admin-account-copy {
   display: flex;
+  align-items: center;
+}
+
+/* .admin-account i .admin-breadcrumb dostaja `display` wylacznie z klas
+   Tailwinda w znaczniku (hidden sm:flex / hidden lg:flex).
+
+   Nie wolno ustawiac go tutaj: zwykla regula CSS spoza warstwy bije utility
+   z @layer niezaleznie od kolejnosci i specyficznosci, wiec `hidden`
+   przegrywalo i oba elementy zostawaly widoczne na telefonie. Dane konta
+   wystawaly wtedy 116 px poza kadr i cały panel przewijal sie w poziomie. */
+.admin-account,
+.admin-breadcrumb {
   align-items: center;
 }
 
@@ -627,7 +637,11 @@ h1, h2, h3, h4 {
 
 .admin-logout,
 .admin-menu-button {
-  display: inline-flex;
+  /* Bez `display` z tej samej przyczyny co przy .admin-account wyzej: zwykla
+     regula bila `lg:hidden` ze znacznika i przycisk menu mobilnego pokazywal
+     sie takze obok stalego menu bocznego na desktopie. Widocznosc niesie teraz
+     para utility `inline-flex lg:hidden` — obie z tej samej warstwy, wiec
+     rozstrzyga miedzy nimi punkt zaczepienia, tak jak powinno. */
   align-items: center;
   justify-content: center;
   gap: 0.4rem;
@@ -2004,3 +2018,27 @@ h1, h2, h3, h4 {
 }
 
 .test-bota-reset:hover { color: #b8480c; }
+
+/* ─── Pasek gorny: skurcz zamiast przewijania ────────────────────────────
+   Przy 1024 px pojawiaja sie naraz stale menu boczne (280 px) i okruszki
+   nawigacji, przez co na sam pasek zostaje ~657 px, a jego zawartosc chciala
+   716 px. Elementy flex maja domyslnie `min-width: auto`, czyli nie kurcza sie
+   ponizej szerokosci wlasnej tresci — i zamiast przyciac nazwe firmy, caly
+   panel przewijal sie w poziomie.
+
+   Zmierzone przy nazwie "Dwor Weselny Pod Debem i Lipa" (najgorszy przypadek,
+   jaki miesci sie w limicie 100 znakow pola). */
+.admin-navbar-left,
+.admin-navbar-actions,
+.admin-account,
+.admin-account-copy {
+  min-width: 0;
+}
+
+/* Te dwa nigdy nie zwezaja sie kosztem czytelnosci: awatar zamienilby sie
+   w pasek, a "Wyloguj" to jedyne wyjscie z panelu. Kurczy sie nazwa firmy,
+   ktora ma juz wielokropek. */
+.admin-avatar,
+.admin-logout {
+  flex-shrink: 0;
+}
