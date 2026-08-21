@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import Link from 'next/link'
 import { apiFetch } from '@/lib/api'
 
 interface ContactRequest {
@@ -147,9 +148,20 @@ export default function LeadsPage() {
                       i nie ma jak się dowiedzieć, że nie przyjdzie. */}
                   {item.blad_powiadomienia && (
                     <p className="text-xs mt-1.5 text-[#b3261e]">
-                      {item.blad_powiadomienia.startsWith('BRAK_ADRESU')
-                        ? 'Nie mamy dokąd wysłać powiadomienia — uzupełnij adres e-mail w ustawieniach konta.'
-                        : 'Powiadomienie nie zostało wysłane. Problem jest po stronie poczty, nie Twojego konta — zgłoś to nam.'}
+                      {item.blad_powiadomienia.startsWith('BRAK_ADRESU') ? (
+                        <>
+                          Nie mamy dokąd wysłać powiadomienia —{' '}
+                          {/* Odkąd ustawienia konta istnieją, ta rada prowadzi
+                              do konkretnego pola. Wcześniej wskazywała ekran,
+                              którego w panelu nie było. */}
+                          <Link href="/ustawienia" className="underline">
+                            uzupełnij adres e-mail w ustawieniach konta
+                          </Link>
+                          .
+                        </>
+                      ) : (
+                        'Powiadomienie nie zostało wysłane. Problem jest po stronie poczty, nie Twojego konta — zgłoś to nam.'
+                      )}
                     </p>
                   )}
                 </div>

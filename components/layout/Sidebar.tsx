@@ -30,10 +30,11 @@ const GRUPY = [
   {
     tytul: 'Konto',
     linki: [
-      { href: '/team', label: 'Zespół', kod: '08' },
-      { href: '/subskrypcja', label: 'Subskrypcja', kod: '09' },
-      { href: '/privacy', label: 'Prywatność', kod: '10' },
-      { href: '/stan', label: 'Stan systemu', kod: '11' },
+      { href: '/ustawienia', label: 'Ustawienia konta', kod: '08' },
+      { href: '/team', label: 'Zespół', kod: '09' },
+      { href: '/subskrypcja', label: 'Subskrypcja', kod: '10' },
+      { href: '/privacy', label: 'Prywatność', kod: '11' },
+      { href: '/stan', label: 'Stan systemu', kod: '12' },
     ],
   },
 ]
