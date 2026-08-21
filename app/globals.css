@@ -1884,3 +1884,123 @@ h1, h2, h3, h4 {
     grid-column: 2 / -1;
   }
 }
+
+/* ─── Test bota ───────────────────────────────────────────────────────────
+   Rozmowa właściciela z własnym botem. Celowo wygląda jak narzędzie panelu,
+   a nie jak widget: podgląd wyglądu okna czatu jest osobno, w ustawieniach
+   widgetu. Tu liczy się treść odpowiedzi i to, skąd bot ją wziął. */
+.test-bota {
+  max-width: 46rem;
+  border: 1px solid var(--admin-line);
+  background: rgba(255, 255, 255, 0.8);
+}
+
+.test-bota-rozmowa {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+  min-height: 22rem;
+  max-height: 60vh;
+  overflow-y: auto;
+  padding: 1.25rem;
+}
+
+.test-bota-pusto {
+  margin: auto;
+  max-width: 26rem;
+  text-align: center;
+  color: var(--tekst-drugi);
+}
+
+.test-bota-pusto p {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--tekst);
+}
+
+.test-bota-pusto small {
+  display: block;
+  margin-top: 0.5rem;
+  font-size: 0.78rem;
+  line-height: 1.5;
+  color: var(--tekst-slaby);
+}
+
+.test-bota-pusto a {
+  color: #b8480c;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.test-bota-babel {
+  max-width: 85%;
+  padding: 0.65rem 0.85rem;
+  border-radius: 2px;
+  font-size: 0.85rem;
+  line-height: 1.5;
+}
+
+.test-bota-babel p {
+  white-space: pre-wrap;
+}
+
+.test-bota-babel.jest-moja {
+  align-self: flex-end;
+  background: #241a0e;
+  color: #faf8f5;
+}
+
+.test-bota-babel.jest-bota {
+  align-self: flex-start;
+  background: #ffffff;
+  border: 1px solid var(--admin-line);
+  border-left: 2px solid var(--admin-accent);
+  color: var(--tekst);
+}
+
+/* Właściwy powód istnienia tej strony: sama odpowiedź nie mówi, czy bot ją
+   znalazł w wiedzy klienta, czy poradził sobie dookoła. */
+.test-bota-zrodlo {
+  display: block;
+  margin-top: 0.45rem;
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+.zrodlo-ok { color: #1f7a4d; }
+.zrodlo-luka { color: #b3261e; }
+
+.test-bota-pole {
+  display: flex;
+  gap: 0.5rem;
+  padding: 0.85rem 1.25rem;
+  border-top: 1px solid var(--admin-line);
+  background: #ffffff;
+}
+
+.test-bota-pole input {
+  flex: 1;
+  min-width: 0;
+  padding: 0.55rem 0.75rem;
+  border: 1px solid var(--admin-line);
+  border-radius: 2px;
+  font-size: 0.85rem;
+  color: var(--tekst);
+}
+
+.test-bota-pole input:focus {
+  outline: none;
+  border-color: rgba(249, 115, 22, 0.55);
+}
+
+.test-bota-reset {
+  margin-top: 0.9rem;
+  font-size: 0.75rem;
+  color: var(--tekst-slaby);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.test-bota-reset:hover { color: #b8480c; }

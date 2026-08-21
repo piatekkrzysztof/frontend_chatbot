@@ -15,6 +15,18 @@ export function clearTokens() {
   localStorage.removeItem('refresh_token')
 }
 
+/**
+ * Nagłówek uwierzytelniający do wywołań, które muszą ominąć apiFetch.
+ *
+ * Strumienie SSE potrzebują surowego `Response.body`, a apiFetch zwraca już
+ * sparsowany JSON — stąd ten wyjątek. Jedno miejsce z nazwą klucza w
+ * localStorage, żeby nie rozjechała się z resztą.
+ */
+export function authHeaders(): Record<string, string> {
+  const token = getToken()
+  return token ? { Authorization: `Bearer ${token}` } : {}
+}
+
 export async function apiFetch(path: string, options: RequestInit = {}) {
   const token = getToken()
   const headers = new Headers(options.headers)

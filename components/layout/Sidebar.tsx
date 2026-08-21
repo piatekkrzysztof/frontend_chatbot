@@ -14,23 +14,26 @@ const GRUPY = [
     linki: [
       { href: '/documents', label: 'Baza wiedzy', kod: '02' },
       { href: '/faq', label: 'FAQ', kod: '03' },
-      { href: '/widget-settings', label: 'Widget', kod: '04' },
+      // Zaraz pod źródłami wiedzy, bo to ich sprawdzenie: wgrywasz, pytasz,
+      // widzisz. Nie w „Obsłudze klienta" — to nie jest ruch klientów.
+      { href: '/test-bota', label: 'Test bota', kod: '04' },
+      { href: '/widget-settings', label: 'Widget', kod: '05' },
     ],
   },
   {
     tytul: 'Obsługa klienta',
     linki: [
-      { href: '/conversations', label: 'Konwersacje', kod: '05' },
-      { href: '/leads', label: 'Zapytania', kod: '06' },
+      { href: '/conversations', label: 'Konwersacje', kod: '06' },
+      { href: '/leads', label: 'Zapytania', kod: '07' },
     ],
   },
   {
     tytul: 'Konto',
     linki: [
-      { href: '/team', label: 'Zespół', kod: '07' },
-      { href: '/subskrypcja', label: 'Subskrypcja', kod: '08' },
-      { href: '/privacy', label: 'Prywatność', kod: '09' },
-      { href: '/stan', label: 'Stan systemu', kod: '10' },
+      { href: '/team', label: 'Zespół', kod: '08' },
+      { href: '/subskrypcja', label: 'Subskrypcja', kod: '09' },
+      { href: '/privacy', label: 'Prywatność', kod: '10' },
+      { href: '/stan', label: 'Stan systemu', kod: '11' },
     ],
   },
 ]
