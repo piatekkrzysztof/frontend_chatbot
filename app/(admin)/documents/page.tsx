@@ -10,6 +10,8 @@ interface DocumentItem {
   uploaded_at: string
   chunk_count: number
   status: string
+  uzywaj_w_wyszukiwaniu: boolean
+  source_url: string
 }
 
 interface WebsiteSourceItem {
@@ -27,6 +29,8 @@ export default function DocumentsPage() {
   const [descriptionError, setDescriptionError] = useState('')
 
   const [documents, setDocuments] = useState<DocumentItem[]>([])
+  // Id dokumentu, przy którym trwa zapis — blokuje podwójne kliknięcie
+  const [przelaczane, setPrzelaczane] = useState<number | null>(null)
   const [file, setFile] = useState<File | null>(null)
   const [uploading, setUploading] = useState(false)
   const [error, setError] = useState('')
@@ -152,6 +156,28 @@ export default function DocumentsPage() {
     }
   }
 
+  async function przelaczWyszukiwanie(doc: DocumentItem, wlaczony: boolean) {
+    // Optymistycznie: kliknięcie ma być natychmiastowe, a przy błędzie wracamy
+    setDocuments((poprzednie) =>
+      poprzednie.map((d) => (d.id === doc.id ? { ...d, uzywaj_w_wyszukiwaniu: wlaczony } : d)),
+    )
+    setPrzelaczane(doc.id)
+    try {
+      await apiFetch(`/documents/${doc.id}/wyszukiwanie/`, {
+        method: 'PATCH',
+        body: JSON.stringify({ uzywaj_w_wyszukiwaniu: wlaczony }),
+      })
+    } catch {
+      setDocuments((poprzednie) =>
+        poprzednie.map((d) =>
+          d.id === doc.id ? { ...d, uzywaj_w_wyszukiwaniu: !wlaczony } : d,
+        ),
+      )
+    } finally {
+      setPrzelaczane(null)
+    }
+  }
+
   async function handleAddSource(e: FormEvent) {
     e.preventDefault()
     if (!newUrl.trim()) return
@@ -218,7 +244,18 @@ export default function DocumentsPage() {
         {descriptionError && <p className="text-sm text-[#c0392b] mt-2">{descriptionError}</p>}
       </form>
 
-      <h2 className="text-xl font-bold mb-4">Dokumenty</h2>
+      <h2 className="text-xl font-bold mb-1">Dokumenty</h2>
+      <p className="text-sm tekst-slaby mb-4 max-w-2xl">
+        Kolumna <strong>W wyszukiwaniu</strong> decyduje, czy bot korzysta z danej
+        pozycji. Warto wyłączyć to, co nie zawiera faktów — sekcję kontaktową,
+        politykę prywatności, stronę główną z samymi hasłami. Takie treści pasują
+        „po trochu" do każdego pytania i wypychają z wyników fragmenty, które
+        naprawdę odpowiadają.
+        {/* Kluczowa różnica wobec usunięcia: dokument pobrany ze strony WWW wraca
+            przy najbliższym odświeżeniu. Wyłączony zostaje wyłączony. */}
+        {' '}Przy podstronach pobranych z Twojej witryny to jedyny trwały sposób —
+        usunięta wróci przy następnym odświeżeniu treści.
+      </p>
 
       <form onSubmit={handleUpload} className="flex items-center gap-3 mb-6">
         <input
@@ -249,6 +286,7 @@ export default function DocumentsPage() {
             <th className="py-2">Status</th>
             <th className="py-2">Fragmenty</th>
             <th className="py-2">Wgrano</th>
+            <th className="py-2">W wyszukiwaniu</th>
           </tr>
         </thead>
         <tbody>
@@ -258,11 +296,25 @@ export default function DocumentsPage() {
               <td className="py-2">{doc.status}</td>
               <td className="py-2">{doc.chunk_count}</td>
               <td className="py-2">{new Date(doc.uploaded_at).toLocaleString('pl-PL')}</td>
+              <td className="py-2">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={doc.uzywaj_w_wyszukiwaniu}
+                    disabled={przelaczane === doc.id}
+                    onChange={(e) => przelaczWyszukiwanie(doc, e.target.checked)}
+                    aria-label={`Używaj w wyszukiwaniu: ${doc.name}`}
+                  />
+                  <span className="text-xs tekst-slaby">
+                    {doc.uzywaj_w_wyszukiwaniu ? 'używany' : 'pominięty'}
+                  </span>
+                </label>
+              </td>
             </tr>
           ))}
           {documents.length === 0 && (
             <tr>
-              <td colSpan={4} className="py-4 tekst-slaby">
+              <td colSpan={5} className="py-4 tekst-slaby">
                 Brak wgranych dokumentów.
               </td>
             </tr>
