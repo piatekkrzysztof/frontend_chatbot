@@ -26,6 +26,10 @@ interface Sygnal {
   godzin_temu?: number
   zaleglych_rozmow?: number
   przyklad_bledu?: string
+  dokumentow?: number
+  bez_fragmentow?: string[]
+  niepelne?: { nazwa: string; udzial_procent: number }[]
+  adres?: string
 }
 
 interface StanZadan {
@@ -43,6 +47,10 @@ interface StanZadan {
     pobieranie_stron: Sygnal
     czyszczenie_rodo: Sygnal
   }
+  // Dwa sygnaly o tym, co widzi klient, a nie o zapleczu — dlatego poza
+  // `slady_w_danych` i poza ogolnym poziomem.
+  baza_wiedzy: Sygnal
+  poczta: Sygnal
 }
 
 interface StanAdresu {
@@ -221,6 +229,34 @@ export default function StanPage() {
                 indeks="03"
                 sygnal={rodo}
                 szczegoly={[`Rozmów po terminie: ${rodo.zaleglych_rozmow ?? 0}`]}
+              />
+            )}
+
+            {zadania.baza_wiedzy && (
+              <Sygnal
+                nazwa="Wiedza, którą zna bot"
+                indeks="04"
+                sygnal={zadania.baza_wiedzy}
+                szczegoly={[
+                  `Dokumentów w wyszukiwaniu: ${zadania.baza_wiedzy.dokumentow ?? 0}`,
+                  // Nazwy wprost, nie sama liczba: bez nich klient wie, ze cos
+                  // jest nie tak, ale nie wie, co ma otworzyc.
+                  ...(zadania.baza_wiedzy.bez_fragmentow ?? []).map(
+                    (nazwa) => `Bez fragmentów: ${nazwa}`,
+                  ),
+                  ...(zadania.baza_wiedzy.niepelne ?? []).map(
+                    (p) => `Wyciągnięto ${p.udzial_procent}% treści: ${p.nazwa}`,
+                  ),
+                ]}
+              />
+            )}
+
+            {zadania.poczta && (
+              <Sygnal
+                nazwa="Powiadomienia e-mail"
+                indeks="05"
+                sygnal={zadania.poczta}
+                szczegoly={zadania.poczta.adres ? [`Adres: ${zadania.poczta.adres}`] : []}
               />
             )}
           </div>
