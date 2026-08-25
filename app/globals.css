@@ -562,6 +562,14 @@ h1, h2, h3, h4 {
   align-items: center;
 }
 
+/* Bez tego logo i okruszek stykaly sie co do piksela: "AI Concierge" konczylo
+   sie na x=493, a "Workspace / Pulpit" zaczynalo dokladnie na 493, wiec
+   naglowek czytalo sie jako "AI CONCIERGEWORKSPACE". Widac to bylo tylko od
+   szerokosci, przy ktorej okruszek w ogole sie pokazuje (lg:flex). */
+.admin-navbar-left {
+  gap: 0.9rem;
+}
+
 /* .admin-account i .admin-breadcrumb dostaja `display` wylacznie z klas
    Tailwinda w znaczniku (hidden sm:flex / hidden lg:flex).
 
