@@ -10,6 +10,16 @@ interface Props {
   menuOtwarte?: boolean
 }
 
+// Podpis pod nazwa firmy mowil "Administrator" kazdemu, niezaleznie od roli.
+// W produkcie z trzema rolami to mylace: pracownik i obserwator widzieli, ze
+// sa administratorami, a czesc panelu i tak odbijala ich z 403. /accounts/me/
+// zwraca `role` od dawna -- frontend go po prostu nie czytal.
+const OPIS_ROLI: Record<string, string> = {
+  owner: 'Właściciel',
+  employee: 'Pracownik',
+  viewer: 'Podgląd',
+}
+
 const PAGE_NAMES: Record<string, string> = {
   '/dashboard': 'Pulpit',
   '/documents': 'Baza wiedzy',
@@ -26,13 +36,17 @@ export default function Navbar({ onToggleMenu, menuOtwarte }: Props) {
   const router = useRouter()
   const pathname = usePathname()
   const [tenantName, setTenantName] = useState('')
+  const [rola, setRola] = useState('')
 
   const currentPage = Object.entries(PAGE_NAMES).find(([path]) => pathname?.startsWith(path))?.[1] || 'Panel'
   const initials = (tenantName || 'SM').slice(0, 2).toUpperCase()
 
   useEffect(() => {
     apiFetch('/accounts/me/')
-      .then((data) => setTenantName(data.tenant_name || ''))
+      .then((data) => {
+        setTenantName(data.tenant_name || '')
+        setRola(data.role || '')
+      })
       .catch(() => {})
   }, [])
 
@@ -70,7 +84,7 @@ export default function Navbar({ onToggleMenu, menuOtwarte }: Props) {
           <span className="admin-avatar">{initials}</span>
           <span className="admin-account-copy">
             <strong>{tenantName || 'Twoje konto'}</strong>
-            <small>Administrator</small>
+            <small>{OPIS_ROLI[rola] ?? 'Konto'}</small>
           </span>
         </div>
         <button onClick={handleLogout} className="admin-logout" title="Wyloguj">
