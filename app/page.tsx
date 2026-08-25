@@ -94,6 +94,10 @@ export default function StronaGlowna() {
       router.replace('/dashboard')
       return
     }
+    // getToken() czyta localStorage, ktorego przy renderze po stronie
+    // serwera nie ma. Tego stanu nie da sie wyliczyc podczas renderu, wiec
+    // efekt jest jedynym miejscem, w ktorym wolno o niego zapytac.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setZalogowany(false)
 
     // Ceny bierzemy z katalogu backendu, nie z kopii w kodzie — inaczej

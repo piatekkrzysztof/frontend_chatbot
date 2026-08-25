@@ -75,7 +75,10 @@ export default function SubskrypcjaPage() {
         method: 'POST',
         body: JSON.stringify({ plan_type: code }),
       })
-      // Płatność prowadzi Stripe — opuszczamy panel
+      // Płatność prowadzi Stripe — opuszczamy panel. Przypisanie do
+      // window.location.href to nawigacja przegladarki, nie mutacja wartosci
+      // Reacta; regula nie odroznia jednego od drugiego.
+      // eslint-disable-next-line react-hooks/immutability
       window.location.href = res.checkout_url
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Nie udało się rozpocząć płatności.')

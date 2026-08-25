@@ -3,6 +3,7 @@
 Two products in one Next.js app: the chat window a visitor sees on a customer's website,
 and the console the business owner uses to shape what it says.
 
+[![CI](https://github.com/piatekkrzysztof/frontend_chatbot/actions/workflows/ci.yml/badge.svg)](https://github.com/piatekkrzysztof/frontend_chatbot/actions/workflows/ci.yml)
 ![next](https://img.shields.io/badge/next.js-16.3-000000)
 ![react](https://img.shields.io/badge/react-19-61DAFB)
 ![typescript](https://img.shields.io/badge/typescript-5-3178C6)

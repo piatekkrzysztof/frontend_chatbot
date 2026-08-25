@@ -142,6 +142,11 @@ export default function StanPage() {
   }, [])
 
   useEffect(() => {
+    // Strona diagnostyki ma sie odpytac raz, przy wejsciu. sprawdz() zaczyna
+    // od synchronicznego setWczytywanie(true) i to jego widzi regula — reszta
+    // stanu ustawia sie dopiero po await. Pobranie danych na wejsciu nie ma
+    // innego miejsca niz efekt.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     sprawdz()
   }, [sprawdz])
 
