@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, FormEvent } from 'react'
+import { useEffect, useRef, useState, FormEvent } from 'react'
 import { apiFetch } from '@/lib/api'
 
 interface FAQItem {
@@ -15,6 +15,20 @@ export default function FAQPage() {
   const [answer, setAnswer] = useState('')
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
+  // Kasowanie bylo natychmiastowe: jedno dotkniecie 32-pikselowego celu
+  // i wpis znikal bez potwierdzenia i bez cofniecia. Zamiast modala —
+  // dwustopniowy przycisk w miejscu: pierwszy klik pyta, drugi kasuje.
+  const [doKasacji, setDoKasacji] = useState<number | null>(null)
+  const zegar = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  // Pytanie samo wygasa, zeby nie zostawiac uzbrojonego przycisku na ekranie.
+  function uzbrojDoKasacji(id: number) {
+    if (zegar.current) clearTimeout(zegar.current)
+    setDoKasacji(id)
+    zegar.current = setTimeout(() => setDoKasacji(null), 5000)
+  }
+
+  useEffect(() => () => { if (zegar.current) clearTimeout(zegar.current) }, [])
 
   async function load() {
     try {
@@ -64,6 +78,8 @@ export default function FAQPage() {
   }
 
   async function handleDelete(id: number) {
+    if (zegar.current) clearTimeout(zegar.current)
+    setDoKasacji(null)
     try {
       await apiFetch(`/faq/${id}/`, { method: 'DELETE' })
       await load()
@@ -124,10 +140,17 @@ export default function FAQPage() {
                   <p className="text-sm tekst-drugi mt-1 whitespace-pre-wrap">{item.answer}</p>
                 </div>
                 <button
-                  onClick={() => handleDelete(item.id)}
+                  onClick={() =>
+                    doKasacji === item.id ? handleDelete(item.id) : uzbrojDoKasacji(item.id)
+                  }
+                  aria-label={
+                    doKasacji === item.id
+                      ? `Potwierdź usunięcie: ${item.question}`
+                      : `Usuń pytanie: ${item.question}`
+                  }
                   className="text-sm text-[#c0392b] hover:underline shrink-0"
                 >
-                  Usuń
+                  {doKasacji === item.id ? 'Na pewno?' : 'Usuń'}
                 </button>
               </div>
             </li>
