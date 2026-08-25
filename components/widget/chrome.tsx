@@ -212,7 +212,7 @@ export function Sugestie({
               key={pytanie}
               onClick={() => onWybierz(pytanie)}
               disabled={zablokowane}
-              className="w-full flex items-baseline gap-2.5 py-2.5 text-left disabled:opacity-50"
+              className="w-full min-h-[44px] flex items-baseline gap-2.5 py-2.5 text-left disabled:opacity-50"
               style={styl}
             >
               {tresc}
@@ -249,10 +249,12 @@ export function PasekKontaktu({
   */
   return (
     <div
-      className="shrink-0 flex justify-end px-3.5 py-1.5"
+      className="shrink-0 min-h-[44px] flex justify-end px-3.5"
       style={{ background: theme.surface, borderTop: `1px solid ${theme.line}` }}
     >
-      <button type="button" onClick={onClick} className="underline underline-offset-2">
+      {/* Padding siedzial na pasku, a przycisk mial 26px wysokosci. Oddanie go
+          przyciskowi daje cel 44px kosztem 6px paska, zamiast 18px. */}
+      <button type="button" onClick={onClick} className="min-h-[44px] flex items-center underline underline-offset-2">
         <Etykieta style={{ color: theme.accentText }}>Zostaw kontakt</Etykieta>
       </button>
     </div>
@@ -271,7 +273,11 @@ export function Stopka({
 
   return (
     <div
-      className="shrink-0 flex items-center justify-between gap-2 px-3.5 py-2"
+      /* flex-wrap, bo przy 360px obie etykiety potrzebuja 329px na 332px dostepne.
+         Zapas 3px sprawial, ze flex wolal je sciesnic i zawinac W SRODKU wyrazu
+         — "SM-ART" pekalo na "SM-" i "ART". Z nowrap na etykietach i zawijaniem
+         na kontenerze ciasnota ustawia je w dwa wiersze, kazda w calosci. */
+      className="shrink-0 min-h-[44px] flex flex-wrap items-center justify-between gap-x-2 px-3.5"
       style={{ background: theme.surface, borderTop: `1px solid ${theme.line}` }}
     >
       {/* RODO: odwiedzający ma być poinformowany o przetwarzaniu tam, gdzie
@@ -281,15 +287,24 @@ export function Stopka({
           href={privacyUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="underline underline-offset-2"
+          className="min-h-[44px] flex items-center underline underline-offset-2"
         >
-          <Etykieta style={{ color: theme.textMuted }}>Przetwarzanie danych</Etykieta>
+          {/* Bylo "Przetwarzanie danych" — 184px przy 332px dostepnych w ramce
+              360px, wiec razem z podpisem nie miescilo sie o 12px i stopka
+              schodzila na dwa wiersze. "Dane i prywatnosc" ma 149px (razem 308,
+              zapas 24px), dalej nazywa dane wprost — o co chodzi w informowaniu
+              o przetwarzaniu tam, gdzie odwiedzajacy je zostawia. */}
+          <Etykieta className="whitespace-nowrap" style={{ color: theme.textMuted }}>
+            Dane i prywatność
+          </Etykieta>
         </a>
       ) : (
         <span />
       )}
       {theme.footerLabel && (
-        <Etykieta style={{ color: theme.textMuted }}>{theme.footerLabel}</Etykieta>
+        <Etykieta className="whitespace-nowrap" style={{ color: theme.textMuted }}>
+          {theme.footerLabel}
+        </Etykieta>
       )}
     </div>
   )

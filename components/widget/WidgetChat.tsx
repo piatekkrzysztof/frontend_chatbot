@@ -417,15 +417,20 @@ export default function WidgetChat() {
                 ) : (
                   <>
                     <Etykieta style={{ color: theme.textMuted }}>Czy to pomogło?</Etykieta>
+                    {/* Mialy 27x26 i 24x26. Pola trafienia nie da sie tu rozszerzyc
+                        niewidocznie: "Tak" i "Nie" dzieli 12px, wiec doliczenie
+                        po 8,5px z kazdej strony nalozyloby je na siebie. Szerokosc
+                        musi byc realna, wysokosc razem z nia — wiersz rosnie o 18px
+                        raz na odpowiedz bota. */}
                     <button
                       onClick={() => handleRate(m.messageId!, 'up')}
-                      className="underline underline-offset-2"
+                      className="min-w-[44px] min-h-[44px] flex items-center justify-center underline underline-offset-2"
                     >
                       <Etykieta style={{ color: theme.accentText }}>Tak</Etykieta>
                     </button>
                     <button
                       onClick={() => handleRate(m.messageId!, 'down')}
-                      className="underline underline-offset-2"
+                      className="min-w-[44px] min-h-[44px] flex items-center justify-center underline underline-offset-2"
                     >
                       <Etykieta style={{ color: theme.accentText }}>Nie</Etykieta>
                     </button>
@@ -483,7 +488,7 @@ export default function WidgetChat() {
                   onKeyDown={(e) => e.key === 'Enter' && handleContactSubmit()}
                   placeholder="jan@firma.pl lub 500 100 200"
                   aria-label="Twój e-mail lub telefon"
-                  className="px-2.5 py-2 text-[13px] placeholder:text-[color:var(--podpowiedz)]"
+                  className="min-h-[44px] px-2.5 py-2 text-[16px] placeholder:text-[color:var(--podpowiedz)]"
                   style={{
                     border: `1px solid ${theme.lineStrong}`,
                     borderRadius: KANT,
@@ -501,11 +506,11 @@ export default function WidgetChat() {
                       color: theme.onAccent,
                       borderRadius: KANT,
                     }}
-                    className="px-3 py-1.5 disabled:opacity-50"
+                    className="px-3 min-h-[44px] disabled:opacity-50"
                   >
                     <Etykieta>Wyślij</Etykieta>
                   </button>
-                  <button onClick={() => { setContactOpen(false); setOfferContact(false) }}>
+                  <button className="min-h-[44px]" onClick={() => { setContactOpen(false); setOfferContact(false) }}>
                     <Etykieta style={{ color: theme.textMuted }}>Nie teraz</Etykieta>
                   </button>
                 </div>
@@ -536,7 +541,7 @@ export default function WidgetChat() {
           aria-label="Treść wiadomości"
           // Kolor podpowiedzi jawnie, bo domyślnie przeglądarka bierze kolor
           // tekstu z 50% krycia — na kremowym dawało to 3,25:1, poniżej progu.
-          className="flex-1 min-w-0 px-3 py-2 text-[13px] placeholder:text-[color:var(--podpowiedz)]"
+          className="flex-1 min-w-0 min-h-[44px] px-3 py-2 text-[16px] placeholder:text-[color:var(--podpowiedz)]"
           style={{
             border: `1px solid ${theme.line}`,
             borderRadius: KANT,
@@ -550,7 +555,7 @@ export default function WidgetChat() {
           disabled={sending || !input.trim()}
           aria-label="Wyślij wiadomość"
           style={{ background: theme.accent, color: theme.onAccent, borderRadius: KANT }}
-          className="px-4 shrink-0 disabled:opacity-50"
+          className="px-4 min-h-[44px] shrink-0 disabled:opacity-50"
         >
           <Etykieta>Wyślij</Etykieta>
         </button>
