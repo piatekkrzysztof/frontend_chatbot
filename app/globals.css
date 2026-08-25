@@ -2050,3 +2050,75 @@ h1, h2, h3, h4 {
 .admin-logout {
   flex-shrink: 0;
 }
+
+/* ═══════════════════════════════════════════════════════════════════
+   CELE DOTYKOWE W PANELU
+
+   Mierzone sondowaniem elementFromPoint, nie odczytem CSS: pole trafienia
+   rozszerzone pseudoelementem jest niewidoczne w getBoundingClientRect,
+   a <input> owiniety <label> ma cel wielkosci etykiety, nie swojego pudelka.
+
+   Dwa ROZLACZNE zakresy wskaznika. Pierwsza wersja miala regule bazowa
+   i dotykowa na zachodzacych selektorach — media query nie dodaje
+   specyficznosci, wiec `.admin-shell button.font-mono` (0,2,1) wygrywalo
+   z `.admin-shell :is(a,button)` (0,1,1) i wersja dotykowa po cichu nic
+   nie robila. Rozdzielenie zakresow usuwa ten wyscig calkiem.
+   ═══════════════════════════════════════════════════════════════════ */
+
+@media (pointer: fine), (pointer: none) {
+  /* Mysz i trackpad: minimum 24px z WCAG 2.2 AA (2.5.8) — obowiazuje na
+     kazdym wskazniku, nie tylko na dotyku. */
+  .panel-link,
+  .row-answer,
+  .admin-logout,
+  .admin-menu-button {
+    min-height: 24px;
+  }
+
+  /* Przycisk kopiowania identyfikatora rozmowy mial 17px. */
+  .admin-shell button.font-mono {
+    display: inline-flex;
+    align-items: center;
+    min-height: 24px;
+  }
+
+  /* Etykieta opakowujaca pole wyboru JEST celem klikniecia — samo pole ma
+     13px, a klikniecie w etykiete przelacza stan. Mialy 20px. */
+  .admin-shell label:has(:is(input[type='radio'], input[type='checkbox'])) {
+    min-height: 24px;
+  }
+}
+
+@media (pointer: coarse) {
+  .admin-shell :is(a, button, [role='button'], summary) {
+    min-height: 44px;
+  }
+
+  /* min-height nie dziala na `display: inline` — bez tego regula wyzej
+     po cichu nic by nie zmienila na czesci elementow. */
+  .admin-shell :is(button.font-mono, .panel-link, .row-answer, .admin-logout) {
+    display: inline-flex;
+    align-items: center;
+  }
+
+  .admin-shell label:has(:is(input[type='radio'], input[type='checkbox'])) {
+    min-height: 44px;
+  }
+
+  .admin-menu-button {
+    min-width: 44px;
+  }
+
+  /* iOS Safari przyblizy cala strone przy dotknieciu pola o foncie < 16px.
+     Na desktopie zostaje 14px, bo tam problem nie wystepuje, a gestosc
+     panelu ma znaczenie. Pola wyboru pomijamy — 16px nic by im nie dalo,
+     a min-height rozjechalby ich uklad. */
+  .admin-shell :is(
+    input:not([type='radio']):not([type='checkbox']),
+    textarea,
+    select
+  ) {
+    font-size: 16px;
+    min-height: 44px;
+  }
+}
