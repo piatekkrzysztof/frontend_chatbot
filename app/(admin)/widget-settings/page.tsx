@@ -314,14 +314,16 @@ export default function WidgetSettingsPage() {
 
         {/* Wspólne dla obu wariantów brandingu — dotyczą treści, nie wyglądu */}
         <div>
-          <label className="label">
+          <label className="label" htmlFor="powitanie">
             Wiadomość powitalna
           </label>
-          <p className="hint">
+          <p id="powitanie-opis" className="hint">
             Pierwsze, co widzi odwiedzający po otwarciu czatu. Zostaw puste, żeby okno
             otwierało się bez powitania.
           </p>
           <textarea
+            id="powitanie"
+            aria-describedby="powitanie-opis"
             value={welcomeMessage}
             onChange={(e) => setWelcomeMessage(e.target.value)}
             rows={2}
@@ -331,14 +333,16 @@ export default function WidgetSettingsPage() {
         </div>
 
         <div>
-          <label className="label">
+          <label className="label" htmlFor="proponowane-pytania">
             Proponowane pytania
           </label>
-          <p className="hint">
+          <p id="proponowane-pytania-opis" className="hint">
             Po jednym w wierszu, pokażemy do czterech. Klikalne od razu po otwarciu czatu —
             odwiedzający nie musi wymyślać pierwszego pytania.
           </p>
           <textarea
+            id="proponowane-pytania"
+            aria-describedby="proponowane-pytania-opis"
             value={suggestedQuestions}
             onChange={(e) => setSuggestedQuestions(e.target.value)}
             rows={4}
@@ -389,15 +393,17 @@ Gdzie was znaleźć?`}
           </div>
 
           <div className="mb-3">
-            <label className="label">
+            <label className="label" htmlFor="jezyk-odpowiedzi">
               {languageMode === 'fixed' ? 'Język odpowiedzi' : 'Język zapasowy'}
             </label>
-            <p className="hint">
+            <p id="jezyk-odpowiedzi-opis" className="hint">
               {languageMode === 'fixed'
                 ? 'Jedyny język, w którym bot będzie odpowiadał.'
                 : 'Użyjemy go, gdy pytanie przyjdzie w języku spoza zaznaczonych.'}
             </p>
             <select
+              id="jezyk-odpowiedzi"
+              aria-describedby="jezyk-odpowiedzi-opis"
               value={defaultLanguage}
               onChange={(e) => setDefaultLanguage(e.target.value)}
               className="input"

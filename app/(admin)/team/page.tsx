@@ -183,8 +183,9 @@ export default function TeamPage() {
 
       <form onSubmit={handleInvite} className="flex flex-wrap items-end gap-3 mb-4">
         <div className="flex-1 min-w-[220px]">
-          <label className="label">E-mail</label>
+          <label className="label" htmlFor="zespol-email">E-mail</label>
           <input
+            id="zespol-email"
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
@@ -193,8 +194,9 @@ export default function TeamPage() {
           />
         </div>
         <div>
-          <label className="label">Rola</label>
+          <label className="label" htmlFor="zespol-rola">Rola</label>
           <select
+            id="zespol-rola"
             value={role}
             onChange={(e) => setRole(e.target.value)}
             className="input"
@@ -205,8 +207,9 @@ export default function TeamPage() {
           </select>
         </div>
         <div>
-          <label className="label">Link ważny</label>
+          <label className="label" htmlFor="zespol-waznosc">Link ważny</label>
           <select
+            id="zespol-waznosc"
             value={duration}
             onChange={(e) => setDuration(e.target.value)}
             className="input"
