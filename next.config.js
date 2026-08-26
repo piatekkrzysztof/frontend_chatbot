@@ -17,11 +17,13 @@ const nextConfig = {
         ],
       },
       {
-        // Panel klienta nie ma powodu działać w cudzej ramce — blokada
-        // chroni zalogowanego użytkownika przed clickjackingiem.
+        // Pelna polityke bezpieczenstwa panelu wystawia proxy.ts — musi
+        // zawierac nonce, ktory powstaje osobno dla kazdego zadania, a tego
+        // statyczny naglowek z konfiguracji nie potrafi. Dwa naglowki CSP
+        // naraz obowiazywalyby jednoczesnie i wygrywalby ostrzejszy, wiec
+        // frame-ancestors zostal tylko tam.
         source: '/:path((?!widget$).*)',
         headers: [
-          { key: 'Content-Security-Policy', value: "frame-ancestors 'self'" },
           { key: 'X-Content-Type-Options', value: 'nosniff' },
           { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
         ],

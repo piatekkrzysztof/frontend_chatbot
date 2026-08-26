@@ -1,5 +1,6 @@
 'use client'
 
+import { ustawToken } from '@/lib/auth'
 import Link from 'next/link'
 import Logo from '@/components/layout/Logo'
 import { FormEvent, Suspense, useState } from 'react'
@@ -54,6 +55,7 @@ function FormularzRejestracji() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username: email, password: haslo }),
+        credentials: 'include',
       })
 
       if (!logowanie.ok) {
@@ -62,8 +64,10 @@ function FormularzRejestracji() {
       }
 
       const dane = await logowanie.json()
-      localStorage.setItem('token', dane.access)
-      if (dane.refresh) localStorage.setItem('refresh_token', dane.refresh)
+      // Przez ustawToken, nie wprost do localStorage. Ten plik pisal tam
+      // sam, z pominieciem wspolnej funkcji -- i wlasnie dlatego przy
+      // zmianie sposobu przechowywania sesji kompilator go nie wskazal.
+      ustawToken(dane.access)
       router.push('/dashboard')
     } catch (err) {
       setBlad(err instanceof Error ? err.message : 'Nie udało się założyć konta.')
