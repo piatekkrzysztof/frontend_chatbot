@@ -9,8 +9,6 @@ import { ustawToken } from '@/lib/auth'
 
 function FormularzLogowania() {
   const router = useRouter()
-  const parametry = useSearchParams()
-  const wygasla = parametry.has('wygasla')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
@@ -56,14 +54,9 @@ function FormularzLogowania() {
 
       <h1 className="text-3xl mb-6">Zaloguj się</h1>
 
-      {wygasla && (
-        // Bez tego uzytkownik odbity z panelu widzi ekran logowania i nie wie,
-        // czy sam sie wylogowal, czy cos padlo. Cicha zmiana ekranu jest
-        // gorsza niz komunikat o bledzie.
-        <p className="mb-5 rounded border border-[color:var(--obramowanie-mocne)] px-3 py-2 text-sm tekst-drugi">
-          Sesja wygasła — zaloguj się ponownie.
-        </p>
-      )}
+      <Suspense fallback={null}>
+        <KomunikatOWygasnieciu />
+      </Suspense>
       <form onSubmit={handleSubmit} className="flex flex-col gap-4">
         <div>
           <label className="label" htmlFor="pole-email">E-mail</label>
@@ -112,13 +105,30 @@ function FormularzLogowania() {
 }
 
 /**
- * useSearchParams wymaga granicy Suspense -- bez niej Next nie potrafi
- * wygenerowac tej strony statycznie i build sie zatrzymuje.
+ * Komunikat po odbiciu z panelu.
+ *
+ * Osobny komponent wylacznie dlatego, ze `useSearchParams` wymaga granicy
+ * Suspense. Wczesniej ta granica obejmowala CALY formularz, wiec strona
+ * wygenerowana przy budowaniu zawierala samo "Wczytywanie..." -- pole na
+ * e-mail pojawialo sie dopiero po uruchomieniu JavaScriptu. Zmierzone
+ * na produkcji z wylaczonym JS. Teraz w Suspense siedzi tylko ten napis,
+ * a formularz jest w gotowym dokumencie od razu.
+ *
+ * Bez tego komunikatu uzytkownik odbity z panelu widzi ekran logowania
+ * i nie wie, czy sam sie wylogowal, czy cos padlo. Cicha zmiana ekranu
+ * jest gorsza niz komunikat o bledzie.
  */
-export default function LoginPage() {
+function KomunikatOWygasnieciu() {
+  const parametry = useSearchParams()
+  if (!parametry.has('wygasla')) return null
+
   return (
-    <Suspense fallback={<p className="text-sand-400">Wczytywanie...</p>}>
-      <FormularzLogowania />
-    </Suspense>
+    <p className="mb-5 rounded border border-[color:var(--obramowanie-mocne)] px-3 py-2 text-sm tekst-drugi">
+      Sesja wygasła — zaloguj się ponownie.
+    </p>
   )
+}
+
+export default function LoginPage() {
+  return <FormularzLogowania />
 }
