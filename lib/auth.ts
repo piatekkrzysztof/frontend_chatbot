@@ -16,6 +16,31 @@
  */
 import { API_URL } from '@/lib/api'
 
+/**
+ * Sprzatanie po poprzednim sposobie przechowywania sesji.
+ *
+ * Uzytkownicy zalogowani przed ta zmiana maja w localStorage token
+ * odswiezania wazny jeszcze dwa tygodnie. Ten kod nigdy go juz nie uzyje,
+ * ale samo nieuzywanie go nie usuwa: lezalby dalej w przegladarce, czytelny
+ * dla kazdego skryptu, dokladnie tak jak przed przebudowa. Cala ta zmiana
+ * minelaby sie z celem dla wszystkich, ktorzy byli zalogowani wczesniej.
+ *
+ * Do usuniecia, gdy najstarszy mozliwy token wygasnie -- czyli dwa tygodnie
+ * po wdrozeniu.
+ */
+function usunSladyPoLocalStorage() {
+  if (typeof window === 'undefined') return
+  try {
+    localStorage.removeItem('token')
+    localStorage.removeItem('refresh_token')
+  } catch {
+    // Tryb prywatny potrafi rzucac przy samym dostepie do localStorage,
+    // a sprzatanie nie moze przewrocic aplikacji.
+  }
+}
+
+usunSladyPoLocalStorage()
+
 let tokenDostepu: string | null = null
 
 /**

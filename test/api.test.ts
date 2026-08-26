@@ -64,6 +64,22 @@ describe('token w pamieci', () => {
     expect(pobierzToken()).toBe('abc')
   })
 
+  it('usuwa token zostawiony przez poprzednia wersje', async () => {
+    // Uzytkownik zalogowany przed przebudowa ma w localStorage token
+    // odswiezania wazny jeszcze dwa tygodnie. Samo nieuzywanie go nie
+    // wystarcza -- lezalby dalej, czytelny dla kazdego skryptu, i cala ta
+    // zmiana minelaby sie z celem dla wszystkich dotychczas zalogowanych.
+    localStorage.setItem('token', 'stary-access')
+    localStorage.setItem('refresh_token', 'stary-refresh')
+
+    // Sprzatanie dzieje sie przy wczytaniu modulu, wiec wczytujemy go od nowa.
+    vi.resetModules()
+    await import('@/lib/auth')
+
+    expect(localStorage.getItem('token')).toBeNull()
+    expect(localStorage.getItem('refresh_token')).toBeNull()
+  })
+
   it('nie wystawia naglowka, gdy tokenu nie ma', () => {
     expect(authHeaders()).toEqual({})
   })
