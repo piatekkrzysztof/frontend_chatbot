@@ -48,9 +48,11 @@ export default function LoginPage() {
       <h1 className="text-3xl mb-6">Zaloguj się</h1>
       <form onSubmit={handleSubmit} className="flex flex-col gap-4">
         <div>
-          <label className="label">E-mail</label>
+          <label className="label" htmlFor="pole-email">E-mail</label>
           <input
+            id="pole-email"
             type="email"
+            autoComplete="username"
             required
             value={email}
             onChange={(e) => setEmail(e.target.value)}
@@ -58,9 +60,11 @@ export default function LoginPage() {
           />
         </div>
         <div>
-          <label className="label">Hasło</label>
+          <label className="label" htmlFor="pole-haslo">Hasło</label>
           <input
+            id="pole-haslo"
             type="password"
+            autoComplete="current-password"
             required
             value={password}
             onChange={(e) => setPassword(e.target.value)}

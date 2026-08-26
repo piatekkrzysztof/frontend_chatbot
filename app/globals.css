@@ -2130,3 +2130,34 @@ h1, h2, h3, h4 {
     min-height: 44px;
   }
 }
+
+/* -------------------------------------------------------------------------
+   Cele wskaznika ponizej 24 px (WCAG 2.2 AA, 2.5.8)
+
+   Poprzednia wersja tych regul wyliczala konkretne klasy. Lista zgnila:
+   przyciski kasowania FAQ i link w stopce paska bocznego powstaly pozniej
+   i po cichu spod niej wypadly. Dlatego progu pilnuje teraz test
+   e2e/responsywnosc.spec.ts, ktory mierzy KAZDY widoczny cel na kluczowych
+   ekranach -- lista ponizej moze byc niepelna, test nie.
+
+   Padding pionowy zamiast min-height: na elemencie liniowym nie zmienia
+   wysokosci wiersza ani odstepow, a powieksza prostokat celu -- to jest
+   dokladnie ta wielkosc, ktora mierzy kryterium.
+   ------------------------------------------------------------------------- */
+@media (pointer: fine), (pointer: none) {
+  /* "Nie masz konta? Zaloz je za darmo" -- link w zdaniu, 18 px */
+  .motyw-ciemny p a,
+  main a.text-ember-500 {
+    padding-block: 3px;
+  }
+
+  /* "Usun" / "Potwierdz usuniecie" przy wpisie FAQ -- 20 px */
+  .admin-shell button.text-sm {
+    padding-block: 2px;
+  }
+
+  /* "Napisz do nas" w karcie wsparcia paska bocznego -- 18.5 px */
+  .admin-support-card a {
+    padding-block: 3px;
+  }
+}

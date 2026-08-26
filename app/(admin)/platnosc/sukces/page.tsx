@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { apiFetch } from '@/lib/api'
 
@@ -19,11 +19,17 @@ export default function PlatnoscSukcesPage() {
   const [plan, setPlan] = useState<string | null>(null)
   const [czekamy, setCzekamy] = useState(true)
 
+  const zegar = useRef<ReturnType<typeof setTimeout> | null>(null)
+
   useEffect(() => {
     let active = true
     let proba = 0
 
     async function sprawdz() {
+      // Zaplanowana proba potrafi wystartowac juz po opuszczeniu strony.
+      // Sam `active` sprawdzany po odpowiedzi wstrzymuje tylko reakcje --
+      // zapytanie i tak leci.
+      if (!active) return
       try {
         const dane = await apiFetch('/billing/plans/')
         if (!active) return
@@ -39,7 +45,7 @@ export default function PlatnoscSukcesPage() {
 
       proba += 1
       if (proba < PROBY && active) {
-        setTimeout(sprawdz, ODSTEP_MS)
+        zegar.current = setTimeout(sprawdz, ODSTEP_MS)
       } else if (active) {
         setCzekamy(false)
       }
@@ -49,6 +55,7 @@ export default function PlatnoscSukcesPage() {
 
     return () => {
       active = false
+      if (zegar.current) clearTimeout(zegar.current)
     }
   }, [])
 
