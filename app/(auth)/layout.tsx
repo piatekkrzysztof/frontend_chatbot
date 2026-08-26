@@ -8,7 +8,14 @@ import { ReactNode } from 'react'
  */
 export default function AuthLayout({ children }: { children: ReactNode }) {
   return (
-    <main className="relative min-h-screen flex items-center justify-center px-5 py-12">
+    /*
+      overflow-hidden przycina poswiate: ma 640 px srednicy, wiec na telefonie
+      wystaje poza ekran i mimo `pointer-events-none` powieksza obszar
+      przewijania -- strona logowania dawala sie przesunac w bok w pustke.
+      dvh zamiast vh, bo na telefonie 100vh liczy sie razem z paskiem
+      przegladarki, ktorego nie widac.
+    */
+    <main className="relative min-h-dvh overflow-hidden flex items-center justify-center px-5 py-12">
       <div
         aria-hidden
         className="absolute left-1/2 -translate-x-1/2 -top-40 w-[640px] h-[640px] rounded-full pointer-events-none"
