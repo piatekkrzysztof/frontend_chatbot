@@ -110,6 +110,15 @@ function saveHistory(apiKey: string, messages: Message[]) {
   }
 }
 
+/**
+ * Kod odmowy z backendu (`KOD_CZAT_NIEDOSTEPNY` w accounts/middleware.py).
+ *
+ * Jeden kod dla wszystkich powodów, dla których czat nie odpowie. Widget nie
+ * musi wiedzieć, czy to wygasła subskrypcja, czy wyczerpany limit — musi
+ * wiedzieć wyłącznie tyle, że ponawianie nic nie da.
+ */
+const KOD_CZAT_NIEDOSTEPNY = 'czat_niedostepny'
+
 export default function WidgetChat() {
   const searchParams = useSearchParams()
   const apiKey = searchParams.get('key') || ''
@@ -187,6 +196,22 @@ export default function WidgetChat() {
       })
 
       if (!res.ok || !res.body) {
+        // Odmowa z powodu rozliczeń jest stanem TRWAŁYM: wygasła subskrypcja,
+        // brak subskrypcji albo wyczerpany limit wiadomości. Proszenie
+        // odwiedzającego o powtórzenie próby jest wtedy wprowadzaniem go
+        // w błąd — to nigdy nie zadziała, a on zostaje bez żadnego wyjścia.
+        // Zamiast tego proponujemy zostawienie kontaktu, tak samo jak wtedy,
+        // gdy bot nie zna odpowiedzi. Nieudana rozmowa zamienia się w zapytanie
+        // handlowe, zamiast w zamkniętą kartę.
+        const powod = await res.json().catch(() => null)
+
+        if (powod?.kod === KOD_CZAT_NIEDOSTEPNY) {
+          if (!contactSent) setOfferContact(true)
+          // Celowo bez słowa o subskrypcji czy limicie: rozliczenia firmy
+          // nie są sprawą osób odwiedzających jej stronę.
+          throw new Error('Czat jest chwilowo niedostępny.')
+        }
+
         throw new Error('Wystąpił błąd. Spróbuj ponownie.')
       }
 
