@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
 
 import { resolveTheme } from './theme'
+import { czytajZdarzenia } from './sse'
 import {
   BabelBota,
   BabelUzytkownika,
@@ -201,14 +202,10 @@ export default function WidgetChat() {
         if (done) break
 
         buffer += decoder.decode(value, { stream: true })
-        const events = buffer.split('\n\n')
-        buffer = events.pop() || ''
+        const { zdarzenia, reszta } = czytajZdarzenia(buffer)
+        buffer = reszta
 
-        for (const raw of events) {
-          const line = raw.trim()
-          if (!line.startsWith('data: ')) continue
-
-          const event = JSON.parse(line.slice(6))
+        for (const event of zdarzenia) {
           if (event.type === 'delta') {
             setMessages((prev) => {
               const next = [...prev]
