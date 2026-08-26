@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
-import { apiFetch, clearTokens } from '@/lib/api'
+import { apiFetch } from '@/lib/api'
+import { wyloguj } from '@/lib/auth'
 import Logo from './Logo'
 
 interface Props {
@@ -50,8 +51,11 @@ export default function Navbar({ onToggleMenu, menuOtwarte }: Props) {
       .catch(() => {})
   }, [])
 
-  function handleLogout() {
-    clearTokens()
+  async function handleLogout() {
+    // Czekamy na backend, zanim przekierujemy: to on uniewaznia token
+    // odswiezania i kasuje ciasteczko. Samo przejscie na /login zostawiloby
+    // dzialajaca sesje na kolejne dwa tygodnie.
+    await wyloguj()
     router.replace('/login')
   }
 

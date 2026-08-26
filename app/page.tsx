@@ -3,7 +3,6 @@
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { getToken } from '@/lib/api'
 import WidgetPreview from '@/components/widget/WidgetPreview'
 import Logo from '@/components/layout/Logo'
 
@@ -85,20 +84,15 @@ const KROKI = [
 
 export default function StronaGlowna() {
   const router = useRouter()
-  const [zalogowany, setZalogowany] = useState<boolean | null>(null)
   const [plany, setPlany] = useState<Plan[]>([])
   const [rocznie, setRocznie] = useState(false)
 
+  // Przekierowanie zalogowanych do panelu robi teraz middleware, po stronie
+  // serwera. Wczesniej decydowal o tym odczyt localStorage w efekcie, wiec
+  // KAZDY odwiedzajacy -- takze ten, ktory nigdy nie mial konta -- ogladal
+  // najpierw ekran "Wczytywanie...". Na stronie sprzedazowej to byla pierwsza
+  // rzecz, jaka widzial potencjalny klient.
   useEffect(() => {
-    if (getToken()) {
-      router.replace('/dashboard')
-      return
-    }
-    // getToken() czyta localStorage, ktorego przy renderze po stronie
-    // serwera nie ma. Tego stanu nie da sie wyliczyc podczas renderu, wiec
-    // efekt jest jedynym miejscem, w ktorym wolno o niego zapytac.
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setZalogowany(false)
 
     // Ceny bierzemy z katalogu backendu, nie z kopii w kodzie — inaczej
     // strona sprzedażowa rozjedzie się z tym, co naprawdę obowiązuje
@@ -107,14 +101,6 @@ export default function StronaGlowna() {
       .then((d) => d?.plans && setPlany(d.plans))
       .catch(() => {})
   }, [router])
-
-  if (zalogowany === null) {
-    return (
-      <main className="min-h-screen grid place-items-center">
-        <p className="text-sand-400">Wczytywanie...</p>
-      </main>
-    )
-  }
 
   return (
     <main className="overflow-hidden">

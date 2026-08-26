@@ -188,19 +188,37 @@ the owner did not register, plus per-key and per-visitor rate limits.
 **Framing policy differs per route,** as described above: `/widget` embeddable anywhere,
 everything else same-origin only.
 
-**Session handling.** Login stores a JWT and refresh token; every request carries
-`Authorization: Bearer`. A `401` clears both tokens and performs a **full page load** to
-`/login` rather than a client-side redirect — deliberately, so that no component keeps the
-previous user's data in memory.
+**Session handling.** The refresh token never reaches this code. It lives in an
+`HttpOnly` `Secure` `SameSite=Lax` cookie set by the API, invisible to any script on the
+page. The access token lives for 15 minutes in a module variable (`lib/auth.ts`) and dies
+with the tab. Every refresh issues a new refresh token and blacklists the previous one, so
+a stolen token logs its owner out instead of granting quiet access.
 
-**Panel routes are guarded client-side** (`lib/withAuth.tsx`). This stops the wrong UI
-rendering; it is not an authorisation boundary. Every panel endpoint is authorised
-server-side, and the `viewer` role's read/write split is covered by backend tests.
+A `401` is not the end of a session: the access token expires during normal work, so
+`apiFetch` exchanges the cookie for a fresh token and repeats the request — once, never in
+a loop. Only when that fails does the panel perform a **full page load** to `/login`,
+deliberately, so that no component keeps the previous user's data in memory.
 
-**Known weakness — tokens in `localStorage`.** Any XSS in the panel can read them. This
-was a deliberate simplification while every customer was onboarded by hand, and it is the
-top security item on the roadmap: `HttpOnly` `Secure` `SameSite` refresh cookie, short
-access token in memory, rotation and revocation, and a CSP as a second line of defence.
+Refreshes are single-flight. Several screens mounting at once would otherwise send several
+refreshes, and rotation would invalidate all but one of the tokens they received.
+
+**Panel routes are guarded server-side** (`proxy.ts`), before anything reaches the browser.
+The guard reads a `sesja_panelu` cookie that carries a `1` and no secret; forging it only
+renders the panel shell, which the API then refuses. The authorisation boundary is the
+access token, checked by the backend — the `viewer` role's read/write split is covered by
+backend tests.
+
+**Content Security Policy** (`proxy.ts`). The load-bearing directive is `connect-src`,
+narrowed to the API origin: a script that manages to read the in-memory token has nowhere
+to send it. `base-uri`, `form-action`, `object-src` and `frame-ancestors` are locked down
+too.
+
+**Known weakness — `script-src` allows `'unsafe-inline'`.** It will not stop a script
+injected into the page itself. A nonce is generated per request, but Next generates most of
+these pages at build time, so there is no way to put a value into a file that does not yet
+exist; measured, with `'strict-dynamic'` no page booted at all, because it voids `'self'`
+and the browser blocked every Next.js chunk. The stronger version requires rendering every
+page on demand — worth revisiting when the panel stops being a client-side app.
 
 **Reporting a vulnerability:** krzysztof@agencjasm-art.pl, not a public issue.
 

@@ -880,9 +880,26 @@ h1, h2, h3, h4 {
   justify-content: space-between;
   gap: 2rem;
   margin-bottom: 2.2rem;
+  /* Naglowek i przyciski nie mieszcza sie obok siebie na telefonie --
+     niech przycisk zejdzie nizej, zamiast rozpychac strone. */
+  flex-wrap: wrap;
+}
+
+/* Element flex ma domyslnie min-width: auto, czyli odmawia zwezenia sie
+   ponizej wlasnej tresci. Naglowek "Dzien dobry, <nazwa firmy>." trzymal
+   przez to 356 px w kontenerze majacym 328 i wypychal cala strone o 12 px
+   w bok -- na pulpicie, czyli pierwszym ekranie po zalogowaniu. */
+.dashboard-heading > * {
+  min-width: 0;
 }
 
 .dashboard-heading h1 {
+  /* Naglowek niesie nazwe firmy, ktora podaje klient -- moze byc dowolnie
+     dluga. Zmierzone: przy 360 px szerokosci ekranu min-content tego
+     naglowka wynosil 356 px w kontenerze majacym 328, wiec wypychal cala
+     strone o 12 px w bok. `anywhere` pozwala zlamac slowo dopiero wtedy,
+     gdy inaczej sie nie miesci -- w typowych nazwach nic nie zmienia. */
+  overflow-wrap: anywhere;
   max-width: 48rem;
   margin: 0.55rem 0 0.6rem;
   font-size: clamp(2.15rem, 4.2vw, 4rem);

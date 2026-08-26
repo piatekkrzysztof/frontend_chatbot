@@ -2,12 +2,15 @@
 
 import Link from 'next/link'
 import Logo from '@/components/layout/Logo'
-import { useState, FormEvent } from 'react'
-import { useRouter } from 'next/navigation'
-import { API_URL, setTokens } from '@/lib/api'
+import { Suspense, useState, FormEvent } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
+import { API_URL } from '@/lib/api'
+import { ustawToken } from '@/lib/auth'
 
-export default function LoginPage() {
+function FormularzLogowania() {
   const router = useRouter()
+  const parametry = useSearchParams()
+  const wygasla = parametry.has('wygasla')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
@@ -23,6 +26,10 @@ export default function LoginPage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username: email, password }),
+        // Bez tego przegladarka odrzuci ciasteczko z tokenem odswiezania,
+        // ktore backend odsyla w tej odpowiedzi -- logowanie "uda sie",
+        // a pierwsze odswiezenie za kwadrans wyrzuci uzytkownika.
+        credentials: 'include',
       })
 
       if (!res.ok) {
@@ -30,7 +37,9 @@ export default function LoginPage() {
       }
 
       const data = await res.json()
-      setTokens(data.access, data.refresh)
+      // Token odswiezania nie przechodzi tedy w ogole -- backend odeslal go
+      // w ciasteczku HttpOnly, ktorego ten kod nie widzi i widziec nie musi.
+      ustawToken(data.access)
       router.replace('/dashboard')
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Nie udało się zalogować.')
@@ -46,6 +55,15 @@ export default function LoginPage() {
       </div>
 
       <h1 className="text-3xl mb-6">Zaloguj się</h1>
+
+      {wygasla && (
+        // Bez tego uzytkownik odbity z panelu widzi ekran logowania i nie wie,
+        // czy sam sie wylogowal, czy cos padlo. Cicha zmiana ekranu jest
+        // gorsza niz komunikat o bledzie.
+        <p className="mb-5 rounded border border-[color:var(--obramowanie-mocne)] px-3 py-2 text-sm tekst-drugi">
+          Sesja wygasła — zaloguj się ponownie.
+        </p>
+      )}
       <form onSubmit={handleSubmit} className="flex flex-col gap-4">
         <div>
           <label className="label" htmlFor="pole-email">E-mail</label>
@@ -90,5 +108,17 @@ export default function LoginPage() {
         </Link>
       </p>
     </div>
+  )
+}
+
+/**
+ * useSearchParams wymaga granicy Suspense -- bez niej Next nie potrafi
+ * wygenerowac tej strony statycznie i build sie zatrzymuje.
+ */
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<p className="text-sand-400">Wczytywanie...</p>}>
+      <FormularzLogowania />
+    </Suspense>
   )
 }

@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState, FormEvent } from 'react'
-import { apiFetch, API_URL, getToken } from '@/lib/api'
+import { apiFetch } from '@/lib/api'
 
 interface DocumentItem {
   id: number
@@ -124,16 +124,11 @@ export default function DocumentsPage() {
       formData.append('file', file)
       formData.append('name', file.name)
 
-      const res = await fetch(`${API_URL}/documents-upload/`, {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${getToken()}` },
-        body: formData,
-      })
-
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({}))
-        throw new Error(data.error || 'Nie udało się wgrać dokumentu.')
-      }
+      // Przez apiFetch, nie surowym fetch: token dostepu zyje 15 minut,
+      // wiec wygasa w trakcie normalnej pracy. apiFetch potrafi go wymienic
+      // i powtorzyc zadanie, surowy fetch odbilby sie z 401 -- i to akurat
+      // na wgrywaniu pliku, ktore trzeba by robic od nowa.
+      await apiFetch('/documents-upload/', { method: 'POST', body: formData })
 
       setFile(null)
       await loadDocuments()

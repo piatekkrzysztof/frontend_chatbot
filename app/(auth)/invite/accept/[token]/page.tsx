@@ -2,7 +2,8 @@
 
 import { useEffect, useState, FormEvent, use } from 'react'
 import { useRouter } from 'next/navigation'
-import { API_URL, setTokens } from '@/lib/api'
+import { API_URL } from '@/lib/api'
+import { ustawToken } from '@/lib/auth'
 
 interface InvitePreview {
   company: string
@@ -97,7 +98,7 @@ export default function AcceptInvitePage({
 
       if (loginRes.ok) {
         const tokens = await loginRes.json()
-        setTokens(tokens.access, tokens.refresh)
+        ustawToken(tokens.access)
         router.push('/dashboard')
         return
       }
