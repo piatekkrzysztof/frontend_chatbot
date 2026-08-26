@@ -210,14 +210,18 @@ export default function DocumentsPage() {
         odpowiedzi na pytania o firmę — celowo, żeby ich nie zmyślać.
       </p>
 
-      <h2 className="text-xl font-bold mb-1">Opis działalności</h2>
+      <h2 id="naglowek-opis" className="text-xl font-bold mb-1">Opis działalności</h2>
       <p className="text-sm tekst-slaby mb-3">
         Najważniejsze pole. Napisz własnymi słowami, czym zajmuje się firma, co oferuje
         i dla kogo. Bez tego bot nie odpowie nawet na „czym się zajmujecie?”.
       </p>
 
       <form onSubmit={handleSaveDescription} className="mb-10 max-w-2xl">
+        {/* Nazwa pola plynie z widocznego naglowka sekcji, zamiast byc
+            powtorzona w aria-label. Jedno zrodlo prawdy: gdy naglowek sie
+            zmieni, czytnik ekranu uslyszy nowa nazwe bez osobnej poprawki. */}
         <textarea
+          aria-labelledby="naglowek-opis"
           value={description}
           onChange={(e) => setDescription(e.target.value)}
           rows={5}
@@ -253,7 +257,10 @@ export default function DocumentsPage() {
       </p>
 
       <form onSubmit={handleUpload} className="flex items-center gap-3 mb-6">
+        {/* Tutaj naglowek sekcji nie opisuje samego pola, tylko cala liste
+            dokumentow -- nazwa musi wiec powiedziec, co ten przycisk robi. */}
         <input
+          aria-label="Wybierz dokument do wgrania"
           type="file"
           accept=".pdf,.docx,.txt,.md"
           onChange={(e) => setFile(e.target.files?.[0] || null)}
@@ -318,13 +325,14 @@ export default function DocumentsPage() {
       </table>
       </div>
 
-      <h2 className="text-xl font-bold mb-4">Strony WWW</h2>
+      <h2 id="naglowek-strony" className="text-xl font-bold mb-4">Strony WWW</h2>
       <p className="text-sm tekst-slaby mb-3">
         Podaj adres strony klienta — treść zostanie automatycznie pobrana i dodana do wiedzy chatbota.
       </p>
 
       <form onSubmit={handleAddSource} className="flex items-center gap-3 mb-6">
         <input
+          aria-labelledby="naglowek-strony"
           type="url"
           value={newUrl}
           onChange={(e) => setNewUrl(e.target.value)}

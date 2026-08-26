@@ -168,8 +168,9 @@ export default function AcceptInvitePage({
             className="input mb-4"
           />
 
-          <label className="label">E-mail</label>
+          <label className="label" htmlFor="zaproszenie-email">E-mail</label>
           <input
+            id="zaproszenie-email"
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
@@ -177,8 +178,9 @@ export default function AcceptInvitePage({
             className="input mb-4"
           />
 
-          <label className="label">Hasło</label>
+          <label className="label" htmlFor="zaproszenie-haslo">Hasło</label>
           <input
+            id="zaproszenie-haslo"
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}

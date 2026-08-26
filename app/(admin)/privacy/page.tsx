@@ -101,13 +101,17 @@ export default function PrivacyPage() {
 
       <form onSubmit={handleSave} className="mb-12">
         <div className="mb-5">
-          <label className="label">
+          <label className="label" htmlFor="retencja">
             Automatyczne usuwanie rozmów
           </label>
-          <p className="text-sm tekst-slaby mb-2">
+          {/* aria-describedby, zeby czytnik ekranu przeczytal to wyjasnienie
+              razem z nazwa pola. Sam napis obok jest dla niego niewidoczny. */}
+          <p id="retencja-opis" className="text-sm tekst-slaby mb-2">
             Po tym czasie rozmowy, logi i zostawione kontakty znikają bezpowrotnie.
           </p>
           <select
+            id="retencja"
+            aria-describedby="retencja-opis"
             value={retention}
             onChange={(e) => setRetention(Number(e.target.value))}
             className="input"
@@ -127,14 +131,16 @@ export default function PrivacyPage() {
         </div>
 
         <div className="mb-5">
-          <label className="label">
+          <label className="label" htmlFor="link-polityki">
             Link do polityki prywatności
           </label>
-          <p className="text-sm tekst-slaby mb-2">
+          <p id="link-polityki-opis" className="text-sm tekst-slaby mb-2">
             Pokazujemy go w oknie czatu. Odwiedzający musi wiedzieć, kto przetwarza jego dane,
             zanim je zostawi.
           </p>
           <input
+            id="link-polityki"
+            aria-describedby="link-polityki-opis"
             type="url"
             value={policyUrl}
             onChange={(e) => setPolicyUrl(e.target.value)}
@@ -156,14 +162,20 @@ export default function PrivacyPage() {
       </form>
 
       <h2 className="text-xl font-bold mb-1">Usunięcie danych na żądanie</h2>
-      <p className="text-sm tekst-slaby mb-4">
+      <p id="kasowanie-opis" className="text-sm tekst-slaby mb-4">
         Gdy ktoś poprosi o usunięcie swoich danych, znajdź jego rozmowę w zakładce
         Konwersacje i wklej tutaj jej identyfikator. Kasujemy rozmowę razem ze wszystkimi
         logami i zostawionym kontaktem. Operacji nie da się cofnąć.
       </p>
 
       <form onSubmit={handleErase} className="flex items-center gap-3">
+        {/* Pole nie ma widocznej etykiety -- niesie ja podpowiedz w tle,
+            ktora znika, gdy tylko ktos zacznie pisac. Przy operacji kasujacej
+            dane bezpowrotnie nazwa musi zostac. aria-describedby dokleja
+            ostrzezenie, ze nie da sie tego cofnac. */}
         <input
+          aria-label="Identyfikator rozmowy do usunięcia"
+          aria-describedby="kasowanie-opis"
           type="text"
           value={sessionId}
           onChange={(e) => setSessionId(e.target.value)}

@@ -98,8 +98,9 @@ export default function FAQPage() {
 
       <form onSubmit={handleAdd} className="flex flex-col gap-3 max-w-2xl mb-8">
         <div>
-          <label className="label">Pytanie</label>
+          <label className="label" htmlFor="faq-pytanie">Pytanie</label>
           <input
+            id="faq-pytanie"
             type="text"
             value={question}
             onChange={(e) => setQuestion(e.target.value)}
@@ -108,8 +109,9 @@ export default function FAQPage() {
           />
         </div>
         <div>
-          <label className="label">Odpowiedź</label>
+          <label className="label" htmlFor="faq-odpowiedz">Odpowiedź</label>
           <textarea
+            id="faq-odpowiedz"
             value={answer}
             onChange={(e) => setAnswer(e.target.value)}
             rows={3}
