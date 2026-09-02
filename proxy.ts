@@ -64,7 +64,14 @@ function politykaTresci() {
     "default-src 'self'",
     // Wlasne skrypty i te w tresci strony -- Next wstawia w prerenderowany
     // dokument ladunek RSC jako skrypt w tresci.
-    "script-src 'self' 'unsafe-inline'",
+    //
+    // 'unsafe-eval' TYLKO w trybie deweloperskim. React uzywa eval() do
+    // odtwarzania stosu wywolan przy debugowaniu i bez tego wypisuje w konsoli
+    // ostrzezenie zamiast pokazac, gdzie naprawde cos poszlo nie tak.
+    // W produkcji nie uzywa go wcale, wiec nie ma powodu, zeby tam byl -
+    // a to jest dokladnie ta furtka, ktora zamienia wstrzykniety napis
+    // w wykonany kod.
+    `script-src 'self' 'unsafe-inline'${process.env.NODE_ENV === 'development' ? " 'unsafe-eval'" : ''}`,
     // Stylu nie da sie uzyc do wyslania tokenu, a React i Tailwind
     // ustawiaja style w atrybutach elementow.
     "style-src 'self' 'unsafe-inline'",

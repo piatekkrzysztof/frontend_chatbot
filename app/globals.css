@@ -2119,6 +2119,21 @@ h1, h2, h3, h4 {
     min-height: 44px;
   }
 
+  /* Ekrany logowania i rejestracji NIE sa w .admin-shell, wiec regula wyzej
+     ich nie obejmowala. Zmierzone na emulowanym dotyku: link "Zaloguj sie"
+     pod formularzem rejestracji mial 68x18 px.
+     
+     To byla dziura w poprzedniej poprawce - dolozylem tym linkom 24 px pod
+     `pointer: fine`, ale zapomnialem, ze na telefonie obowiazuje ten drugi
+     blok, a on dotyczyl wylacznie panelu. Podzial na rozlaczne zakresy
+     wskaznika ma te wade, ze o jednej polowie latwo zapomniec.
+     
+     Padding pionowy, nie min-height: link stoi w zdaniu, a min-height
+     rozepchnaloby wiersz. */
+  main p a {
+    padding-block: 13px;
+  }
+
   /* min-height nie dziala na `display: inline` — bez tego regula wyzej
      po cichu nic by nie zmienila na czesci elementow. */
   .admin-shell :is(button.font-mono, .panel-link, .row-answer, .admin-logout) {
