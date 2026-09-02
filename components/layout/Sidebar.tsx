@@ -34,7 +34,11 @@ const GRUPY = [
       { href: '/team', label: 'Zespół', kod: '09' },
       { href: '/subskrypcja', label: 'Subskrypcja', kod: '10' },
       { href: '/privacy', label: 'Prywatność', kod: '11' },
-      { href: '/stan', label: 'Stan systemu', kod: '12' },
+      // Obok prywatności, bo to ta sama sprawa z drugiej strony: tam widać,
+      // co system trzyma o odwiedzających, tutaj - co z tym robili ludzie
+      // z Twojej firmy.
+      { href: '/dziennik', label: 'Dziennik zdarzeń', kod: '12' },
+      { href: '/stan', label: 'Stan systemu', kod: '13' },
     ],
   },
 ]

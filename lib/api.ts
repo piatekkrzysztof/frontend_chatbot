@@ -84,6 +84,24 @@ function wyslij(path: string, opcje: RequestInit) {
   })
 }
 
+/**
+ * Blad z zachowanym kodem odpowiedzi.
+ *
+ * Sam komunikat nie wystarcza, zeby ekran odroznil awarie od granicy
+ * uprawnien: 403 i 500 przychodza jako zwykly tekst, wiec bez statusu
+ * jedyna metoda byloby dopasowywanie napisow z DRF. To dziala do pierwszej
+ * zmiany jezyka albo tresci komunikatu po stronie backendu.
+ */
+export class BladApi extends Error {
+  readonly status: number
+
+  constructor(status: number, komunikat: string) {
+    super(komunikat)
+    this.name = 'BladApi'
+    this.status = status
+  }
+}
+
 async function odczytaj(response: Response) {
   if (!response.ok) {
     let detail = response.statusText
@@ -93,7 +111,7 @@ async function odczytaj(response: Response) {
     } catch {
       // brak tresci JSON w odpowiedzi bledu
     }
-    throw new Error(detail)
+    throw new BladApi(response.status, detail)
   }
 
   if (response.status === 204) return null

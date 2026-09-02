@@ -14,7 +14,7 @@ import { expect, test, type Page } from '@playwright/test'
 import { podstawBackend, zalogowany } from './atrapa'
 
 /** Ekrany panelu -- wymagaja sesji. */
-const EKRANY_PANELU = ['/dashboard', '/faq', '/subskrypcja']
+const EKRANY_PANELU = ['/dashboard', '/faq', '/subskrypcja', '/dziennik']
 
 /** Ekrany dostepne bez konta. Zalogowanego middleware odeslaloby stad do panelu. */
 const EKRANY_PUBLICZNE = ['/login', '/rejestracja']
