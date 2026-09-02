@@ -79,6 +79,61 @@ const ODPOWIEDZI: Record<string, unknown> = {
   ],
 }
 
+/**
+ * Dwie strony dziennika, w ksztalcie `PageNumberPagination` z DRF.
+ *
+ * Pierwsza niesie wpis rozpoznany (wgranie dokumentu), odmowe (nieudane
+ * logowanie) i sciezke, ktorej panel nie zna - ta ostatnia pilnuje, ze
+ * nieznany wpis pokazuje sie surowo, zamiast zniknac pod ogolnikiem.
+ */
+function stronaDziennika(numer: number) {
+  const pierwsza = [
+    {
+      id: 3,
+      czas: '2026-09-01T14:32:10Z',
+      nazwa_uzytkownika: 'szef@rowerownia.pl',
+      metoda: 'POST',
+      sciezka: '/api/documents-upload/',
+      status: 201,
+      adres_ip: '83.11.24.7',
+    },
+    {
+      id: 2,
+      czas: '2026-09-01T09:15:00Z',
+      nazwa_uzytkownika: 'szef@rowerownia.pl',
+      metoda: 'POST',
+      sciezka: '/api/accounts/login/',
+      status: 401,
+      adres_ip: '45.9.148.2',
+    },
+    {
+      id: 1,
+      czas: '2026-08-31T22:04:41Z',
+      nazwa_uzytkownika: 'szef@rowerownia.pl',
+      metoda: 'PATCH',
+      sciezka: '/api/cos-czego-panel-nie-zna/7/',
+      status: 200,
+      adres_ip: '83.11.24.7',
+    },
+  ]
+
+  const druga = [
+    {
+      id: 0,
+      czas: '2026-08-30T11:00:00Z',
+      nazwa_uzytkownika: 'szef@rowerownia.pl',
+      metoda: 'POST',
+      sciezka: '/api/chat/export/',
+      status: 200,
+      adres_ip: '83.11.24.7',
+    },
+  ]
+
+  return numer >= 2
+    ? { count: 4, next: null, previous: 'strona-1', results: druga }
+    : { count: 4, next: 'strona-2', previous: null, results: pierwsza }
+}
+
 type Nadpisanie = { status: number; body?: unknown }
 
 /**
@@ -147,6 +202,19 @@ export async function podstawBackend(
           wlaczony: true,
           kody_zapasowe: ['A1B2C3D4-E5F6A7B8', 'C9D0E1F2-A3B4C5D6'],
         }),
+      })
+    }
+
+    // Dziennik jest jedyna stronicowana lista w panelu, wiec atrapa musi
+    // czytac parametr `page`. Gdyby zwracala te sama strone niezaleznie od
+    // niego, test stronicowania przechodzilby, nie sprawdzajac niczego -
+    // przycisk "Starsze" moglby w ogole nie wysylac numeru.
+    if (sciezka === '/accounts/dziennik/') {
+      const numer = Number(new URL(route.request().url()).searchParams.get('page') ?? '1')
+      return route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify(stronaDziennika(numer)),
       })
     }
 
