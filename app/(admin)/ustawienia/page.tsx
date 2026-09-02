@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from 'react'
 import { apiFetch } from '@/lib/api'
+import DaneRozliczeniowe from '@/components/ustawienia/DaneRozliczeniowe'
+import DrugiSkladnik from '@/components/ustawienia/DrugiSkladnik'
 
 export default function UstawieniaPage() {
   const [nazwa, setNazwa] = useState('')
@@ -104,6 +106,17 @@ export default function UstawieniaPage() {
           {zapisuje ? 'Zapisywanie…' : 'Zapisz'}
         </button>
       </form>
+
+      {/* Osobna sekcja, a nie kolejne pole formularza wyżej: to nie jest
+          ustawienie do zapisania razem z nazwą firmy, tylko wieloetapowa
+          konfiguracja z własnym potwierdzeniem. */}
+      <hr className="my-10 border-[color:var(--obramowanie-mocne)]" />
+
+      <DaneRozliczeniowe />
+
+      <hr className="my-10 border-[color:var(--obramowanie-mocne)]" />
+
+      <DrugiSkladnik />
     </div>
   )
 }

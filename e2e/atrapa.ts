@@ -52,6 +52,27 @@ const ODPOWIEDZI: Record<string, unknown> = {
     widget_position: 'right',
     branding_mode: 'standard',
   },
+  // Ekran ustawien sklada sie z trzech sekcji, kazda z wlasnym zapytaniem.
+  // Bez tych wpisow atrapa zwracalaby pusta liste tam, gdzie komponent
+  // oczekuje obiektu - i ekran wywracalby sie w tescie z powodu, ktory
+  // z produktem nie ma nic wspolnego.
+  '/accounts/dane-rozliczeniowe/': {
+    nazwa: 'Rowerownia Krakowska Anna Nowak',
+    nip: '5260250274',
+    ulica: 'Krakowska 12',
+    kod_pocztowy: '31-000',
+    miasto: 'Kraków',
+    kraj: 'PL',
+  },
+  '/accounts/2fa/': {
+    wlaczony: false,
+    w_trakcie_konfiguracji: false,
+    kodow_zapasowych: 0,
+  },
+  '/accounts/firma/': {
+    name: 'Rowerownia Krakowska',
+    owner_email: 'szef@rowerownia.pl',
+  },
   '/faq/': [
     { id: 11, question: 'Jakie macie godziny otwarcia?', answer: 'Pon-pt 9-18.' },
     { id: 12, question: 'Ile kosztuje przeglad?', answer: '120 zl.' },
@@ -100,6 +121,32 @@ export async function podstawBackend(
         status: 200,
         contentType: 'application/json',
         body: JSON.stringify({ access: TOKEN_DOSTEPU }),
+      })
+    }
+
+    // Konfiguracja drugiego skladnika: sekret i adres otpauth. Sekret jest
+    // wymyslony na potrzeby testu - prawdziwy nigdy nie powstaje po stronie
+    // przegladarki.
+    if (sciezka === '/accounts/2fa/rozpocznij/') {
+      return route.fulfill({
+        status: 201,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          sekret: 'JBSWY3DPEHPK3PXP',
+          adres_otpauth:
+            'otpauth://totp/SM-art%20Chat:szef@rowerownia.pl?secret=JBSWY3DPEHPK3PXP&issuer=SM-art%20Chat',
+        }),
+      })
+    }
+
+    if (sciezka === '/accounts/2fa/potwierdz/') {
+      return route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          wlaczony: true,
+          kody_zapasowe: ['A1B2C3D4-E5F6A7B8', 'C9D0E1F2-A3B4C5D6'],
+        }),
       })
     }
 
