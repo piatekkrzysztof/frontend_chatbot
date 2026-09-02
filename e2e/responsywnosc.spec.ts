@@ -17,15 +17,28 @@ import { podstawBackend, zalogowany } from './atrapa'
 const EKRANY_PANELU = ['/dashboard', '/faq', '/subskrypcja']
 
 /** Ekrany dostepne bez konta. Zalogowanego middleware odeslaloby stad do panelu. */
-const EKRANY_PUBLICZNE = ['/login']
+const EKRANY_PUBLICZNE = ['/login', '/rejestracja']
 
 /** WCAG 2.2 AA, kryterium 2.5.8 -- minimum na kazdym wskazniku, nie tylko dotyku. */
 const MINIMALNY_CEL = 24
 
+/**
+ * `dotyk` decyduje o tym, ktora regula CSS obowiazuje.
+ *
+ * Progi rozmiaru celu sa w tym projekcie rozdzielone na dwa rozlaczne zakresy
+ * wskaznika: 24 px pod `pointer: fine`, 44 px pod `pointer: coarse`. Waskie
+ * okno zwyklej przegladarki to WCIAZ `pointer: fine`, wiec test nazwany
+ * "telefon", ktory tylko zwezal okno, sprawdzal polowe regul i nazywal to
+ * telefonem.
+ *
+ * Wyszlo to dopiero przy recznym ogladaniu rejestracji na emulowanym
+ * urzadzeniu: link "Zaloguj sie" mial tam 68x18 px i zaden test tego nie
+ * widzial.
+ */
 const WIDOKI = [
-  { nazwa: 'telefon', width: 360, height: 780 },
-  { nazwa: 'tablet', width: 768, height: 1024 },
-  { nazwa: 'desktop', width: 1440, height: 900 },
+  { nazwa: 'telefon', width: 360, height: 780, dotyk: true },
+  { nazwa: 'tablet', width: 768, height: 1024, dotyk: true },
+  { nazwa: 'desktop', width: 1440, height: 900, dotyk: false },
 ]
 
 type Cel = { opis: string; szerokosc: number; wysokosc: number }
@@ -107,7 +120,11 @@ async function sprawdzEkran(page: Page, ekran: string, szerokosc: number) {
 
 for (const widok of WIDOKI) {
   test.describe(widok.nazwa, () => {
-    test.use({ viewport: { width: widok.width, height: widok.height } })
+    test.use({
+      viewport: { width: widok.width, height: widok.height },
+      hasTouch: widok.dotyk,
+      isMobile: widok.dotyk,
+    })
 
     for (const ekran of EKRANY_PANELU) {
       test(`${ekran} miesci sie w szerokosci i ma dosc duze cele`, async ({ page, context }) => {
