@@ -8,6 +8,7 @@
  */
 import { expect, test } from '@playwright/test'
 import { podstawBackend, TOKEN_DOSTEPU, ZNACZNIK_SESJI, zalogowany } from './atrapa'
+import { CHRONIONE } from '../proxy'
 
 test('poprawne dane logowania prowadza do panelu', async ({ page }) => {
   await podstawBackend(page)
@@ -125,4 +126,33 @@ test('wylogowanie pyta backend, a nie tylko przekierowuje', async ({ page, conte
 
   await wylogowanie
   await expect(page).toHaveURL(/\/login/)
+})
+
+/**
+ * Kazda trasa z listy CHRONIONE naprawde przechodzi przez middleware.
+ *
+ * Test sterowany ta sama lista, z ktorej korzysta middleware - wlasna kopia
+ * znaczylaby, ze nowy ekran dopisany do proxy.ts nie zostaje sprawdzony.
+ *
+ * Powod, dla ktorego ten test istnieje: `/widget-settings` byl wymieniony
+ * w CHRONIONE i NIE BYL chroniony. Wykluczenie `widget` w matcherze
+ * dopasowywalo prefiks, wiec lapalo takze ten ekran. Wchodzil na niego kazdy
+ * bez sesji, a przy okazji strona nie dostawala zadnej polityki
+ * bezpieczenstwa - mimo ze to wlasnie na niej token dostepu zyje w pamieci
+ * karty. Zaden test tego nie widzial, bo wszystkie sprawdzaly `/dashboard`.
+ */
+test.describe('ochrona obejmuje wszystkie zadeklarowane trasy', () => {
+  for (const trasa of CHRONIONE) {
+    test(`${trasa} bez sesji odbija na logowanie i niesie polityke`, async ({ page }) => {
+      await podstawBackend(page)
+      const odpowiedz = await page.goto(trasa)
+
+      // Porownanie tekstu, nie wyrazenie regularne: w szablonie JS `\?` nie
+      // jest ucieczka regexowa, tylko zwyklym znakiem zapytania - czyli
+      // kwantyfikatorem. Pierwsza wersja tego testu sprawdzala wiec wzorzec
+      // "logi[n opcjonalne]powrot" i nie pasowala do niczego.
+      expect(page.url()).toContain(`/login?powrot=${encodeURIComponent(trasa)}`)
+      expect(odpowiedz?.headers()['content-security-policy']).toBeTruthy()
+    })
+  }
 })

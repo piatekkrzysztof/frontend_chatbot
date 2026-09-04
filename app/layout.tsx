@@ -1,6 +1,7 @@
 import './globals.css'
 import { ReactNode } from 'react'
 import type { Metadata } from 'next'
+import { headers } from 'next/headers'
 import { Syne, DM_Sans } from 'next/font/google'
 
 /**
@@ -53,7 +54,23 @@ export const metadata: Metadata = {
   },
 }
 
-export default function RootLayout({ children }: { children: ReactNode }) {
+/**
+ * Odczyt nagłówków wypisuje całą aplikację ze statycznego prerenderowania.
+ *
+ * To nie jest efekt uboczny, tylko powód, dla którego ta funkcja jest
+ * asynchroniczna. Polityka bezpieczeństwa używa nonce, który powstaje osobno
+ * dla każdego żądania - w stronie zapisanej na dysku przy budowaniu nie ma
+ * jak go umieścić, więc przeglądarka zablokowałaby wszystkie skrypty Next.js
+ * i panel by nie wstał. Dokładnie tak skończyła się pierwsza próba.
+ *
+ * Koszt jest mały: wszystkie ekrany panelu to komponenty klienta pobierające
+ * dane po zamontowaniu, więc prerenderowana była pusta powłoka. Widget, gdzie
+ * czas pierwszego rysowania ma znaczenie, jest poza zasięgiem middleware
+ * i zachowuje własne nagłówki z next.config.js.
+ */
+export default async function RootLayout({ children }: { children: ReactNode }) {
+  await headers()
+
   return (
     <html lang="pl" className={`${syne.variable} ${dmSans.variable}`}>
       <body>{children}</body>
