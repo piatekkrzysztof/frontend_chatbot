@@ -61,3 +61,36 @@ test('widget zostaje osadzalny na cudzej stronie', async ({ page }) => {
   expect(polityka).toContain('frame-ancestors *')
   expect(polityka).not.toContain("frame-ancestors 'self'")
 })
+
+test('skrypty w tresci strony nie sa juz dozwolone hurtem', async ({ page }) => {
+  /**
+   * Sedno tej zmiany i jedyny test, ktory ja pilnuje.
+   *
+   * Wczesniej `script-src` mial 'unsafe-inline', czyli przegladarka wykonywala
+   * KAZDY skrypt wpisany w tresc strony - lacznie z takim, ktory trafil tam
+   * przez wstrzykniecie. Polityka blokowala wtedy wyniesienie tokenu, ale nie
+   * jego odczyt.
+   *
+   * Teraz wykonuja sie wylacznie skrypty z nonce, ktory powstaje osobno dla
+   * kazdego zadania. Wstrzyknietego napisu nie da sie nim opatrzyc, bo w chwili
+   * wstrzykiwania jeszcze nie istnieje.
+   *
+   * Uwaga przy czytaniu wynikow lokalnie: oprogramowanie antywirusowe potrafi
+   * dopisac do tego naglowka wlasny nonce i wlasne adresy. Test sprawdza wiec
+   * BRAK 'unsafe-inline', a nie doslowna tresc naglowka - to pierwsze jest
+   * odporne na takie dopiski, drugie nie.
+   */
+  await podstawBackend(page)
+  const odpowiedz = await page.goto('/login')
+  const polityka = odpowiedz?.headers()['content-security-policy'] ?? ''
+
+  const skrypty = polityka
+    .split(';')
+    .map((czlon) => czlon.trim())
+    .find((czlon) => czlon.startsWith('script-src'))
+
+  expect(skrypty, 'brak dyrektywy script-src').toBeTruthy()
+  expect(skrypty).not.toContain("'unsafe-inline'")
+  expect(skrypty).toContain("'strict-dynamic'")
+  expect(skrypty).toMatch(/'nonce-[^']+'/)
+})

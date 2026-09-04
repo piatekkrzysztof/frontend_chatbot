@@ -37,48 +37,57 @@ const ZRODLO_API = (() => {
 /**
  * Polityka bezpieczenstwa tresci.
  *
- * Sens w kontekscie tej przebudowy: token odswiezania jest juz niewidoczny
- * dla skryptow, ale token dostepu zyje w pamieci karty i wstrzykniety skrypt
- * moglby go stamtad wyslac. Najmocniejsza czescia tej polityki jest wiec
- * `connect-src` -- nawet skrypt, ktoremu uda sie wykonac, nie ma dokad
- * wyslac tego, co przeczyta.
+ * Sens: token odswiezania jest niewidoczny dla skryptow, ale token dostepu
+ * zyje w pamieci karty i wstrzykniety skrypt moglby go stamtad wyslac.
+ * Polityka dziala wiec na dwa sposoby: nie pozwala takiemu skryptowi sie
+ * wykonac (`script-src` z nonce) i nie daje mu dokad wyslac tego, co
+ * przeczyta (`connect-src`).
  *
- * Czego tu NIE ma i dlaczego: `script-src` nie uzywa nonce ani
- * 'strict-dynamic'. Nonce powstaje osobno dla kazdego zadania, a Next
- * generuje wiekszosc tych stron przy budowaniu -- w pliku zapisanym na dysku
- * nie ma jak umiescic wartosci, ktora jeszcze nie istnieje. Sprawdzone:
- * z nonce zadna ze stron nie wstawala, bo 'strict-dynamic' uniewaznia 'self'
- * i przegladarka blokowala wszystkie wlasne chunki Next.js.
+ * Dlaczego nonce, skoro poprzednia proba sie nie udala
+ * ----------------------------------------------------
+ * Nonce powstaje osobno dla kazdego zadania, a Next generowal wszystkie te
+ * strony przy budowaniu - w pliku zapisanym na dysku nie ma jak umiescic
+ * wartosci, ktora jeszcze nie istnieje. Efekt byl taki, ze `strict-dynamic`
+ * uniewazniał `self`, a przegladarka blokowala wszystkie chunki Next.js
+ * i zadna strona nie wstawala.
  *
- * Zostaje wiec 'self' plus 'unsafe-inline'. To jest slabsze i nie udaje, ze
- * jest inaczej: nie zatrzyma skryptu wstrzyknietego w tresc strony. Nadal
- * jednak blokuje wciagniecie skryptu z cudzego serwera, wyslanie
- * czegokolwiek pod obcy adres, przepisanie adresu bazowego, wyslanie
- * formularza gdzie indziej i osadzenie panelu w cudzej ramce.
+ * Brakowalo dwoch rzeczy naraz, nie jednej:
  *
- * Mocniejsza wersja wymagalaby renderowania kazdej strony na zadanie.
- * Do rozwazenia, gdy panel przestanie byc aplikacja klienta.
+ *  1. Nonce musi trafic do naglowkow ZADANIA, nie tylko odpowiedzi. Next
+ *     czyta go stamtad i sam doklein do swoich skryptow. Bez tego naglowek
+ *     odpowiedzi obiecuje nonce, ktorego w HTML nie ma.
+ *  2. Strony musza byc renderowane na zadanie. Odczyt `headers()` w ukladzie
+ *     korzenia wypisuje cala aplikacje ze statycznego prerenderowania.
+ *
+ * Koszt: kazda strona powstaje na serwerze zamiast lezec gotowa. Dla panelu
+ * to niewiele - wszystkie ekrany sa i tak komponentami klienta, ktore pobieraja
+ * dane po zamontowaniu, wiec prerenderowana byla sama pusta powloka.
+ *
+ * `/widget` jest poza zasiegiem tego middleware i ma wlasny naglowek
+ * w next.config.js - polityka panelu z `frame-ancestors 'self'`
+ * uniemozliwilaby osadzenie go na stronie klienta.
  */
-function politykaTresci() {
+function politykaTresci(nonce: string) {
   return [
     "default-src 'self'",
-    // Wlasne skrypty i te w tresci strony -- Next wstawia w prerenderowany
-    // dokument ladunek RSC jako skrypt w tresci.
+    // Skrypty wylacznie z nonce. `strict-dynamic` przenosi zaufanie z tego
+    // skryptu na chunki, ktore on sam wciaga - bez tego kazdy plik Next.js
+    // trzeba by wymieniac z osobna.
     //
     // 'unsafe-eval' TYLKO w trybie deweloperskim. React uzywa eval() do
-    // odtwarzania stosu wywolan przy debugowaniu i bez tego wypisuje w konsoli
-    // ostrzezenie zamiast pokazac, gdzie naprawde cos poszlo nie tak.
-    // W produkcji nie uzywa go wcale, wiec nie ma powodu, zeby tam byl -
-    // a to jest dokladnie ta furtka, ktora zamienia wstrzykniety napis
+    // odtwarzania stosu wywolan przy debugowaniu. W produkcji nie uzywa go
+    // wcale, a to jest dokladnie ta furtka, ktora zamienia wstrzykniety napis
     // w wykonany kod.
-    `script-src 'self' 'unsafe-inline'${process.env.NODE_ENV === 'development' ? " 'unsafe-eval'" : ''}`,
-    // Stylu nie da sie uzyc do wyslania tokenu, a React i Tailwind
-    // ustawiaja style w atrybutach elementow.
+    `script-src 'nonce-${nonce}' 'strict-dynamic'${
+      process.env.NODE_ENV === 'development' ? " 'unsafe-eval'" : ''
+    }`,
+    // Stylu nie da sie uzyc do wyslania tokenu, a React i Tailwind ustawiaja
+    // style w atrybutach elementow. Tu 'unsafe-inline' zostaje swiadomie.
     "style-src 'self' 'unsafe-inline'",
     "img-src 'self' data: blob: https:",
     "font-src 'self'",
-    // Najwazniejsza linia: adres backendu i nic wiecej. Skrypt, ktory
-    // odczyta token z pamieci, nie ma dokad go wyslac.
+    // Adres backendu i nic wiecej. Skrypt, ktory odczyta token z pamieci,
+    // nie ma dokad go wyslac.
     `connect-src 'self' ${ZRODLO_API}`.trim(),
     // Panel nie osadza niczego obcego i nie ma wtyczek
     "object-src 'none'",
@@ -93,11 +102,29 @@ function politykaTresci() {
   ].join('; ')
 }
 
+/**
+ * Losowy nonce na zadanie.
+ *
+ * `crypto.randomUUID` jest dostepne w srodowisku uruchomieniowym middleware
+ * i jest kryptograficznie losowe. Nonce przewidywalny nie chroni przed
+ * niczym: napastnik wpisalby go po prostu do wstrzyknietego skryptu.
+ */
+function nowyNonce() {
+  return btoa(crypto.randomUUID())
+}
+
 /** Ta sama nazwa co NAZWA_CIASTECZKA_SESJI po stronie Django. */
 const ZNACZNIK_SESJI = 'sesja_panelu'
 
-/** Trasy panelu -- wymagaja sesji. */
-const CHRONIONE = [
+/**
+ * Trasy panelu -- wymagaja sesji.
+ *
+ * Eksportowane, zeby test przegladarkowy mogl przejsc po tej samej liscie,
+ * z ktorej korzysta middleware. Wlasna kopia listy w tescie znaczylaby, ze
+ * nowy ekran dopisany tutaj nie zostaje sprawdzony - a wlasnie tak przez
+ * dlugi czas `/widget-settings` byl wymieniony jako chroniony i nie byl.
+ */
+export const CHRONIONE = [
   '/dashboard',
   '/conversations',
   '/documents',
@@ -149,21 +176,48 @@ export function proxy(zadanie: NextRequest) {
     return NextResponse.redirect(new URL('/dashboard', zadanie.url))
   }
 
-  return zNaglowkami()
+  return zNaglowkami(zadanie)
 }
 
-/** Przepuszcza zadanie, dokladajac polityke bezpieczenstwa. */
-function zNaglowkami() {
-  const odpowiedz = NextResponse.next()
-  odpowiedz.headers.set('Content-Security-Policy', politykaTresci())
+/**
+ * Przepuszcza zadanie, dokladajac polityke bezpieczenstwa.
+ *
+ * Polityka jedzie w OBIE strony. Na zadaniu czyta ja Next i doklein nonce do
+ * swoich skryptow; na odpowiedzi czyta ja przegladarka i egzekwuje. Ustawienie
+ * jej tylko na odpowiedzi daje naglowek obiecujacy nonce, ktorego w HTML nie
+ * ma - czyli biala strone.
+ */
+function zNaglowkami(zadanie: NextRequest) {
+  const polityka = politykaTresci(nowyNonce())
+
+  const naglowkiZadania = new Headers(zadanie.headers)
+  naglowkiZadania.set('Content-Security-Policy', polityka)
+
+  const odpowiedz = NextResponse.next({ request: { headers: naglowkiZadania } })
+  odpowiedz.headers.set('Content-Security-Policy', polityka)
   return odpowiedz
 }
 
 export const config = {
   /**
-   * Poza zasiegiem: pliki statyczne oraz `/widget`, ktory z zalozenia
-   * dziala bez sesji panelu -- odwiedzajacy strone klienta nie ma konta
-   * i nie moze zostac odbity na logowanie.
+   * Poza zasiegiem: pliki statyczne oraz `/widget`, ktory z zalozenia dziala
+   * bez sesji panelu -- odwiedzajacy strone klienta nie ma konta i nie moze
+   * zostac odbity na logowanie. Widget dostaje wlasna polityke (patrz nizej),
+   * bo `frame-ancestors 'self'` z polityki panelu uniemozliwiloby osadzenie
+   * go na stronie klienta.
+   *
+   * `widget(?:/|$)` zamiast samego `widget` -- i to nie jest kosmetyka.
+   * Poprzedni wzorzec dopasowywal PREFIKS, wiec wykluczal takze
+   * `/widget-settings`: ekran panelu wymieniony w CHRONIONE, ktory przez to
+   * nie byl chroniony wcale i nie dostawal ZADNEJ polityki bezpieczenstwa.
+   * Wchodzil na niego kazdy, bez sesji, a token dostepu zyje na tej stronie
+   * w pamieci karty. Sprawdzone w przegladarce: bez sesji `/dashboard`
+   * odbijalo na logowanie, a `/widget-settings` po prostu sie otwieral.
+   *
+   * `embed\.js` z kropka uciekniona, bo niepoprzedzona kropka w wyrazeniu
+   * regularnym znaczy "dowolny znak" i wykluczala takze `embedXjs`.
    */
-  matcher: ['/((?!_next/static|_next/image|widget|embed.js|favicon.ico|.*\.(?:png|jpg|jpeg|svg|webp|ico|woff2?)$).*)'],
+  matcher: [
+    '/((?!_next/static|_next/image|widget(?:/|$)|embed\.js|favicon\.ico|.*\.(?:png|jpg|jpeg|svg|webp|ico|woff2?)$).*)',
+  ],
 }
