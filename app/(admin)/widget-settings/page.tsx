@@ -2,6 +2,8 @@
 
 import { useEffect, useState, FormEvent } from 'react'
 import { apiFetch } from '@/lib/api'
+import { uploadError } from '@/lib/uploads'
+import UploadField from '@/components/UploadField'
 import WidgetPreview from '@/components/widget/WidgetPreview'
 
 // Lista musi odpowiadać WIDGET_LANGUAGES w accounts/models.py — backend
@@ -86,6 +88,7 @@ export default function WidgetSettingsPage() {
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault()
+    if (saving || uploadError(logoFile, 'image') || uploadError(avatarFile, 'image')) return
     setSaving(true)
     setError('')
     setSaved(false)
@@ -272,31 +275,33 @@ export default function WidgetSettingsPage() {
               </select>
             </div>
             <div>
-              <label className="label">Logo</label>
               {logoUrl && !logoFile && (
                 // Plik wgrany przez klienta, serwowany przez backend/S3 — optymalizacja
                 // next/image wymagałaby listy dozwolonych domen i nic tu nie wnosi.
                 // eslint-disable-next-line @next/next/no-img-element
                 <img src={logoUrl} alt="Aktualne logo" className="h-8 mb-2" />
               )}
-              <input
-                type="file"
-                accept="image/*,.svg"
-                onChange={(e) => setLogoFile(e.target.files?.[0] || null)}
-                className="text-sm"
+              <UploadField
+                id="widget-logo"
+                label="Logo"
+                kind="image"
+                file={logoFile}
+                onChange={setLogoFile}
+                disabled={saving}
               />
             </div>
             <div>
-              <label className="label">Awatar bota</label>
               {avatarUrl && !avatarFile && (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img src={avatarUrl} alt="Aktualny awatar" className="h-8 w-8 rounded-full mb-2" />
               )}
-              <input
-                type="file"
-                accept="image/*"
-                onChange={(e) => setAvatarFile(e.target.files?.[0] || null)}
-                className="text-sm"
+              <UploadField
+                id="widget-avatar"
+                label="Awatar bota"
+                kind="image"
+                file={avatarFile}
+                onChange={setAvatarFile}
+                disabled={saving}
               />
             </div>
             <div>
@@ -511,11 +516,11 @@ Gdzie was znaleźć?`}
           )}
         </div>
 
-        {error && <p className="text-sm text-[#c0392b]">{error}</p>}
-        {saved && <p className="text-sm text-[#1f7a4d]">Zapisano.</p>}
+        {error && <p role="alert" className="text-sm text-[#c0392b]">{error}</p>}
+        {saved && <p role="status" className="text-sm text-[#1f7a4d]">Zapisano.</p>}
         <button
           type="submit"
-          disabled={saving}
+          disabled={saving || Boolean(uploadError(logoFile, 'image') || uploadError(avatarFile, 'image'))}
           className="btn-primary w-fit"
         >
           {saving ? 'Zapisywanie...' : 'Zapisz'}
