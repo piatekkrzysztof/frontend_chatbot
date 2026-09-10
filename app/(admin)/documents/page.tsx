@@ -2,6 +2,8 @@
 
 import { useEffect, useState, FormEvent } from 'react'
 import { apiFetch } from '@/lib/api'
+import { documentStatus, uploadError } from '@/lib/uploads'
+import UploadField from '@/components/UploadField'
 
 interface DocumentItem {
   id: number
@@ -10,6 +12,7 @@ interface DocumentItem {
   uploaded_at: string
   chunk_count: number
   status: string
+  processing_error?: string
   uzywaj_w_wyszukiwaniu: boolean
   source_url: string
 }
@@ -115,7 +118,7 @@ export default function DocumentsPage() {
 
   async function handleUpload(e: FormEvent) {
     e.preventDefault()
-    if (!file) return
+    if (!file || uploading || uploadError(file, 'document')) return
     setUploading(true)
     setError('')
 
@@ -256,26 +259,27 @@ export default function DocumentsPage() {
         usunięta wróci przy następnym odświeżeniu treści.
       </p>
 
-      <form onSubmit={handleUpload} className="flex items-center gap-3 mb-6">
+      <form onSubmit={handleUpload} className="flex flex-wrap items-start gap-3 mb-6">
         {/* Tutaj naglowek sekcji nie opisuje samego pola, tylko cala liste
             dokumentow -- nazwa musi wiec powiedziec, co ten przycisk robi. */}
-        <input
-          aria-label="Wybierz dokument do wgrania"
-          type="file"
-          accept=".pdf,.docx,.txt,.md"
-          onChange={(e) => setFile(e.target.files?.[0] || null)}
-          className="text-sm"
+        <UploadField
+          id="document-upload"
+          label="Wybierz dokument do wgrania"
+          kind="document"
+          file={file}
+          onChange={setFile}
+          disabled={uploading}
         />
         <button
           type="submit"
-          disabled={!file || uploading}
+          disabled={!file || uploading || Boolean(uploadError(file, 'document'))}
           className="btn-primary !py-2 !px-4 !text-sm"
         >
           {uploading ? 'Wgrywanie...' : 'Wgraj dokument'}
         </button>
       </form>
 
-      {error && <p className="text-sm text-[#c0392b] mb-4">{error}</p>}
+      {error && <p role="alert" className="text-sm text-[#c0392b] mb-4">{error}</p>}
 
       {/* Tabela przewija się sama — bez tego rozpychała całą stronę */}
 
@@ -295,7 +299,12 @@ export default function DocumentsPage() {
           {documents.map((doc) => (
             <tr key={doc.id} className="border-b obramowanie">
               <td className="py-2">{doc.name}</td>
-              <td className="py-2">{doc.status}</td>
+              <td className="py-2">
+                {documentStatus(doc.status)}
+                {doc.processing_error && (
+                  <p className="text-xs text-[#c0392b] mt-1 max-w-sm">{doc.processing_error}</p>
+                )}
+              </td>
               <td className="py-2">{doc.chunk_count}</td>
               <td className="py-2">{new Date(doc.uploaded_at).toLocaleString('pl-PL')}</td>
               <td className="py-2">
