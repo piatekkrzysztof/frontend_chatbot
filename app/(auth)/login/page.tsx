@@ -9,6 +9,8 @@ import { ustawToken } from '@/lib/auth'
 
 function FormularzLogowania() {
   const router = useRouter()
+  const destination = () => new URLSearchParams(window.location.search).get('dalej') === 'subskrypcja'
+    ? '/subskrypcja' : '/dashboard'
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
@@ -53,7 +55,7 @@ function FormularzLogowania() {
       // Token odswiezania nie przechodzi tedy w ogole -- backend odeslal go
       // w ciasteczku HttpOnly, ktorego ten kod nie widzi i widziec nie musi.
       ustawToken(data.access)
-      router.replace('/dashboard')
+      router.replace(destination())
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Nie udało się zalogować.')
     } finally {
@@ -89,7 +91,7 @@ function FormularzLogowania() {
 
       const dane = await res.json()
       ustawToken(dane.access)
-      router.replace('/dashboard')
+      router.replace(destination())
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Nie udało się zalogować.')
       setKod('')
@@ -188,7 +190,7 @@ function FormularzLogowania() {
             className="input"
           />
         </div>
-        {error && <p className="text-sm text-rose-400">{error}</p>}
+        {error && <p role="alert" className="text-sm text-rose-400">{error}</p>}
         <button
           type="submit"
           disabled={loading}
@@ -201,6 +203,9 @@ function FormularzLogowania() {
 
       {/* Bez tego jedyną drogą do konta było logowanie — nowy klient
           nie miał gdzie kliknąć, żeby je w ogóle założyć */}
+      <p className="text-sm text-sand-400 mt-6">
+        <Link href="/aktywacja" className="underline inline-flex min-h-11 items-center">Nie dotarł link aktywacyjny?</Link>
+      </p>
       <p className="text-sm text-sand-400 mt-6">
         Nie masz konta?{' '}
         <Link href="/rejestracja" className="text-ember-500 hover:text-ember-400 transition-colors">

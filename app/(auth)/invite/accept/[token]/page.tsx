@@ -94,6 +94,7 @@ export default function AcceptInvitePage({
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username: email, password }),
+        credentials: 'include',
       })
 
       if (loginRes.ok) {
@@ -157,11 +158,14 @@ export default function AcceptInvitePage({
         </p>
 
         <form onSubmit={handleSubmit}>
-          <label className="label">
+          <label className="label" htmlFor="zaproszenie-username">
             Nazwa użytkownika
           </label>
           <input
+            id="zaproszenie-username"
             type="text"
+            autoComplete="username"
+            maxLength={150}
             value={username}
             onChange={(e) => setUsername(e.target.value)}
             required
@@ -173,10 +177,12 @@ export default function AcceptInvitePage({
             id="zaproszenie-email"
             type="email"
             value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            readOnly
+            aria-describedby="zaproszenie-adresat"
             required
             className="input mb-4"
           />
+          <p id="zaproszenie-adresat" className="hint mb-4">Jednorazowe zaproszenie jest przypisane do tego adresu.</p>
 
           <label className="label" htmlFor="zaproszenie-haslo">Hasło</label>
           <input
@@ -186,10 +192,12 @@ export default function AcceptInvitePage({
             onChange={(e) => setPassword(e.target.value)}
             required
             minLength={8}
+            maxLength={1024}
+            autoComplete="new-password"
             className="input mb-5"
           />
 
-          {error && <p className="text-sm text-rose-400 mb-4">{error}</p>}
+          {error && <p role="alert" className="text-sm text-rose-400 mb-4">{error}</p>}
 
           <button
             type="submit"

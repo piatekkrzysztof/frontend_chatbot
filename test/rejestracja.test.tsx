@@ -38,7 +38,6 @@ async function wypelnij(uzytkownik: ReturnType<typeof userEvent.setup>) {
   await uzytkownik.type(screen.getByLabelText('Imię'), 'Anna')
   await uzytkownik.type(screen.getByLabelText('Nazwisko'), 'Nowak')
   await uzytkownik.type(screen.getByLabelText('Adres e-mail'), 'anna@rowerownia.pl')
-  await uzytkownik.type(screen.getByLabelText('Hasło'), 'bardzoTajneHaslo123')
   await uzytkownik.type(screen.getByLabelText('Nazwa firmy'), 'Rowerownia')
   await uzytkownik.type(screen.getByLabelText('Ulica i numer'), 'Krakowska 12')
   await uzytkownik.type(screen.getByLabelText('Kod pocztowy'), '31-000')
@@ -82,7 +81,7 @@ describe('wysylanie danych', () => {
     })
   })
 
-  it('po zalozeniu konta loguje od razu, bez przepisywania hasla', async () => {
+  it('po zgłoszeniu wymaga potwierdzenia skrzynki i nie loguje', async () => {
     // Kazanie przepisac dopiero co wpisane dane to najprostszy sposob na
     // porzucenie rejestracji w ostatnim kroku.
     vi.mocked(fetch)
@@ -94,8 +93,10 @@ describe('wysylanie danych', () => {
     await wypelnij(uzytkownik)
     await uzytkownik.click(screen.getByRole('button', { name: /Załóż konto/i }))
 
-    await waitFor(() => expect(przekierowania).toContain('/dashboard'))
-    expect(vi.mocked(fetch).mock.calls[1][0]).toContain('/accounts/login/')
+    expect(await screen.findByRole('heading', { name: 'Sprawdź skrzynkę e-mail' })).toBeInTheDocument()
+    expect(przekierowania).toEqual([])
+    expect(fetch).toHaveBeenCalledTimes(1)
+    expect(JSON.parse(String(vi.mocked(fetch).mock.calls[0][1]?.body))).not.toHaveProperty('password')
   })
 })
 
@@ -182,6 +183,6 @@ describe('pola opcjonalne', () => {
     await wypelnij(uzytkownik)
     await uzytkownik.click(screen.getByRole('button', { name: /Załóż konto/i }))
 
-    await waitFor(() => expect(przekierowania).toContain('/dashboard'))
+    expect(await screen.findByRole('heading', { name: 'Sprawdź skrzynkę e-mail' })).toBeInTheDocument()
   })
 })

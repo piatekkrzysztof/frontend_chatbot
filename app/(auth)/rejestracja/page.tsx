@@ -1,10 +1,10 @@
 'use client'
 
-import { ustawToken } from '@/lib/auth'
+import ResendConfirmation from '@/components/auth/ResendConfirmation'
 import Link from 'next/link'
 import Logo from '@/components/layout/Logo'
 import { FormEvent, Suspense, useState } from 'react'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useSearchParams } from 'next/navigation'
 import { API_URL } from '@/lib/api'
 
 /**
@@ -57,7 +57,6 @@ function Pole({
 }
 
 function FormularzRejestracji() {
-  const router = useRouter()
   const params = useSearchParams()
 
   // Plan wybrany na stronie cennika. Zapamiętujemy go tylko po to, żeby
@@ -68,7 +67,7 @@ function FormularzRejestracji() {
   const [imie, setImie] = useState('')
   const [nazwisko, setNazwisko] = useState('')
   const [email, setEmail] = useState('')
-  const [haslo, setHaslo] = useState('')
+  const [sent, setSent] = useState(false)
 
   const [nazwaFirmy, setNazwaFirmy] = useState('')
   const [nazwaDoFaktury, setNazwaDoFaktury] = useState('')
@@ -96,7 +95,6 @@ function FormularzRejestracji() {
           nazwisko,
           company_name: nazwaFirmy,
           email,
-          password: haslo,
           nazwa_do_faktury: nazwaDoFaktury,
           nip,
           ulica,
@@ -126,11 +124,12 @@ function FormularzRejestracji() {
             const pierwszePole = Object.keys(rozlozone)[0]
             const mapa: Record<string, string> = {
               company_name: 'firma',
-              password: 'haslo',
               kod_pocztowy: 'kod-pocztowy',
               nazwa_do_faktury: 'nazwa-do-faktury',
             }
-            document.getElementById(mapa[pierwszePole] ?? pierwszePole)?.focus()
+            const field = document.getElementById(mapa[pierwszePole] ?? pierwszePole)
+            if (field) field.focus()
+            else setBlad(rozlozone[pierwszePole])
             setWysylanie(false)
             return
           }
@@ -139,28 +138,27 @@ function FormularzRejestracji() {
         throw new Error('Nie udało się założyć konta.')
       }
 
-      // Logujemy od razu: kazanie przepisywać dopiero co wpisane dane
-      // to najprostszy sposób na porzucenie rejestracji w ostatnim kroku
-      const logowanie = await fetch(`${API_URL}/accounts/login/`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username: email, password: haslo }),
-        credentials: 'include',
-      })
-
-      if (!logowanie.ok) {
-        router.push('/login')
-        return
-      }
-
-      const dane = await logowanie.json()
-      ustawToken(dane.access)
-      router.push('/dashboard')
+      setSent(true)
     } catch (err) {
       setBlad(err instanceof Error ? err.message : 'Nie udało się założyć konta.')
       setWysylanie(false)
     }
   }
+
+  if (sent) return (
+    <div className="w-full max-w-md">
+      <h1 className="text-3xl mb-4" tabIndex={-1} ref={element => element?.focus()}>Sprawdź skrzynkę e-mail</h1>
+      <p role="status" className="text-sand-300 break-words">
+        Otwórz link wysłany na {email} i ustaw hasło. Konto oraz 14-dniowy trial powstaną
+        po potwierdzeniu. Link jest ważny 24 godziny; sprawdź także spam.
+      </p>
+      <ResendConfirmation initialEmail={email} />
+      <button className="mt-5 text-sm underline" onClick={() => { setSent(false); setWysylanie(false) }}>
+        Popraw adres e-mail
+      </button>
+      <p className="mt-4 text-sm"><Link className="underline" href="/login">Przejdź do logowania</Link></p>
+    </div>
+  )
 
   return (
     <div className="w-full max-w-md">
@@ -172,6 +170,7 @@ function FormularzRejestracji() {
       <p className="text-sand-300 text-sm mb-7">
         14 dni bez opłat i bez karty. Dane firmy zbieramy od razu, żeby faktura i umowa
         były gotowe, zanim będą potrzebne — nie prosimy o nie drugi raz przy płatności.
+        Hasło ustawisz po potwierdzeniu adresu e-mail.
       </p>
 
       {wybranyPlan && <p className="pill mb-5">Wybrany plan: {wybranyPlan}</p>}
@@ -210,6 +209,7 @@ function FormularzRejestracji() {
             <input
               id="email"
               type="email"
+              maxLength={150}
               className="input"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
@@ -218,19 +218,6 @@ function FormularzRejestracji() {
             />
           </Pole>
 
-          <Pole id="haslo" etykieta="Hasło" podpowiedz="Minimum 8 znaków." blad={bledy.password}>
-            <input
-              id="haslo"
-              type="password"
-              className="input"
-              value={haslo}
-              onChange={(e) => setHaslo(e.target.value)}
-              required
-              minLength={8}
-              autoComplete="new-password"
-              aria-describedby="haslo-opis"
-            />
-          </Pole>
         </fieldset>
 
         <fieldset className="flex flex-col gap-4 border-0 p-0 m-0">
@@ -335,7 +322,7 @@ function FormularzRejestracji() {
         )}
 
         <button type="submit" disabled={wysylanie} className="btn-primary w-full">
-          {wysylanie ? 'Zakładam konto...' : 'Załóż konto i zacznij'}
+          {wysylanie ? 'Wysyłam link…' : 'Załóż konto — wyślij link'}
         </button>
       </form>
 

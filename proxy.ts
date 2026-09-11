@@ -195,6 +195,10 @@ function zNaglowkami(zadanie: NextRequest) {
 
   const odpowiedz = NextResponse.next({ request: { headers: naglowkiZadania } })
   odpowiedz.headers.set('Content-Security-Policy', polityka)
+  if (['/potwierdz-email', '/aktywacja'].includes(zadanie.nextUrl.pathname)) {
+    odpowiedz.headers.set('Cache-Control', 'no-store')
+    odpowiedz.headers.set('Referrer-Policy', 'no-referrer')
+  }
   return odpowiedz
 }
 
