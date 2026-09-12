@@ -15,6 +15,7 @@
  * za to, ze dwutygodniowy token nie lezy w miejscu czytelnym dla skryptow.
  */
 import { API_URL } from '@/lib/api'
+import { fetchWithSessionTimeout, withSessionLock } from '@/lib/session-lock'
 
 /**
  * Sprzatanie po poprzednim sposobie przechowywania sesji.
@@ -42,6 +43,23 @@ function usunSladyPoLocalStorage() {
 usunSladyPoLocalStorage()
 
 let tokenDostepu: string | null = null
+let generation = 0
+let loggingOut = false
+const LOGOUT_EVENT = 'sm-art-session-logout'
+
+function logoutRevision() {
+  try { return localStorage.getItem(LOGOUT_EVENT) } catch { return null }
+}
+
+if (typeof window !== 'undefined') {
+  window.addEventListener('storage', event => {
+    if (event.key !== LOGOUT_EVENT || !event.newValue) return
+    zapomnijToken()
+    // A full navigation clears tenant data cached by mounted components.
+    // eslint-disable-next-line @next/next/no-location-assign-relative-destination
+    window.location.href = '/login?wygasla=1'
+  })
+}
 
 /**
  * Odswiezanie w locie. Bez tego pola piec komponentow montujacych sie naraz
@@ -56,10 +74,12 @@ export function pobierzToken(): string | null {
 }
 
 export function ustawToken(token: string | null) {
+  generation += 1
   tokenDostepu = token
 }
 
 export function zapomnijToken() {
+  generation += 1
   tokenDostepu = null
 }
 
@@ -72,16 +92,30 @@ export function zapomnijToken() {
  * normalna, nie awaryjna.
  */
 export async function odswiezSesje(): Promise<string | null> {
+  if (loggingOut) return null
   if (odswiezanieWToku) return odswiezanieWToku
 
-  odswiezanieWToku = (async () => {
+  const expectedGeneration = generation
+  const expectedLogout = logoutRevision()
+  const stillCurrent = () => generation === expectedGeneration && logoutRevision() === expectedLogout
+  odswiezanieWToku = withSessionLock(async () => {
     try {
-      const odpowiedz = await fetch(`${API_URL}/accounts/token/refresh/`, {
+      if (!stillCurrent()) return null
+      let odpowiedz = await fetchWithSessionTimeout(`${API_URL}/accounts/token/refresh/`, {
         method: 'POST',
         // Bez tego przegladarka nie dolaczy ciasteczka do zapytania
         // miedzy panel.* a api.* -- i odswiezanie zawsze zwraca 401.
         credentials: 'include',
       })
+
+      // A losing concurrent request must never remove the winning cookie.
+      // Retry once: fetch reads the current HttpOnly cookie at request time.
+      if (odpowiedz.status === 409 && stillCurrent()) {
+        odpowiedz = await fetchWithSessionTimeout(`${API_URL}/accounts/token/refresh/`, {
+          method: 'POST', credentials: 'include',
+        })
+      }
+      if (!stillCurrent()) return null
 
       if (!odpowiedz.ok) {
         tokenDostepu = null
@@ -89,17 +123,19 @@ export async function odswiezSesje(): Promise<string | null> {
       }
 
       const dane = await odpowiedz.json()
+      if (!stillCurrent()) return null
       tokenDostepu = dane.access ?? null
       return tokenDostepu
     } catch {
       // Brak sieci to nie to samo co brak sesji, ale z punktu widzenia
       // wywolujacego oba znacza "nie mam teraz tokenu".
-      tokenDostepu = null
+      if (stillCurrent()) tokenDostepu = null
       return null
-    } finally {
-      odswiezanieWToku = null
     }
-  })()
+  }).catch(() => {
+    if (stillCurrent()) tokenDostepu = null
+    return null
+  }).finally(() => { odswiezanieWToku = null })
 
   return odswiezanieWToku
 }
@@ -112,16 +148,20 @@ export async function odswiezSesje(): Promise<string | null> {
  * tygodnie. Dlatego pytamy backend, a nie tylko siebie.
  */
 export async function wyloguj(): Promise<void> {
+  loggingOut = true
+  zapomnijToken()
+  try { localStorage.setItem(LOGOUT_EVENT, crypto.randomUUID()) } catch { /* storage may be disabled */ }
   try {
-    await fetch(`${API_URL}/accounts/logout/`, {
+    await withSessionLock(() => fetchWithSessionTimeout(`${API_URL}/accounts/logout/`, {
       method: 'POST',
       credentials: 'include',
-    })
+    }))
   } catch {
     // Nieudane wylogowanie po stronie serwera nie moze zatrzymac
     // wylogowania po stronie przegladarki -- uzytkownik kliknal "wyloguj"
     // i ma zostac wylogowany, nawet jesli siec akurat padla.
   } finally {
     zapomnijToken()
+    loggingOut = false
   }
 }

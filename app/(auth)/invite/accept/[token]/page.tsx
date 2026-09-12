@@ -4,6 +4,7 @@ import { useEffect, useState, FormEvent, use } from 'react'
 import { useRouter } from 'next/navigation'
 import { API_URL } from '@/lib/api'
 import { ustawToken } from '@/lib/auth'
+import { sessionRequest } from '@/lib/session-lock'
 
 interface InvitePreview {
   company: string
@@ -90,7 +91,7 @@ export default function AcceptInvitePage({
       // Konto założone — logujemy od razu, żeby nie odsyłać na ekran logowania.
       // Endpoint oczekuje klucza `username`; backend przyjmuje pod nim zarówno
       // nazwę użytkownika, jak i adres e-mail.
-      const loginRes = await fetch(`${API_URL}/accounts/login/`, {
+      const loginRes = await sessionRequest(`${API_URL}/accounts/login/`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username: email, password }),

@@ -6,6 +6,7 @@ import { Suspense, useState, FormEvent } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { API_URL } from '@/lib/api'
 import { ustawToken } from '@/lib/auth'
+import { sessionRequest } from '@/lib/session-lock'
 
 function FormularzLogowania() {
   const router = useRouter()
@@ -27,7 +28,7 @@ function FormularzLogowania() {
     setLoading(true)
 
     try {
-      const res = await fetch(`${API_URL}/accounts/login/`, {
+      const res = await sessionRequest(`${API_URL}/accounts/login/`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username: email, password }),
@@ -69,7 +70,7 @@ function FormularzLogowania() {
     setLoading(true)
 
     try {
-      const res = await fetch(`${API_URL}/accounts/login/2fa/`, {
+      const res = await sessionRequest(`${API_URL}/accounts/login/2fa/`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ bilet, kod }),
