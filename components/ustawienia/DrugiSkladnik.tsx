@@ -4,6 +4,7 @@ import { FormEvent, useEffect, useState } from 'react'
 import QRCode from 'qrcode'
 
 import { apiFetch } from '@/lib/api'
+import PasswordField from '@/components/auth/PasswordField'
 
 type Stan = {
   wlaczony: boolean
@@ -43,11 +44,15 @@ export default function DrugiSkladnik() {
       .catch(() => setStan({ wlaczony: false, w_trakcie_konfiguracji: false, kodow_zapasowych: 0 }))
   }, [])
 
-  async function rozpocznij() {
+  async function rozpocznij(event: FormEvent) {
+    event.preventDefault()
+    if (pracuje) return
     setPracuje(true)
     setBlad('')
     try {
-      const dane = (await apiFetch('/accounts/2fa/rozpocznij/', { method: 'POST' })) as {
+      const dane = (await apiFetch('/accounts/2fa/rozpocznij/', {
+        method: 'POST', body: JSON.stringify({ haslo }),
+      })) as {
         sekret: string
         adres_otpauth: string
       }
@@ -67,13 +72,14 @@ export default function DrugiSkladnik() {
     try {
       const dane = (await apiFetch('/accounts/2fa/potwierdz/', {
         method: 'POST',
-        body: JSON.stringify({ kod }),
+        body: JSON.stringify({ haslo, kod }),
       })) as { kody_zapasowe: string[] }
 
       setKodyZapasowe(dane.kody_zapasowe)
       setSekret('')
       setObrazekQR('')
       setKod('')
+      setHaslo('')
       setStan({ wlaczony: true, w_trakcie_konfiguracji: false, kodow_zapasowych: dane.kody_zapasowe.length })
     } catch (err) {
       setBlad(err instanceof Error ? err.message : 'Kod nie pasuje.')
@@ -215,14 +221,19 @@ export default function DrugiSkladnik() {
       )}
 
       {!stan.wlaczony && !obrazekQR && kodyZapasowe.length === 0 && (
+        <form onSubmit={rozpocznij} className="flex flex-col gap-4 max-w-sm">
+        <p className="tekst-drugi text-sm" id="mfa-password-help">Potwierdź aktualne hasło, aby rozpocząć konfigurację.
+          Użyjemy go także przy potwierdzeniu kodu. Nie zapisujemy hasła w przeglądarce.</p>
+        <PasswordField id="mfa-setup-password" label="Aktualne hasło" value={haslo}
+          onChange={setHaslo} autoComplete="current-password" describedBy="mfa-password-help" />
         <button
-          type="button"
-          onClick={rozpocznij}
+          type="submit"
           disabled={pracuje}
           className="btn-primary !py-2 !px-4 !text-sm"
         >
           {pracuje ? 'Przygotowuję...' : 'Włącz logowanie dwuetapowe'}
         </button>
+        </form>
       )}
 
       {obrazekQR && (
@@ -265,6 +276,10 @@ export default function DrugiSkladnik() {
 
           <button type="submit" disabled={pracuje} className="btn-primary !py-2 !px-4 !text-sm">
             {pracuje ? 'Sprawdzam...' : 'Potwierdź i włącz'}
+          </button>
+          <button type="button" disabled={pracuje} className="underline min-h-11"
+            onClick={() => { setSekret(''); setObrazekQR(''); setKod(''); setHaslo(''); setBlad('') }}>
+            Anuluj konfigurację
           </button>
         </form>
       )}

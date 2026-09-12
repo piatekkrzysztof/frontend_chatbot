@@ -205,6 +205,9 @@ function FormularzLogowania() {
       {/* Bez tego jedyną drogą do konta było logowanie — nowy klient
           nie miał gdzie kliknąć, żeby je w ogóle założyć */}
       <p className="text-sm text-sand-400 mt-6">
+        <Link href="/odzyskaj-haslo" className="underline inline-flex min-h-11 items-center">Nie pamiętam hasła</Link>
+      </p>
+      <p className="text-sm text-sand-400 mt-6">
         <Link href="/aktywacja" className="underline inline-flex min-h-11 items-center">Nie dotarł link aktywacyjny?</Link>
       </p>
       <p className="text-sm text-sand-400 mt-6">

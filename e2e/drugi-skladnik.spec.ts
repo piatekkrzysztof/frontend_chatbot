@@ -21,6 +21,7 @@ test.beforeEach(async ({ page, context }) => {
 })
 
 test('konfiguracja pokazuje kod QR i klucz do przepisania', async ({ page }) => {
+  await page.getByLabel('Aktualne hasło', { exact: true }).fill('Test!Password739')
   await page.getByRole('button', { name: /Włącz logowanie dwuetapowe/i }).click()
 
   // Kod QR rysuje przegladarka z adresu otpauth. Gdyby biblioteka zawiodla,
@@ -35,6 +36,7 @@ test('konfiguracja pokazuje kod QR i klucz do przepisania', async ({ page }) => 
 })
 
 test('kody zapasowe pokazuja sie po potwierdzeniu, z ostrzezeniem', async ({ page }) => {
+  await page.getByLabel('Aktualne hasło', { exact: true }).fill('Test!Password739')
   await page.getByRole('button', { name: /Włącz logowanie dwuetapowe/i }).click()
   await page.getByLabel('Kod z aplikacji').fill('123456')
   await page.getByRole('button', { name: /Potwierdź i włącz/i }).click()
@@ -48,6 +50,7 @@ test('kody zapasowe pokazuja sie po potwierdzeniu, z ostrzezeniem', async ({ pag
 test('kody zapasowe NIE pokazuja sie przed potwierdzeniem', async ({ page }) => {
   // Pokazane za wczesnie znaczylyby, ze klient zapisuje kody do ochrony,
   // ktorej jeszcze nie ma - i ktora moze sie nie wlaczyc.
+  await page.getByLabel('Aktualne hasło', { exact: true }).fill('Test!Password739')
   await page.getByRole('button', { name: /Włącz logowanie dwuetapowe/i }).click()
 
   await expect(page.getByText(/Zapisz kody zapasowe/i)).toHaveCount(0)
