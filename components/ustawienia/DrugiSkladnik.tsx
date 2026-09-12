@@ -23,6 +23,7 @@ type Stan = {
 export default function DrugiSkladnik() {
   const [stan, setStan] = useState<Stan | null>(null)
   const [blad, setBlad] = useState('')
+  const [odczyt, setOdczyt] = useState(0)
 
   // Konfiguracja w toku
   const [sekret, setSekret] = useState('')
@@ -39,10 +40,12 @@ export default function DrugiSkladnik() {
   const [pracuje, setPracuje] = useState(false)
 
   useEffect(() => {
+    let active = true
     apiFetch('/accounts/2fa/')
-      .then((dane) => setStan(dane as Stan))
-      .catch(() => setStan({ wlaczony: false, w_trakcie_konfiguracji: false, kodow_zapasowych: 0 }))
-  }, [])
+      .then((dane) => { if (active) setStan(dane as Stan) })
+      .catch(() => { if (active) setBlad('Nie udało się sprawdzić stanu MFA. Ponów odczyt.') })
+    return () => { active = false }
+  }, [odczyt])
 
   async function rozpocznij(event: FormEvent) {
     event.preventDefault()
@@ -109,7 +112,11 @@ export default function DrugiSkladnik() {
     }
   }
 
-  if (!stan) return <p className="tekst-drugi">Sprawdzam ustawienia logowania...</p>
+  if (!stan) return <section><h2 className="text-xl font-bold mb-3">Logowanie dwuetapowe</h2>
+    {blad ? <><p role="alert" className="text-[#b42318] mb-3">{blad}</p>
+      <button type="button" className="btn-ghost min-h-11 disabled:opacity-50 disabled:cursor-not-allowed" onClick={() => { setBlad(''); setOdczyt(odczyt + 1) }}>Ponów odczyt MFA</button></>
+      : <p role="status" className="tekst-drugi">Sprawdzam ustawienia logowania...</p>}
+  </section>
 
   return (
     <section className="max-w-2xl">

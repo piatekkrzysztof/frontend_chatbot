@@ -12,12 +12,17 @@
  */
 import type { BrowserContext, Page, Route } from '@playwright/test'
 
-export const TOKEN_DOSTEPU = 'access-testowy'
+export const TEST_SESSION_ID = '11111111-1111-4111-8111-111111111111'
+export const TOKEN_DOSTEPU = 'eyJhbGciOiJub25lIn0.' + Buffer.from(JSON.stringify({ sid: TEST_SESSION_ID })).toString('base64url') + '.synthetic'
 
 /** Ta sama nazwa co NAZWA_CIASTECZKA_SESJI po stronie Django. */
 export const ZNACZNIK_SESJI = 'sesja_panelu'
 
 const ODPOWIEDZI: Record<string, unknown> = {
+  '/accounts/sessions/': {
+    count: 1, next: null, previous: null, mfa_enabled: false,
+    results: [{ id: TEST_SESSION_ID, created_at: '2026-09-12T08:00:00Z', expires_at: '2026-09-26T08:00:00Z', current: true }],
+  },
   '/accounts/me/': {
     id: 1,
     username: 'wlascicielka@rowerownia.pl',
