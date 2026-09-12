@@ -15,7 +15,7 @@
  * za to, ze dwutygodniowy token nie lezy w miejscu czytelnym dla skryptow.
  */
 import { API_URL } from '@/lib/api'
-import { fetchWithSessionTimeout, withSessionLock } from '@/lib/session-lock'
+import { fetchSessionJson, fetchWithSessionTimeout, withSessionLock } from '@/lib/session-lock'
 
 /**
  * Sprzatanie po poprzednim sposobie przechowywania sesji.
@@ -46,6 +46,30 @@ let tokenDostepu: string | null = null
 let generation = 0
 let loggingOut = false
 const LOGOUT_EVENT = 'sm-art-session-logout'
+const REVOCATION_EVENT = 'sm-art-session-revoked'
+const revokedSessions = new Set<string>()
+
+/** UI coordination only. The server independently validates the signed JWT. */
+export function sessionIdentity(token: string | null): string | null {
+  try {
+    const sid = JSON.parse(atob(token!.split('.')[1].replace(/-/g, '+').replace(/_/g, '/'))).sid
+    return typeof sid === 'string' && /^[a-f0-9-]{36}$/i.test(sid) ? sid : null
+  } catch { return null }
+}
+
+function rememberRevocation(sid: string) {
+  revokedSessions.add(sid)
+  if (revokedSessions.size > 100) revokedSessions.delete(revokedSessions.values().next().value!)
+}
+
+/** The server has revoked this login. Never send logout with a possibly newer cookie. */
+export function clearRevokedSession(sid: string): boolean {
+  rememberRevocation(sid)
+  const current = sessionIdentity(tokenDostepu) === sid
+  if (current) zapomnijToken()
+  try { localStorage.setItem(REVOCATION_EVENT, JSON.stringify({ sid, event: crypto.randomUUID() })) } catch { /* optional tab notification */ }
+  return current
+}
 
 function logoutRevision() {
   try { return localStorage.getItem(LOGOUT_EVENT) } catch { return null }
@@ -53,6 +77,17 @@ function logoutRevision() {
 
 if (typeof window !== 'undefined') {
   window.addEventListener('storage', event => {
+    if (event.key === REVOCATION_EVENT && event.newValue) {
+      try {
+        const { sid } = JSON.parse(event.newValue)
+        if (typeof sid !== 'string' || !/^[a-f0-9-]{36}$/i.test(sid)) return
+        rememberRevocation(sid)
+        if (sessionIdentity(tokenDostepu) !== sid) return
+        zapomnijToken()
+        window.location.replace('/login?wygasla=1')
+      } catch { /* ignore malformed notifications */ }
+      return
+    }
     if (event.key !== LOGOUT_EVENT || !event.newValue) return
     zapomnijToken()
     // A full navigation clears tenant data cached by mounted components.
@@ -75,7 +110,7 @@ export function pobierzToken(): string | null {
 
 export function ustawToken(token: string | null) {
   generation += 1
-  tokenDostepu = token
+  tokenDostepu = revokedSessions.has(sessionIdentity(token) || '') ? null : token
 }
 
 export function zapomnijToken() {
@@ -101,7 +136,7 @@ export async function odswiezSesje(): Promise<string | null> {
   odswiezanieWToku = withSessionLock(async () => {
     try {
       if (!stillCurrent()) return null
-      let odpowiedz = await fetchWithSessionTimeout(`${API_URL}/accounts/token/refresh/`, {
+      let refreshed = await fetchSessionJson(`${API_URL}/accounts/token/refresh/`, {
         method: 'POST',
         // Bez tego przegladarka nie dolaczy ciasteczka do zapytania
         // miedzy panel.* a api.* -- i odswiezanie zawsze zwraca 401.
@@ -110,20 +145,24 @@ export async function odswiezSesje(): Promise<string | null> {
 
       // A losing concurrent request must never remove the winning cookie.
       // Retry once: fetch reads the current HttpOnly cookie at request time.
-      if (odpowiedz.status === 409 && stillCurrent()) {
-        odpowiedz = await fetchWithSessionTimeout(`${API_URL}/accounts/token/refresh/`, {
+      if (refreshed.response.status === 409 && stillCurrent()) {
+        refreshed = await fetchSessionJson(`${API_URL}/accounts/token/refresh/`, {
           method: 'POST', credentials: 'include',
         })
       }
       if (!stillCurrent()) return null
 
-      if (!odpowiedz.ok) {
+      if (!refreshed.response.ok) {
         tokenDostepu = null
         return null
       }
 
-      const dane = await odpowiedz.json()
+      const dane = refreshed.data
       if (!stillCurrent()) return null
+      if (revokedSessions.has(sessionIdentity(dane.access) || '')) {
+        tokenDostepu = null
+        return null
+      }
       tokenDostepu = dane.access ?? null
       return tokenDostepu
     } catch {

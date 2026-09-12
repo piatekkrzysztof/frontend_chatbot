@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { apiFetch } from '@/lib/api'
 import DaneRozliczeniowe from '@/components/ustawienia/DaneRozliczeniowe'
 import DrugiSkladnik from '@/components/ustawienia/DrugiSkladnik'
+import BezpieczenstwoKonta from '@/components/ustawienia/BezpieczenstwoKonta'
 
 export default function UstawieniaPage() {
   const [nazwa, setNazwa] = useState('')
@@ -117,6 +118,8 @@ export default function UstawieniaPage() {
       <hr className="my-10 border-[color:var(--obramowanie-mocne)]" />
 
       <DrugiSkladnik />
+      <hr className="my-10 border-[color:var(--obramowanie-mocne)]" />
+      <BezpieczenstwoKonta />
     </div>
   )
 }

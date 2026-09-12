@@ -23,6 +23,17 @@ export async function fetchWithSessionTimeout(url: string, options: RequestInit)
   } finally { clearTimeout(timer) }
 }
 
+/** Refresh holds the shared lock until JSON is consumed, so its body needs a deadline too. */
+export async function fetchSessionJson(url: string, options: RequestInit) {
+  const controller = new AbortController()
+  const timer = setTimeout(() => controller.abort(), 20_000)
+  try {
+    const response = await fetch(url, { ...options, signal: controller.signal })
+    const data = response.ok ? await response.json() : null
+    return { response, data }
+  } finally { clearTimeout(timer) }
+}
+
 /** Login also mutates the shared cookie, so it must not race an old refresh. */
 export function sessionRequest(url: string, options: RequestInit) {
   return withSessionLock(() => fetchWithSessionTimeout(url, options))

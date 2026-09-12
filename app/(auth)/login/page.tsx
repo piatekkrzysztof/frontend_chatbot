@@ -239,8 +239,10 @@ function KomunikatOWygasnieciu() {
   if (!parametry.has('wygasla')) return null
 
   return (
-    <p className="mb-5 rounded border border-[color:var(--obramowanie-mocne)] px-3 py-2 text-sm tekst-drugi">
-      Sesja wygasła — zaloguj się ponownie.
+    <p role="status" className="mb-5 rounded border border-[color:var(--obramowanie-mocne)] px-3 py-2 text-sm tekst-drugi">
+      {parametry.get('powod') === 'haslo' ? 'Hasło zmienione. Zaloguj się nowym hasłem. Jeśli korzystasz z MFA, kod nadal jest wymagany.'
+        : parametry.get('powod') === 'sesja' ? 'Sesja została zakończona. Zaloguj się ponownie.'
+          : 'Sesja wygasła — zaloguj się ponownie.'}
     </p>
   )
 }
