@@ -285,7 +285,13 @@ export default function WidgetChat() {
       await fetch(`${API_URL}/widget/feedback/`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'X-API-Key': apiKey },
-        body: JSON.stringify({ message_id: messageId, is_helpful: rating === 'up' }),
+        // Sesja rozmowy jest wymagana: klucz API jest publiczny, a bez sesji
+        // dało się ocenić dowolną odpowiedź firmy po numerze wiadomości.
+        body: JSON.stringify({
+          message_id: messageId,
+          is_helpful: rating === 'up',
+          conversation_session_id: getSessionId(apiKey),
+        }),
       })
     } catch {
       // Nieudana ocena nie ma przerywać rozmowy ani straszyć komunikatem
