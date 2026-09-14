@@ -257,6 +257,21 @@ describe('zadanie', () => {
     await expect(apiFetch('/widget/chat/')).rejects.toThrow('Limit wiadomości wyczerpany')
   })
 
+  it('blad walidacji w postaci listy pokazuje zdanie, a nie JSON', async () => {
+    // DRF zwraca ValidationError("...") jako liste. Panel pokazywal klientowi
+    // dosłownie ["Masz już aktywną subskrypcję..."].
+    vi.mocked(fetch).mockResolvedValue(odpowiedz(400, ['Masz już aktywną subskrypcję (Grow).']))
+
+    const blad = await apiFetch('/billing/create-checkout-session/').catch((e) => e)
+    expect(blad.message).toBe('Masz już aktywną subskrypcję (Grow).')
+  })
+
+  it('bledy pol zostaja surowe, zeby nie zgubic, ktorego pola dotycza', async () => {
+    vi.mocked(fetch).mockResolvedValue(odpowiedz(400, { email: ['Niepoprawny adres.'] }))
+
+    await expect(apiFetch('/accounts/register/')).rejects.toThrow('{"email":["Niepoprawny adres."]}')
+  })
+
   it('nie gubi bledu, gdy odpowiedz nie jest JSON-em', async () => {
     // Przy 502 od proxy cialo bywa strona HTML. Bez zabezpieczenia
     // uzytkownik dostaje "Unexpected token <" zamiast informacji o awarii.

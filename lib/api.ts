@@ -102,12 +102,32 @@ export class BladApi extends Error {
   }
 }
 
+/**
+ * Zdanie do pokazania z tresci bledu.
+ *
+ * DRF zwraca sam napis bledu walidacji jako liste, a `JSON.stringify` robil
+ * z niej to, co klient widzial w panelu: `["Masz już aktywną subskrypcję..."]`.
+ * Bledy pol (`{"email": [...]}`) zostaja jak dotad - surowo, bo ekran i tak
+ * nie wie, ktore pole wskazac.
+ */
+function tekstBledu(data: unknown): string {
+  if (typeof data === 'string') return data
+  if (Array.isArray(data)) return data.map(tekstBledu).filter(Boolean).join(' ')
+  if (data && typeof data === 'object') {
+    const obiekt = data as Record<string, unknown>
+    if (obiekt.detail) return tekstBledu(obiekt.detail)
+    if (obiekt.error) return tekstBledu(obiekt.error)
+    return JSON.stringify(data)
+  }
+  return ''
+}
+
 async function odczytaj(response: Response) {
   if (!response.ok) {
     let detail = response.statusText
     try {
       const data = await response.json()
-      detail = data.detail || data.error || JSON.stringify(data)
+      detail = tekstBledu(data) || detail
     } catch {
       // brak tresci JSON w odpowiedzi bledu
     }
