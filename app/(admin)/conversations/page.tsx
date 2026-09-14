@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { apiFetch } from '@/lib/api'
+import Stronicowanie, { naStrone, type StronaListy } from '@/components/Stronicowanie'
 
 interface PromptLogItem {
   id: number
@@ -15,26 +16,37 @@ interface PromptLogItem {
 }
 
 export default function ConversationsPage() {
-  const [logs, setLogs] = useState<PromptLogItem[]>([])
+  const [strona, setStrona] = useState<StronaListy<PromptLogItem> | null>(null)
+  const [numer, setNumer] = useState(1)
+  const [wczytanyNumer, setWczytanyNumer] = useState(0)
   const [error, setError] = useState('')
   const [copied, setCopied] = useState<string | null>(null)
+
+  // Wyliczone, nie trzymane osobno - jak w Dzienniku: zapomniana gałąź
+  // zostawiłaby "wczytuję" na ekranie bez końca.
+  const wczytuje = wczytanyNumer !== numer && !error
 
   useEffect(() => {
     let active = true
 
-    apiFetch('/chat/logs/')
+    // Historia rośnie z każdą rozmową. Wcześniej ekran wczytywał ją całą przy
+    // każdym wejściu - teraz stronami, od najnowszych.
+    apiFetch(`/chat/logs/?page=${numer}`)
       .then((data) => {
-        if (active) setLogs(Array.isArray(data) ? data : data.results || [])
+        if (!active) return
+        setStrona(naStrone<PromptLogItem>(data))
+        setWczytanyNumer(numer)
+        setError('')
       })
       .catch((err) => {
         if (active) setError(err instanceof Error ? err.message : 'Nie udało się pobrać konwersacji.')
       })
 
-    // nie ustawiamy stanu, jeśli komponent zdążył się odmontować
+    // Odpowiedź na porzuconą stronę nie może nadpisać tej, którą już widać
     return () => {
       active = false
     }
-  }, [])
+  }, [numer])
 
   async function copySessionId(sessionId: string) {
     try {
@@ -46,6 +58,8 @@ export default function ConversationsPage() {
     }
   }
 
+  const logs = strona?.results ?? []
+
   return (
     <div>
       <h1 className="text-2xl font-bold mb-1">Konwersacje</h1>
@@ -54,7 +68,7 @@ export default function ConversationsPage() {
         wklej go w zakładce Prywatność.
       </p>
 
-      {error && <p className="text-sm text-[#c0392b] mb-4">{error}</p>}
+      {error && <p role="alert" className="text-sm text-[#c0392b] mb-4">{error}</p>}
 
       <div className="flex flex-col gap-3">
         {logs.map((log) => (
@@ -84,10 +98,22 @@ export default function ConversationsPage() {
             )}
           </div>
         ))}
-        {logs.length === 0 && !error && (
+        {strona && logs.length === 0 && !error && (
           <p className="tekst-slaby">Brak zarejestrowanych konwersacji.</p>
         )}
       </div>
+
+      {strona && (
+        <Stronicowanie
+          numer={numer}
+          poprzednia={!!strona.previous}
+          nastepna={!!strona.next}
+          lacznie={strona.count}
+          wczytuje={wczytuje}
+          opisLacznie="wpisów łącznie"
+          onZmien={setNumer}
+        />
+      )}
     </div>
   )
 }

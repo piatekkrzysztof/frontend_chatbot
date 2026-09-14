@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { apiFetch } from '@/lib/api'
+import Stronicowanie, { naStrone, type StronaListy } from '@/components/Stronicowanie'
 
 interface ContactRequest {
   id: number
@@ -15,32 +16,44 @@ interface ContactRequest {
   blad_powiadomienia: string
 }
 
+type StronaZapytan = StronaListy<ContactRequest> & { nieobsluzone: number | null }
+
 export default function LeadsPage() {
-  const [items, setItems] = useState<ContactRequest[]>([])
+  const [strona, setStrona] = useState<StronaZapytan | null>(null)
+  const [numer, setNumer] = useState(1)
+  const [wczytanyNumer, setWczytanyNumer] = useState(0)
+  // Zwiększana po zmianie zapytania, żeby wczytać tę samą stronę od nowa
+  const [wersja, setWersja] = useState(0)
   const [error, setError] = useState('')
   // null = jeszcze nie wiemy. Bez tego przełącznik migałby przy wczytywaniu
   // z pozycji „wyłączone" na faktyczną.
   const [oRozmowie, setORozmowie] = useState<boolean | null>(null)
 
-  async function load() {
-    try {
-      const data = await apiFetch('/contact-requests/')
-      setItems(Array.isArray(data) ? data : data.results || [])
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Nie udało się pobrać zapytań.')
-    }
-  }
+  const wczytuje = wczytanyNumer !== numer && !error
 
   useEffect(() => {
     let active = true
 
-    apiFetch('/contact-requests/')
+    apiFetch(`/contact-requests/?page=${numer}`)
       .then((data) => {
-        if (active) setItems(Array.isArray(data) ? data : data.results || [])
+        if (!active) return
+        const nieobsluzone = (data as { nieobsluzone?: number } | null)?.nieobsluzone
+        setStrona({ ...naStrone<ContactRequest>(data), nieobsluzone: nieobsluzone ?? null })
+        setWczytanyNumer(numer)
+        setError('')
       })
       .catch((err) => {
         if (active) setError(err instanceof Error ? err.message : 'Nie udało się pobrać zapytań.')
       })
+
+    // Odpowiedź na porzuconą stronę nie może nadpisać tej, którą już widać
+    return () => {
+      active = false
+    }
+  }, [numer, wersja])
+
+  useEffect(() => {
+    let active = true
 
     apiFetch('/widget-settings/mine/')
       .then((data) => {
@@ -51,7 +64,6 @@ export default function LeadsPage() {
         // nawet gdy nie udało się odczytać preferencji powiadomień.
       })
 
-    // nie ustawiamy stanu, jeśli komponent zdążył się odmontować
     return () => {
       active = false
     }
@@ -77,23 +89,26 @@ export default function LeadsPage() {
         method: 'PATCH',
         body: JSON.stringify({ handled: !item.handled }),
       })
-      await load()
+      setWersja((w) => w + 1)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Nie udało się zapisać.')
     }
   }
 
-  const pending = items.filter((i) => !i.handled)
+  const items = strona?.results ?? []
+  // Licznik z backendu obejmuje wszystkie strony. Z samej strony wyszłoby
+  // "Nieobsłużone: 3", choć starszych czeka jeszcze pięćdziesiąt.
+  const nieobsluzone = strona?.nieobsluzone ?? items.filter((i) => !i.handled).length
 
   return (
     <div>
       <h1 className="text-2xl font-bold mb-1">Zapytania</h1>
       <p className="tekst-drugi mb-6">
         Kontakty zostawione przez odwiedzających, gdy bot nie potrafił pomóc.
-        {pending.length > 0 && ` Nieobsłużone: ${pending.length}.`}
+        {nieobsluzone > 0 && ` Nieobsłużone: ${nieobsluzone}.`}
       </p>
 
-      {error && <p className="text-sm text-[#c0392b] mb-4">{error}</p>}
+      {error && <p role="alert" className="text-sm text-[#c0392b] mb-4">{error}</p>}
 
       {/* Zapytanie powstaje tylko wtedy, gdy ktoś świadomie zostawi namiary —
           a propozycja pojawia się dopiero, gdy bot nie umie odpowiedzieć.
@@ -120,7 +135,7 @@ export default function LeadsPage() {
         </label>
       </div>
 
-      {items.length === 0 ? (
+      {strona && items.length === 0 ? (
         <p className="text-sm tekst-slaby">Brak zapytań.</p>
       ) : (
         <ul className="flex flex-col gap-3 max-w-2xl">
@@ -175,6 +190,18 @@ export default function LeadsPage() {
             </li>
           ))}
         </ul>
+      )}
+
+      {strona && (
+        <Stronicowanie
+          numer={numer}
+          poprzednia={!!strona.previous}
+          nastepna={!!strona.next}
+          lacznie={strona.count}
+          wczytuje={wczytuje}
+          opisLacznie="zapytań łącznie"
+          onZmien={setNumer}
+        />
       )}
     </div>
   )
