@@ -78,6 +78,31 @@ const ODPOWIEDZI: Record<string, unknown> = {
     name: 'Rowerownia Krakowska',
     owner_email: 'szef@rowerownia.pl',
   },
+  // Ksztalt z api/views/stripe.py (BillingOverviewView). Nieudana platnosc,
+  // bo to najbogatszy wariant ekranu: ostrzezenie, zmiana karty, portal
+  // i przyciski zmiany planu - wszystkie cele dotykowe naraz.
+  '/billing/plans/': {
+    current: {
+      plan: 'grow',
+      name: 'Grow',
+      in_catalogue: true,
+      is_active: true,
+      used: 6480,
+      limit: 8000,
+      renews_at: '2026-10-17',
+      stripe_status: 'past_due',
+      access_until: '2026-10-17',
+      has_stripe_subscription: true,
+      portal_available: true,
+      can_manage: true,
+    },
+    plans: [
+      { code: 'start', name: 'Start', price_pln: 149, price_pln_yearly: 119, message_limit: 2000, white_label: false, available: true, current: false },
+      { code: 'grow', name: 'Grow', price_pln: 349, price_pln_yearly: 279, message_limit: 8000, white_label: false, available: true, current: true },
+      { code: 'pro', name: 'Pro', price_pln: 899, price_pln_yearly: 719, message_limit: 25000, white_label: true, available: true, current: false },
+    ],
+  },
+  '/widget-domains/': { domains: [{ id: 1, host: 'rowerownia.pl', last_seen: '2026-09-13T10:00:00Z' }], limit: 3 },
   '/faq/': [
     { id: 11, question: 'Jakie macie godziny otwarcia?', answer: 'Pon-pt 9-18.' },
     { id: 12, question: 'Ile kosztuje przeglad?', answer: '120 zl.' },
