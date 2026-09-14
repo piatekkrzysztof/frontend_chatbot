@@ -95,6 +95,10 @@ const ODPOWIEDZI: Record<string, unknown> = {
       has_stripe_subscription: true,
       portal_available: true,
       can_manage: true,
+      cancel_at: null,
+      scheduled_plan: 'start',
+      scheduled_plan_name: 'Start',
+      scheduled_plan_from: '2026-10-14',
     },
     plans: [
       { code: 'start', name: 'Start', price_pln: 149, price_pln_yearly: 119, message_limit: 2000, white_label: false, available: true, current: false },

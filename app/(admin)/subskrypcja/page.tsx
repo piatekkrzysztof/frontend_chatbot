@@ -26,6 +26,10 @@ interface Current {
   has_stripe_subscription: boolean
   portal_available: boolean
   can_manage: boolean
+  cancel_at: string | null
+  scheduled_plan: string | null
+  scheduled_plan_name: string | null
+  scheduled_plan_from: string | null
 }
 
 interface Overview {
@@ -258,6 +262,23 @@ export default function SubskrypcjaPage() {
             </p>
           )}
 
+          {/* Zmiany zaplanowane w Stripe. Bez nich panel pokazywal anulowana
+              subskrypcje jak zwykly odnawiany plan, a po obnizce - stary plan
+              bez slowa o zmianie. */}
+          {current.is_active && current.cancel_at && (
+            <p className="text-sm text-[#c0392b] mt-3">
+              Subskrypcja anulowana - działa do {dataPl(current.cancel_at)}, potem chatbot przestanie
+              odpowiadać.
+              {current.can_manage && ' Anulowanie cofniesz w „Zarządzaj subskrypcją”.'}
+            </p>
+          )}
+          {current.is_active && current.scheduled_plan_name && current.scheduled_plan_from && (
+            <p className="text-sm tekst-drugi mt-3">
+              Od {dataPl(current.scheduled_plan_from)} plan {current.scheduled_plan_name}. Do tego
+              dnia działa obecny plan i jego limity.
+            </p>
+          )}
+
           {current.portal_available && current.can_manage && (
             <div className="mt-4 flex flex-wrap items-center gap-x-3 gap-y-2">
               <button
@@ -342,6 +363,10 @@ export default function SubskrypcjaPage() {
             <div className="mt-auto">
               {plan.current ? (
                 <p className="text-sm text-center tekst-slaby py-2">Twój obecny plan</p>
+              ) : current?.scheduled_plan === plan.code && current.scheduled_plan_from ? (
+                <p className="text-sm text-center tekst-slaby py-2">
+                  Od {dataPl(current.scheduled_plan_from)}
+                </p>
               ) : !plan.available ? (
                 <p
                   className="text-xs text-center tekst-slaby py-2"

@@ -179,3 +179,56 @@ describe('nieudana platnosc', () => {
     expect(screen.queryByText(/nie przeszła/)).not.toBeInTheDocument()
   })
 })
+
+describe('zmiany zaplanowane w Stripe', () => {
+  // Przy odbiorze F11: po anulowaniu z koncem okresu i po obnizce panel
+  // pokazywal zwykly aktywny plan, bez slowa o tym, co stanie sie 14.10.
+  it('anulowanie z koncem okresu mowi, do kiedy dziala chatbot', async () => {
+    podmienLokalizacje()
+    backend({ ...OPLACANY_GROW, cancel_at: '2026-10-14' })
+
+    render(<SubskrypcjaPage />)
+
+    expect(await screen.findByText(/Subskrypcja anulowana - działa do 14\.10\.2026/)).toBeInTheDocument()
+    expect(screen.getByText(/Anulowanie cofniesz/)).toBeInTheDocument()
+  })
+
+  it('zaplanowana obnizka jest widoczna przy planie i w opisie', async () => {
+    podmienLokalizacje()
+    backend({
+      ...OPLACANY_GROW,
+      plan: 'pro',
+      name: 'Pro',
+      scheduled_plan: 'grow',
+      scheduled_plan_name: 'Grow',
+      scheduled_plan_from: '2026-10-14',
+    })
+
+    render(<SubskrypcjaPage />)
+
+    expect(await screen.findByText(/Od 14\.10\.2026 plan Grow/)).toBeInTheDocument()
+    // Karta Grow nie zaprasza do ponownej zmiany, ktora juz czeka w Stripe
+    expect(screen.queryByRole('button', { name: 'Przejdź na Grow' })).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Przejdź na Start' })).toBeInTheDocument()
+  })
+
+  it('bez zaplanowanych zmian nic nie zapowiada', async () => {
+    podmienLokalizacje()
+    backend({ ...OPLACANY_GROW, cancel_at: null, scheduled_plan: null })
+
+    render(<SubskrypcjaPage />)
+
+    await screen.findByRole('button', { name: 'Przejdź na Pro' })
+    expect(screen.queryByText(/anulowana|plan Grow\./)).not.toBeInTheDocument()
+  })
+
+  it('pracownik widzi anulowanie, ale bez wskazowki do portalu', async () => {
+    podmienLokalizacje()
+    backend({ ...OPLACANY_GROW, cancel_at: '2026-10-14', can_manage: false })
+
+    render(<SubskrypcjaPage />)
+
+    expect(await screen.findByText(/Subskrypcja anulowana/)).toBeInTheDocument()
+    expect(screen.queryByText(/Anulowanie cofniesz/)).not.toBeInTheDocument()
+  })
+})
