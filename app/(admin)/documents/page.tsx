@@ -4,6 +4,7 @@ import { useEffect, useState, FormEvent } from 'react'
 import { apiFetch } from '@/lib/api'
 import { documentStatus, uploadError } from '@/lib/uploads'
 import UploadField from '@/components/UploadField'
+import Stronicowanie, { naStrone } from '@/components/Stronicowanie'
 
 interface DocumentItem {
   id: number
@@ -32,6 +33,11 @@ export default function DocumentsPage() {
   const [descriptionError, setDescriptionError] = useState('')
 
   const [documents, setDocuments] = useState<DocumentItem[]>([])
+  // Import strony zakłada dokument na każdą podstronę, więc lista potrafi mieć
+  // setki pozycji - wczytujemy ją stronami (F16).
+  const [numerDok, setNumerDok] = useState(1)
+  const [stronaDok, setStronaDok] = useState<{ count: number; next: boolean; previous: boolean } | null>(null)
+  const [wczytujeDok, setWczytujeDok] = useState(false)
   // Id dokumentu, przy którym trwa zapis — blokuje podwójne kliknięcie
   const [przelaczane, setPrzelaczane] = useState<number | null>(null)
   const [file, setFile] = useState<File | null>(null)
@@ -44,12 +50,21 @@ export default function DocumentsPage() {
   const [sourceError, setSourceError] = useState('')
   const [odswiezane, setOdswiezane] = useState<number | null>(null)
 
-  async function loadDocuments() {
+  function pokazDokumenty(data: unknown) {
+    const strona = naStrone<DocumentItem>(data)
+    setDocuments(strona.results)
+    setStronaDok({ count: strona.count, next: !!strona.next, previous: !!strona.previous })
+  }
+
+  async function loadDocuments(numer: number) {
+    setWczytujeDok(true)
     try {
-      const data = await apiFetch('/documents/')
-      setDocuments(Array.isArray(data) ? data : data.results || [])
+      pokazDokumenty(await apiFetch(`/documents/?page=${numer}`))
+      setNumerDok(numer)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Nie udało się pobrać listy dokumentów.')
+    } finally {
+      setWczytujeDok(false)
     }
   }
 
@@ -65,9 +80,9 @@ export default function DocumentsPage() {
   useEffect(() => {
     let active = true
 
-    apiFetch('/documents/')
+    apiFetch('/documents/?page=1')
       .then((data) => {
-        if (active) setDocuments(Array.isArray(data) ? data : data.results || [])
+        if (active) pokazDokumenty(data)
       })
       .catch((err) => {
         if (active) setError(err instanceof Error ? err.message : 'Nie udało się pobrać listy dokumentów.')
@@ -134,7 +149,8 @@ export default function DocumentsPage() {
       await apiFetch('/documents-upload/', { method: 'POST', body: formData })
 
       setFile(null)
-      await loadDocuments()
+      // Nowy dokument jest na pierwszej stronie - lista idzie od najnowszych
+      await loadDocuments(1)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Nie udało się wgrać dokumentu.')
     } finally {
@@ -333,6 +349,20 @@ export default function DocumentsPage() {
         </tbody>
       </table>
       </div>
+
+      {stronaDok && (
+        <div className="-mt-6 mb-10">
+          <Stronicowanie
+            numer={numerDok}
+            poprzednia={stronaDok.previous}
+            nastepna={stronaDok.next}
+            lacznie={stronaDok.count}
+            wczytuje={wczytujeDok}
+            opisLacznie="dokumentów łącznie"
+            onZmien={loadDocuments}
+          />
+        </div>
+      )}
 
       <h2 id="naglowek-strony" className="text-xl font-bold mb-4">Strony WWW</h2>
       <p className="text-sm tekst-slaby mb-3">

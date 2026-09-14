@@ -60,7 +60,8 @@ describe('limity plików przed wysłaniem', () => {
 
   it('pokazuje przyczynę nieudanego przetwarzania dokumentu', async () => {
     const calls = fakeApi()
-    calls.mockImplementation(async (path) => path === '/documents/' ? [{
+    // Lista dokumentów jest stronicowana (F16) - ekran pyta o `/documents/?page=1`
+    calls.mockImplementation(async (path) => path.startsWith('/documents/') ? [{
       id: 1, name: 'Uszkodzony plik', status: 'failed', processed: false,
       processing_error: 'Brak tekstu. Najpierw wykonaj OCR.',
       uploaded_at: '2026-09-10T12:00:00Z', chunk_count: 0,

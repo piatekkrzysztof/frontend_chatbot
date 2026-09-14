@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState, FormEvent } from 'react'
 import { apiFetch } from '@/lib/api'
+import Stronicowanie, { naStrone } from '@/components/Stronicowanie'
 
 interface FAQItem {
   id: number
@@ -11,6 +12,10 @@ interface FAQItem {
 
 export default function FAQPage() {
   const [items, setItems] = useState<FAQItem[]>([])
+  // FAQ nie ma górnej granicy liczby wpisów - stronami, od najnowszych (F16)
+  const [numer, setNumer] = useState(1)
+  const [strona, setStrona] = useState<{ count: number; next: boolean; previous: boolean } | null>(null)
+  const [wczytuje, setWczytuje] = useState(false)
   const [question, setQuestion] = useState('')
   const [answer, setAnswer] = useState('')
   const [saving, setSaving] = useState(false)
@@ -30,21 +35,30 @@ export default function FAQPage() {
 
   useEffect(() => () => { if (zegar.current) clearTimeout(zegar.current) }, [])
 
-  async function load() {
+  function pokaz(data: unknown) {
+    const wynik = naStrone<FAQItem>(data)
+    setItems(wynik.results)
+    setStrona({ count: wynik.count, next: !!wynik.next, previous: !!wynik.previous })
+  }
+
+  async function load(nowyNumer: number) {
+    setWczytuje(true)
     try {
-      const data = await apiFetch('/faq/')
-      setItems(Array.isArray(data) ? data : data.results || [])
+      pokaz(await apiFetch(`/faq/?page=${nowyNumer}`))
+      setNumer(nowyNumer)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Nie udało się pobrać FAQ.')
+    } finally {
+      setWczytuje(false)
     }
   }
 
   useEffect(() => {
     let active = true
 
-    apiFetch('/faq/')
+    apiFetch('/faq/?page=1')
       .then((data) => {
-        if (active) setItems(Array.isArray(data) ? data : data.results || [])
+        if (active) pokaz(data)
       })
       .catch((err) => {
         if (active) setError(err instanceof Error ? err.message : 'Nie udało się pobrać FAQ.')
@@ -69,7 +83,8 @@ export default function FAQPage() {
       })
       setQuestion('')
       setAnswer('')
-      await load()
+      // Nowy wpis jest na pierwszej stronie
+      await load(1)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Nie udało się zapisać.')
     } finally {
@@ -82,7 +97,9 @@ export default function FAQPage() {
     setDoKasacji(null)
     try {
       await apiFetch(`/faq/${id}/`, { method: 'DELETE' })
-      await load()
+      // Usunięcie ostatniego wpisu na dalszej stronie: ta strona już nie istnieje
+      // i backend odpowiedziałby 404 - cofamy się o jedną.
+      await load(items.length === 1 && numer > 1 ? numer - 1 : numer)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Nie udało się usunąć.')
     }
@@ -158,6 +175,18 @@ export default function FAQPage() {
             </li>
           ))}
         </ul>
+      )}
+
+      {strona && (
+        <Stronicowanie
+          numer={numer}
+          poprzednia={strona.previous}
+          nastepna={strona.next}
+          lacznie={strona.count}
+          wczytuje={wczytuje}
+          opisLacznie="wpisów łącznie"
+          onZmien={load}
+        />
       )}
     </div>
   )
