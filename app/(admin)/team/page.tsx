@@ -40,7 +40,9 @@ const DURATIONS = [
 ]
 
 export default function TeamPage() {
-  const [members, setMembers] = useState<TeamMember[]>([])
+  // null = jeszcze nie wiemy. Pusta tablica od startu pokazywała "Brak
+  // użytkowników" w trakcie wczytywania i po błędzie odczytu.
+  const [members, setMembers] = useState<TeamMember[] | null>(null)
   const [invitations, setInvitations] = useState<Invitation[]>([])
   const [error, setError] = useState('')
 
@@ -136,7 +138,16 @@ export default function TeamPage() {
         Osoby z dostępem do panelu Twojego chatbota.
       </p>
 
-      {error && <p className="text-sm text-[#c0392b] mb-4">{error}</p>}
+      {error && (
+        <p role="alert" className="text-sm text-[#c0392b] mb-4">
+          {error}
+        </p>
+      )}
+      {members === null && !error && (
+        <p role="status" className="text-sm tekst-slaby mb-4">
+          Wczytuję zespół…
+        </p>
+      )}
 
       {/* Tabela przewija się sama — bez tego rozpychała całą stronę */}
 
@@ -152,7 +163,7 @@ export default function TeamPage() {
           </tr>
         </thead>
         <tbody>
-          {members.map((member) => (
+          {(members ?? []).map((member) => (
             <tr key={member.id} className="border-b obramowanie">
               <td className="py-2">{member.username}</td>
               <td className="py-2 tekst-drugi">{member.email}</td>
@@ -164,7 +175,7 @@ export default function TeamPage() {
               </td>
             </tr>
           ))}
-          {members.length === 0 && (
+          {members !== null && members.length === 0 && (
             <tr>
               <td colSpan={4} className="py-4 tekst-slaby">
                 Brak użytkowników.

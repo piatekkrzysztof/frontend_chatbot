@@ -14,6 +14,12 @@ const RETENTION_OPTIONS = [
 export default function PrivacyPage() {
   const [retention, setRetention] = useState(90)
   const [policyUrl, setPolicyUrl] = useState('')
+  // Formularz startuje z wartościami domyślnymi. Zapis przed odczytem albo po
+  // nieudanym odczycie nadpisałby nimi ustawienia firmy - a skrócenie okresu
+  // przechowywania z 365 do domyślnych 90 dni usuwa rozmowy przy nocnym
+  // czyszczeniu. Dlatego formularz działa dopiero po poprawnym odczycie.
+  const [wczytane, setWczytane] = useState(false)
+  const [bladOdczytu, setBladOdczytu] = useState('')
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
   const [error, setError] = useState('')
@@ -31,9 +37,12 @@ export default function PrivacyPage() {
         if (!active) return
         setRetention(data.data_retention_days)
         setPolicyUrl(data.privacy_policy_url || '')
+        setWczytane(true)
       })
       .catch((err) => {
-        if (active) setError(err instanceof Error ? err.message : 'Nie udało się pobrać ustawień.')
+        if (active) {
+          setBladOdczytu(err instanceof Error ? err.message : 'Nie udało się pobrać ustawień.')
+        }
       })
 
     // nie ustawiamy stanu, jeśli komponent zdążył się odmontować
@@ -44,6 +53,7 @@ export default function PrivacyPage() {
 
   async function handleSave(e: FormEvent) {
     e.preventDefault()
+    if (!wczytane) return
     setSaving(true)
     setError('')
     setSaved(false)
@@ -97,7 +107,21 @@ export default function PrivacyPage() {
         jak długo je przechowujemy.
       </p>
 
-      {error && <p className="text-sm text-[#c0392b] mb-4">{error}</p>}
+      {!wczytane && !bladOdczytu && (
+        <p role="status" className="text-sm tekst-slaby mb-4">
+          Wczytuję ustawienia…
+        </p>
+      )}
+      {bladOdczytu && (
+        <p role="alert" className="text-sm text-[#c0392b] mb-4">
+          {bladOdczytu} Formularz odblokuje się po poprawnym odczycie - odśwież stronę.
+        </p>
+      )}
+      {error && (
+        <p role="alert" className="text-sm text-[#c0392b] mb-4">
+          {error}
+        </p>
+      )}
 
       <form onSubmit={handleSave} className="mb-12">
         <div className="mb-5">
@@ -114,6 +138,7 @@ export default function PrivacyPage() {
             aria-describedby="retencja-opis"
             value={retention}
             onChange={(e) => setRetention(Number(e.target.value))}
+            disabled={!wczytane}
             className="input"
           >
             {RETENTION_OPTIONS.map((option) => (
@@ -145,6 +170,7 @@ export default function PrivacyPage() {
             value={policyUrl}
             onChange={(e) => setPolicyUrl(e.target.value)}
             placeholder="https://twojafirma.pl/polityka-prywatnosci"
+            disabled={!wczytane}
             className="input"
           />
         </div>
@@ -152,7 +178,7 @@ export default function PrivacyPage() {
         <div className="flex items-center gap-3">
           <button
             type="submit"
-            disabled={saving}
+            disabled={saving || !wczytane}
             className="btn-primary !py-2 !px-4 !text-sm"
           >
             {saving ? 'Zapisywanie...' : 'Zapisz ustawienia'}

@@ -47,6 +47,11 @@ export default function WidgetSettingsPage() {
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
   const [saved, setSaved] = useState(false)
+  // Pola startują z wartościami domyślnymi (tytuł "Chatbot", czarny kolor,
+  // sam polski). Zapis przed odczytem albo po nieudanym odczycie nadpisałby
+  // nimi konfigurację firmy, więc formularz działa dopiero po odczycie.
+  const [wczytane, setWczytane] = useState(false)
+  const [bladOdczytu, setBladOdczytu] = useState('')
 
   useEffect(() => {
     apiFetch('/widget-settings/mine/')
@@ -69,8 +74,11 @@ export default function WidgetSettingsPage() {
         setProactiveTexts(data.widget_proactive_texts || {})
         setLogoUrl(data.widget_logo)
         setAvatarUrl(data.widget_avatar)
+        setWczytane(true)
       })
-      .catch((err) => setError(err.message))
+      .catch((err) =>
+        setBladOdczytu(err instanceof Error ? err.message : 'Nie udało się wczytać ustawień widgetu.'),
+      )
 
     apiFetch('/accounts/me/')
       .then((data) => setApiKey(data.tenant_api_key || ''))
@@ -88,7 +96,7 @@ export default function WidgetSettingsPage() {
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault()
-    if (saving || uploadError(logoFile, 'image') || uploadError(avatarFile, 'image')) return
+    if (!wczytane || saving || uploadError(logoFile, 'image') || uploadError(avatarFile, 'image')) return
     setSaving(true)
     setError('')
     setSaved(false)
@@ -196,8 +204,22 @@ export default function WidgetSettingsPage() {
         )}
       </div>
 
+      {!wczytane && !bladOdczytu && (
+        <p role="status" className="text-sm tekst-slaby mb-4">
+          Wczytuję ustawienia widgetu…
+        </p>
+      )}
+      {bladOdczytu && (
+        <p role="alert" className="text-sm text-[#c0392b] mb-4">
+          {bladOdczytu} Formularz odblokuje się po poprawnym odczycie - odśwież stronę.
+        </p>
+      )}
+
       <div className="flex flex-wrap items-start gap-10">
       <form onSubmit={handleSubmit} className="flex flex-col gap-4 max-w-md mb-8">
+        {/* Jedno zablokowanie dla wszystkich pól: "contents" nie tworzy
+            własnego pudełka, więc układ formularza się nie zmienia. */}
+        <fieldset disabled={!wczytane} className="contents">
         <div>
           <label className="label">Branding</label>
           <div className="flex flex-col gap-2">
@@ -520,11 +542,16 @@ Gdzie was znaleźć?`}
         {saved && <p role="status" className="text-sm text-[#1f7a4d]">Zapisano.</p>}
         <button
           type="submit"
-          disabled={saving || Boolean(uploadError(logoFile, 'image') || uploadError(avatarFile, 'image'))}
+          disabled={
+            !wczytane ||
+            saving ||
+            Boolean(uploadError(logoFile, 'image') || uploadError(avatarFile, 'image'))
+          }
           className="btn-primary w-fit"
         >
           {saving ? 'Zapisywanie...' : 'Zapisz'}
         </button>
+        </fieldset>
       </form>
 
       <div className="sticky top-6">

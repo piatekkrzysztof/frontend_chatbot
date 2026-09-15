@@ -146,7 +146,9 @@ describe('zmiana planu', () => {
 
     render(<SubskrypcjaPage />)
 
-    expect(await screen.findByRole('status')).toHaveTextContent(/Zmiana zapisana w Stripe/)
+    // Po tekście, nie po pierwszym komunikacie stanu: przed odpowiedzią ekran
+    // ma też status "Wczytuję plan…".
+    expect(await screen.findByText(/Zmiana zapisana w Stripe/)).toHaveAttribute('role', 'status')
   })
 })
 
