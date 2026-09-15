@@ -60,6 +60,7 @@ export default function SubskrypcjaPage() {
   const [komunikat, setKomunikat] = useState('')
   const [domeny, setDomeny] = useState<Domena[] | null>(null)
   const [limitDomen, setLimitDomen] = useState<number | null>(null)
+  const [bladDomen, setBladDomen] = useState(false)
   const [otwieram, setOtwieram] = useState('')
 
   useEffect(() => {
@@ -98,7 +99,10 @@ export default function SubskrypcjaPage() {
         setDomeny(d.domains)
         setLimitDomen(d.limit)
       })
-      .catch(() => {})
+      .catch(() => {
+        // Cisza wyglądała jak brak witryn, a lista liczy się do limitu planu.
+        if (active) setBladDomen(true)
+      })
 
     // nie ustawiamy stanu, jeśli komponent zdążył się odmontować
     return () => {
@@ -188,6 +192,11 @@ export default function SubskrypcjaPage() {
 
       {error && <p role="alert" className="text-sm text-[#c0392b] mb-4">{error}</p>}
       {komunikat && <p role="status" className="text-sm tekst-drugi mb-4">{komunikat}</p>}
+      {!data && !error && (
+        <p role="status" className="text-sm tekst-slaby mb-4">
+          Wczytuję plan…
+        </p>
+      )}
 
       {current && nieudanaPlatnosc && (
         <div role="alert" className="card p-5 mb-6 border-2 border-[#c0392b]">
@@ -294,6 +303,13 @@ export default function SubskrypcjaPage() {
             </div>
           )}
         </div>
+      )}
+
+      {bladDomen && (
+        <p role="alert" className="card p-5 mb-6 text-sm text-[#c0392b]">
+          Nie udało się wczytać listy witryn z widgetem. Odśwież stronę, żeby zobaczyć, ile miejsc
+          zostało w planie.
+        </p>
       )}
 
       {domeny && (
