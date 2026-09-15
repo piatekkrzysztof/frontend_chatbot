@@ -45,6 +45,15 @@ const ODPOWIEDZI: Record<string, unknown> = {
       websites: 1,
       is_empty: false,
     },
+    // Dwa kroki niezrobione, żeby testy przeglądarkowe widziały listę
+    // i sprawdzały jej układ na wąskim ekranie.
+    pierwsze_kroki: {
+      wiedza: true,
+      rozmowa_testowa: true,
+      widget_na_stronie: false,
+      adres_powiadomien: true,
+      polityka_prywatnosci: false,
+    },
     conversations: { total: 57, last_7d: 9, last_30d: 57 },
     questions: { total: 114, last_7d: 18, daily: [] },
     answer_sources: { document: 61, faq: 40, gpt: 13 },
