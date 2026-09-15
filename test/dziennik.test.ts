@@ -42,11 +42,49 @@ describe('opiszWpis', () => {
     expect(opiszWpis('POST', '/api/accounts/login/podszywanie/').rozpoznane).toBe(false)
   })
 
-  it('opisuje eksport rozmow, bo to jedyny wpis o danych wynoszonych na zewnatrz', () => {
-    expect(opiszWpis('POST', '/api/chat/export/')).toEqual({
+  it('opisuje odczyty wynoszace dane, ktore backend zapisuje mimo metody GET', () => {
+    expect(opiszWpis('GET', '/api/chat/export/')).toEqual({
       opis: 'Eksport rozmów do pliku',
       rozpoznane: true,
     })
+    expect(opiszWpis('GET', '/api/documents/7/download/')).toEqual({
+      opis: 'Pobranie pliku dokumentu',
+      rozpoznane: true,
+    })
+  })
+
+  it('nie nazywa eksportem zadania, ktore eksportem nie bylo', () => {
+    // Eksport to wylacznie GET. Wpis POST oznacza odrzucone zadanie (405),
+    // a opis "Eksport rozmow" kazalby szukac pliku, ktorego nikt nie dostal.
+    expect(opiszWpis('POST', '/api/chat/export/').rozpoznane).toBe(false)
+  })
+
+  it('opisuje zdarzenia dostepu, ktore backend przypisuje teraz do osoby', () => {
+    expect(opiszWpis('POST', '/api/accounts/registration/activate/').opis).toBe(
+      'Założenie konta - potwierdzenie adresu',
+    )
+    expect(opiszWpis('POST', '/api/accounts/accept-invite/').opis).toBe(
+      'Dołączenie do zespołu z zaproszenia',
+    )
+    expect(opiszWpis('POST', '/api/accounts/password-reset/confirm/').opis).toBe(
+      'Ustawienie nowego hasła z linku',
+    )
+    expect(
+      opiszWpis('POST', '/api/accounts/sessions/3f1c2a9e-8b7d-4c6e-9f10-2a3b4c5d6e7f/revoke/').opis,
+    ).toBe('Wylogowanie wybranego urządzenia')
+  })
+
+  it('uzywa sciezek, ktore naprawde istnieja w API', () => {
+    // Poprzednie reguly opisywaly /api/privacy/erase/ i /api/billing/checkout/,
+    // ktorych backend nie ma - prawdziwe wpisy pokazywaly sie jako surowe.
+    expect(
+      opiszWpis('DELETE', '/api/privacy/conversations/3f1c2a9e-8b7d-4c6e-9f10-2a3b4c5d6e7f/').opis,
+    ).toBe('Usunięcie danych rozmowy na żądanie')
+    expect(opiszWpis('POST', '/api/billing/create-checkout-session/').opis).toBe(
+      'Rozpoczęcie płatności',
+    )
+    expect(opiszWpis('PATCH', '/api/users/5/').opis).toBe('Zmiana osoby w zespole')
+    expect(opiszWpis('DELETE', '/api/widget-domains/3/').opis).toBe('Usunięcie domeny widgetu')
   })
 })
 

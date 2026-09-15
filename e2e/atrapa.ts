@@ -156,7 +156,7 @@ function stronaDziennika(numer: number) {
       id: 0,
       czas: '2026-08-30T11:00:00Z',
       nazwa_uzytkownika: 'szef@rowerownia.pl',
-      metoda: 'POST',
+      metoda: 'GET',
       sciezka: '/api/chat/export/',
       status: 200,
       adres_ip: '83.11.24.7',
