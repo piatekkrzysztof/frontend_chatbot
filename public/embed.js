@@ -31,6 +31,9 @@
   function zaczepkaOdrzucona() {
     try {
       return sessionStorage.getItem(KLUCZ_SESJI) === '1';
+    // Nazwa błędu zostaje: skrypt trafia na strony klientów, a `catch {}` bez
+    // zmiennej nie działa w starszych przeglądarkach.
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (e) {
       // Tryb prywatny potrafi rzucać przy samym dostępie do sessionStorage
       return false;
@@ -39,6 +42,7 @@
   function zapamietajOdrzucenie() {
     try {
       sessionStorage.setItem(KLUCZ_SESJI, '1');
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (e) { /* brak pamięci sesji nie może wywrócić widgetu */ }
   }
 

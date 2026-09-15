@@ -31,9 +31,11 @@ function naEkranLogowania() {
   // Celowo pelne przeladowanie, nie router.push: po wygasnieciu sesji
   // chcemy wyczyscic caly stan aplikacji, zeby dane poprzedniego
   // uzytkownika nie zostaly w pamieci komponentow.
-  // eslint-disable-next-line @next/next/no-location-assign-relative-destination
   // Parametr mowi middleware, ze sesja wlasnie umarla, wiec ma NIE odbijac
   // tego powrotu do panelu mimo wciaz lezacego znacznika sesji.
+  // Wylaczenie reguly bezposrednio nad przypisaniem - wczesniej stalo dwie
+  // linie wyzej, wiec nie dzialalo i samo bylo zgloszeniem lintera.
+  // eslint-disable-next-line @next/next/no-location-assign-relative-destination
   window.location.href = '/login?wygasla=1'
 }
 
