@@ -972,6 +972,97 @@ h1, h2, h3, h4 {
   line-height: 1.45;
 }
 
+/* Pierwsze kroki: jasna karta jak reszta pulpitu, stan kroku niesie słowo,
+   znaczek i kolor naraz - żaden z nich nie jest jedynym nośnikiem. */
+.pierwsze-kroki {
+  padding: 1.1rem 1.2rem;
+  border: 1px solid var(--obramowanie-mocne);
+  background: var(--powierzchnia);
+  color: var(--tekst);
+}
+
+.pierwsze-kroki-naglowek {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 0.5rem 1rem;
+  margin-bottom: 0.85rem;
+}
+
+.pierwsze-kroki h2 {
+  margin: 0.16rem 0 0;
+  font-size: 0.94rem;
+}
+
+.pierwsze-kroki-postep {
+  color: var(--tekst-drugi);
+  font-family: var(--font-display);
+  font-size: 0.76rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.pierwsze-kroki ol {
+  display: grid;
+  gap: 0.7rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.pierwsze-kroki li {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: start;
+  gap: 0.75rem;
+}
+
+.pierwsze-kroki-znak {
+  display: grid;
+  width: 1.25rem;
+  height: 1.25rem;
+  place-items: center;
+  margin-top: 0.1rem;
+  border: 1px solid var(--obramowanie-mocne);
+  color: var(--akcent-tekst);
+  font-size: 0.7rem;
+  font-weight: 800;
+}
+
+.pierwsze-kroki li.is-complete .pierwsze-kroki-znak {
+  border-color: var(--akcent);
+}
+
+.pierwsze-kroki-tytul {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem;
+  min-height: 1.5rem;
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+a.pierwsze-kroki-tytul {
+  color: var(--akcent-tekst);
+}
+
+a.pierwsze-kroki-tytul:hover {
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+
+.pierwsze-kroki li p:not(.pierwsze-kroki-tytul) {
+  color: var(--tekst-slaby);
+  font-size: 0.74rem;
+  line-height: 1.45;
+}
+
+.pierwsze-kroki li.is-complete .pierwsze-kroki-tytul {
+  color: var(--tekst-drugi);
+}
+
 .notice-action,
 .panel-link {
   display: inline-flex;

@@ -13,9 +13,20 @@ interface Knowledge {
   is_empty: boolean
 }
 
+interface PierwszeKroki {
+  wiedza: boolean
+  rozmowa_testowa: boolean
+  widget_na_stronie: boolean
+  adres_powiadomien: boolean
+  polityka_prywatnosci: boolean
+}
+
 interface Analytics {
   tenant_name?: string
   knowledge: Knowledge
+  // Opcjonalne: panel i backend wdrażają się osobno, a pulpit sprzed
+  // wdrożenia backendu ma działać jak dotąd, tylko bez listy.
+  pierwsze_kroki?: PierwszeKroki
   conversations: { total: number; last_7d: number; last_30d: number }
   questions: {
     total: number
@@ -102,6 +113,87 @@ function KnowledgeNotice({ knowledge }: { knowledge: Knowledge }) {
       </div>
       <Link href="/documents" className="notice-action">Uzupełnij bazę <span aria-hidden="true">↗</span></Link>
     </aside>
+  )
+}
+
+const KROKI: { klucz: keyof PierwszeKroki; tytul: string; opis: string; href: string }[] = [
+  {
+    klucz: 'wiedza',
+    tytul: 'Dodaj wiedzę o firmie',
+    opis: 'Opis, dokument, FAQ albo strona WWW. Bez nich bot nie odpowiada na pytania o firmę.',
+    href: '/documents',
+  },
+  {
+    klucz: 'rozmowa_testowa',
+    tytul: 'Sprawdź bota w rozmowie testowej',
+    opis: 'Zadaj pytania, które zadają Twoi klienci, zanim zobaczą odpowiedzi odwiedzający.',
+    href: '/test-bota',
+  },
+  {
+    klucz: 'widget_na_stronie',
+    tytul: 'Wklej kod widgetu na swoją stronę',
+    opis: 'Krok zamknie się sam, gdy widget pierwszy raz zapyta z Twojej witryny.',
+    href: '/widget-settings',
+  },
+  {
+    klucz: 'adres_powiadomien',
+    tytul: 'Podaj adres do powiadomień',
+    opis: 'Tu wyślemy zapytania, które odwiedzający zostawią w czacie.',
+    href: '/ustawienia',
+  },
+  {
+    klucz: 'polityka_prywatnosci',
+    tytul: 'Dodaj link do polityki prywatności',
+    opis: 'Widget pokazuje go odwiedzającym, zanim zostawią swoje dane.',
+    href: '/privacy',
+  },
+]
+
+/**
+ * Lista uruchomienia dla nowej firmy. Kroki liczy backend z danych, więc nie da
+ * się ich odhaczyć bez wykonania; lista znika, gdy wszystkie są zrobione.
+ */
+function PierwszeKrokiLista({ kroki }: { kroki?: PierwszeKroki }) {
+  if (!kroki) return null
+  const zrobione = KROKI.filter((krok) => kroki[krok.klucz]).length
+  if (zrobione === KROKI.length) return null
+
+  return (
+    <section className="pierwsze-kroki wejscie" aria-labelledby="pierwsze-kroki-tytul">
+      <div className="pierwsze-kroki-naglowek">
+        <div>
+          <span className="section-kicker">Uruchomienie</span>
+          <h2 id="pierwsze-kroki-tytul">Pierwsze kroki</h2>
+        </div>
+        <p className="pierwsze-kroki-postep">
+          {zrobione} z {KROKI.length}
+        </p>
+      </div>
+      <ol>
+        {KROKI.map((krok) => {
+          const zrobiony = kroki[krok.klucz]
+          return (
+            <li key={krok.klucz} className={zrobiony ? 'is-complete' : ''}>
+              <span className="pierwsze-kroki-znak" aria-hidden="true">
+                {zrobiony ? '✓' : ''}
+              </span>
+              <div>
+                {zrobiony ? (
+                  <p className="pierwsze-kroki-tytul">{krok.tytul}</p>
+                ) : (
+                  <Link href={krok.href} className="pierwsze-kroki-tytul">
+                    {krok.tytul} <span aria-hidden="true">↗</span>
+                  </Link>
+                )}
+                {/* Słowo, nie tylko kolor i znaczek: stan kroku musi dotrzeć
+                    także do czytnika ekranu i przy słabym kontraście. */}
+                <p>{zrobiony ? 'Zrobione' : krok.opis}</p>
+              </div>
+            </li>
+          )
+        })}
+      </ol>
+    </section>
   )
 }
 
@@ -231,6 +323,7 @@ export default function DashboardPage() {
       {data && (
         <div className="dashboard-content">
           <KnowledgeNotice knowledge={data.knowledge} />
+          <PierwszeKrokiLista kroki={data.pierwsze_kroki} />
 
           <section className="command-card wejscie" style={{ animationDelay: '70ms' }}>
             <div className="command-grid" aria-hidden="true" />
