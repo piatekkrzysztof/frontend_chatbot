@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState, FormEvent } from 'react'
-import { apiFetch } from '@/lib/api'
+import { apiFetch, BladApi, pobierzPlik } from '@/lib/api'
 import { documentStatus, uploadError } from '@/lib/uploads'
 import UploadField from '@/components/UploadField'
 import Stronicowanie, { naStrone } from '@/components/Stronicowanie'
@@ -16,6 +16,8 @@ interface DocumentItem {
   processing_error?: string
   uzywaj_w_wyszukiwaniu: boolean
   source_url: string
+  // Dokument z importu strony WWW ma treść, ale nie ma pliku do pobrania.
+  ma_plik: boolean
 }
 
 interface WebsiteSourceItem {
@@ -40,6 +42,7 @@ export default function DocumentsPage() {
   const [wczytujeDok, setWczytujeDok] = useState(false)
   // Id dokumentu, przy którym trwa zapis — blokuje podwójne kliknięcie
   const [przelaczane, setPrzelaczane] = useState<number | null>(null)
+  const [pobierany, setPobierany] = useState<number | null>(null)
   const [file, setFile] = useState<File | null>(null)
   const [uploading, setUploading] = useState(false)
   const [error, setError] = useState('')
@@ -49,6 +52,24 @@ export default function DocumentsPage() {
   const [addingSource, setAddingSource] = useState(false)
   const [sourceError, setSourceError] = useState('')
   const [odswiezane, setOdswiezane] = useState<number | null>(null)
+
+  async function pobierzDokument(doc: DocumentItem) {
+    setPobierany(doc.id)
+    setError('')
+    try {
+      await pobierzPlik(`/documents/${doc.id}/download/`, doc.name)
+    } catch (err) {
+      setError(
+        err instanceof BladApi && err.status === 404
+          ? 'Tego dokumentu nie ma już w magazynie plików.'
+          : err instanceof Error
+            ? err.message
+            : 'Nie udało się pobrać pliku.',
+      )
+    } finally {
+      setPobierany(null)
+    }
+  }
 
   function pokazDokumenty(data: unknown) {
     const strona = naStrone<DocumentItem>(data)
@@ -309,6 +330,7 @@ export default function DocumentsPage() {
             <th className="py-2">Fragmenty</th>
             <th className="py-2">Wgrano</th>
             <th className="py-2">W wyszukiwaniu</th>
+            <th className="py-2">Plik</th>
           </tr>
         </thead>
         <tbody>
@@ -337,11 +359,27 @@ export default function DocumentsPage() {
                   </span>
                 </label>
               </td>
+              <td className="py-2">
+                {doc.ma_plik ? (
+                  <button
+                    type="button"
+                    onClick={() => pobierzDokument(doc)}
+                    disabled={pobierany === doc.id}
+                    className="text-xs underline underline-offset-4 disabled:opacity-50"
+                  >
+                    {pobierany === doc.id ? 'Pobieram...' : `Pobierz ${doc.name}`}
+                  </button>
+                ) : (
+                  // Dokument ze strony WWW nie ma pliku; myślnik zamiast
+                  // przycisku, który i tak skończyłby się błędem.
+                  <span className="text-xs tekst-slaby">–</span>
+                )}
+              </td>
             </tr>
           ))}
           {documents.length === 0 && (
             <tr>
-              <td colSpan={5} className="py-4 tekst-slaby">
+              <td colSpan={6} className="py-4 tekst-slaby">
                 Brak wgranych dokumentów.
               </td>
             </tr>

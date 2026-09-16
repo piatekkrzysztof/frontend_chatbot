@@ -11,7 +11,7 @@
  * bez uruchamiania prawdziwej przegladarki.
  */
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { apiFetch, authHeaders } from '@/lib/api'
+import { apiFetch, authHeaders, pobierzPlik } from '@/lib/api'
 import { odswiezSesje, pobierzToken, ustawToken, wyloguj, zapomnijToken } from '@/lib/auth'
 
 const oryginalnaLokalizacja = window.location
@@ -305,5 +305,79 @@ describe('wylogowanie', () => {
     await wyloguj()
 
     expect(pobierzToken()).toBeNull()
+  })
+})
+
+describe('pobieranie pliku', () => {
+  function odpowiedzZPlikiem(status: number, naglowek?: string, cialo: unknown = {}) {
+    return {
+      status,
+      ok: status >= 200 && status < 300,
+      statusText: `HTTP ${status}`,
+      headers: { get: () => naglowek ?? null },
+      blob: () => Promise.resolve(new Blob(['pytanie,odpowiedz'], { type: 'text/csv' })),
+      json: () => Promise.resolve(cialo),
+    } as unknown as Response
+  }
+
+  function przechwycPobranie() {
+    const zapisane: { nazwa: string } = { nazwa: '' }
+    vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(function (
+      this: HTMLAnchorElement,
+    ) {
+      zapisane.nazwa = this.download
+    })
+    return zapisane
+  }
+
+  beforeEach(() => {
+    // jsdom nie ma adresow blob - bez tego pomocnik wywracalby sie na
+    // createObjectURL, a nie na tym, co test sprawdza.
+    vi.stubGlobal('URL', {
+      createObjectURL: vi.fn(() => 'blob:test'),
+      revokeObjectURL: vi.fn(),
+    })
+  })
+
+  it('zapisuje plik pod nazwa z naglowka odpowiedzi', async () => {
+    vi.mocked(fetch).mockResolvedValueOnce(
+      odpowiedzZPlikiem(200, 'attachment; filename="rozmowy-2026-09.csv"'),
+    )
+    const pobrane = przechwycPobranie()
+
+    await pobierzPlik('/chat/export/', 'domyslna.csv')
+
+    expect(pobrane.nazwa).toBe('rozmowy-2026-09.csv')
+  })
+
+  it('bez naglowka uzywa nazwy domyslnej', async () => {
+    vi.mocked(fetch).mockResolvedValueOnce(odpowiedzZPlikiem(200))
+    const pobrane = przechwycPobranie()
+
+    await pobierzPlik('/documents/1/download/', 'cennik.pdf')
+
+    expect(pobrane.nazwa).toBe('cennik.pdf')
+  })
+
+  it('odmowe zglasza jako BladApi ze statusem, a nie jako pusty plik', async () => {
+    // Bez tego przegladarka zapisalaby na dysk plik z trescia bledu 403.
+    vi.mocked(fetch).mockResolvedValueOnce(
+      odpowiedzZPlikiem(403, undefined, { detail: 'Brak uprawnień.' }),
+    )
+
+    await expect(pobierzPlik('/chat/export/', 'domyslna.csv')).rejects.toMatchObject({
+      status: 403,
+      message: 'Brak uprawnień.',
+    })
+  })
+
+  it('po wygasnieciu tokenu odswieza sesje i ponawia pobranie', async () => {
+    sesjaDaSieOdnowic(odpowiedzZPlikiem(200, 'attachment; filename="r.csv"'))
+    const pobrane = przechwycPobranie()
+
+    await pobierzPlik('/chat/export/', 'domyslna.csv')
+
+    expect(pobrane.nazwa).toBe('r.csv')
+    expect(vi.mocked(fetch)).toHaveBeenCalledTimes(3)
   })
 })
