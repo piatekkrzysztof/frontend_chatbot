@@ -2,7 +2,8 @@
 
 import { FormEvent, useEffect, useState } from 'react'
 
-import { apiFetch } from '@/lib/api'
+import { apiFetch, BladApi } from '@/lib/api'
+import BrakUprawnien from '@/components/BrakUprawnien'
 
 type Dane = {
   nazwa: string
@@ -30,6 +31,7 @@ export default function DaneRozliczeniowe() {
   const [zapisano, setZapisano] = useState(false)
   const [bledy, setBledy] = useState<Record<string, string>>({})
   const [blad, setBlad] = useState('')
+  const [brakUprawnien, setBrakUprawnien] = useState(false)
 
   useEffect(() => {
     apiFetch('/accounts/dane-rozliczeniowe/')
@@ -37,9 +39,14 @@ export default function DaneRozliczeniowe() {
         setDane({ ...PUSTE, ...(odpowiedz as Dane) })
         setWczytane(true)
       })
-      .catch((err) =>
-        setBlad(err instanceof Error ? err.message : 'Nie udało się wczytać danych.'),
-      )
+      .catch((err) => {
+        // 403 to rola, nie awaria - patrz components/BrakUprawnien.tsx.
+        if (err instanceof BladApi && err.status === 403) {
+          setBrakUprawnien(true)
+          return
+        }
+        setBlad(err instanceof Error ? err.message : 'Nie udało się wczytać danych.')
+      })
   }, [])
 
   function ustaw(pole: keyof Dane, wartosc: string) {
@@ -73,6 +80,18 @@ export default function DaneRozliczeniowe() {
     } finally {
       setZapisuje(false)
     }
+  }
+
+  if (brakUprawnien) {
+    return (
+      <section className="max-w-2xl">
+        <h2 className="text-xl font-bold mb-3">Dane do faktury</h2>
+        <BrakUprawnien
+          tytul="Dane do faktury prowadzi właściciel konta."
+          opis="Na te dane wystawiamy faktury i na nie zawarta jest umowa, więc zmienia je wyłącznie właściciel. Jeśli coś się w nich nie zgadza, poproś go o poprawkę."
+        />
+      </section>
+    )
   }
 
   return (

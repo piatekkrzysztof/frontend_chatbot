@@ -1,7 +1,8 @@
 'use client'
 
 import { useEffect, useState, FormEvent } from 'react'
-import { apiFetch } from '@/lib/api'
+import { apiFetch, BladApi } from '@/lib/api'
+import BrakUprawnien from '@/components/BrakUprawnien'
 
 interface TeamMember {
   id: number
@@ -45,6 +46,10 @@ export default function TeamPage() {
   const [members, setMembers] = useState<TeamMember[] | null>(null)
   const [invitations, setInvitations] = useState<Invitation[]>([])
   const [error, setError] = useState('')
+  // Rolę rozstrzyga backend, nie panel: 403 na liście zespołu znaczy "podgląd",
+  // a 403 na liście zaproszeń - "nie właściciel".
+  const [brakUprawnien, setBrakUprawnien] = useState(false)
+  const [mozeZapraszac, setMozeZapraszac] = useState(true)
 
   const [email, setEmail] = useState('')
   const [role, setRole] = useState('employee')
@@ -67,15 +72,23 @@ export default function TeamPage() {
         if (active) setMembers(Array.isArray(data) ? data : data.results || [])
       })
       .catch((err) => {
-        if (active) setError(err instanceof Error ? err.message : 'Nie udało się pobrać zespołu.')
+        if (!active) return
+        if (err instanceof BladApi && err.status === 403) {
+          setBrakUprawnien(true)
+          return
+        }
+        setError(err instanceof Error ? err.message : 'Nie udało się pobrać zespołu.')
       })
 
     apiFetch('/accounts/invitations/list/')
       .then((data) => {
         if (active) setInvitations(Array.isArray(data) ? data : data.results || [])
       })
-      .catch(() => {
-        // listę zaproszeń widzi tylko właściciel — pracownik dostaje 403 i to jest w porządku
+      .catch((err) => {
+        // Listę zaproszeń widzi tylko właściciel. Pracownik dostawał 403 po
+        // cichu i zostawał z formularzem zaproszenia, który przy wysłaniu
+        // odbijał go kolejnym 403 - teraz po prostu go nie widzi.
+        if (active && err instanceof BladApi && err.status === 403) setMozeZapraszac(false)
       })
 
     // nie ustawiamy stanu, jeśli komponent zdążył się odmontować
@@ -129,6 +142,18 @@ export default function TeamPage() {
     } catch {
       // schowek bywa zablokowany — link i tak jest widoczny do zaznaczenia
     }
+  }
+
+  if (brakUprawnien) {
+    return (
+      <div className="max-w-3xl">
+        <h1 className="text-2xl font-bold mb-3">Zespół</h1>
+        <BrakUprawnien
+          tytul="Listę zespołu widzi właściciel i pracownik."
+          opis="Rola podglądu służy do czytania rozmów i bazy wiedzy, a nie do zarządzania dostępem do konta. Jeśli potrzebujesz tu wglądu, poproś właściciela o zmianę roli."
+        />
+      </div>
+    )
   }
 
   return (
@@ -186,6 +211,10 @@ export default function TeamPage() {
       </table>
       </div>
 
+      {/* Zaproszenia tworzy wyłącznie właściciel. Pracownik widział ten
+          formularz i dowiadywał się o tym dopiero po wysłaniu, z 403. */}
+      {mozeZapraszac && (
+        <>
       <h2 className="text-xl font-bold mb-1">Zaproś osobę</h2>
       <p className="text-sm tekst-slaby mb-4">
         Wyślemy e-mail z linkiem. Link dostajesz też tutaj — na wypadek gdyby wiadomość
@@ -257,6 +286,8 @@ export default function TeamPage() {
             {copied === lastInvite.url ? 'Skopiowano' : lastInvite.url}
           </button>
         </div>
+      )}
+        </>
       )}
 
       {invitations.length > 0 && (

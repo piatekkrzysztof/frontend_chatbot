@@ -1,7 +1,8 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { apiFetch } from '@/lib/api'
+import { apiFetch, BladApi } from '@/lib/api'
+import BrakUprawnien from '@/components/BrakUprawnien'
 import DaneRozliczeniowe from '@/components/ustawienia/DaneRozliczeniowe'
 import DrugiSkladnik from '@/components/ustawienia/DrugiSkladnik'
 import BezpieczenstwoKonta from '@/components/ustawienia/BezpieczenstwoKonta'
@@ -13,6 +14,7 @@ export default function UstawieniaPage() {
   const [zapisuje, setZapisuje] = useState(false)
   const [zapisano, setZapisano] = useState(false)
   const [blad, setBlad] = useState('')
+  const [brakUprawnien, setBrakUprawnien] = useState(false)
 
   useEffect(() => {
     apiFetch('/accounts/firma/')
@@ -22,7 +24,15 @@ export default function UstawieniaPage() {
         setAdres(dane.owner_email || '')
         setWczytane(true)
       })
-      .catch((err) => setBlad(err instanceof Error ? err.message : 'Nie udało się wczytać ustawień.'))
+      .catch((err) => {
+        // Dane firmy prowadzi właściciel; dla pozostałych ról to granica
+        // roli, nie awaria - reszta ekranu (hasło, sesje, MFA) działa dalej.
+        if (err instanceof BladApi && err.status === 403) {
+          setBrakUprawnien(true)
+          return
+        }
+        setBlad(err instanceof Error ? err.message : 'Nie udało się wczytać ustawień.')
+      })
   }, [])
 
   async function zapisz(e: React.FormEvent) {
@@ -51,6 +61,14 @@ export default function UstawieniaPage() {
         ponownie ani zmieniać kodu na stronie.
       </p>
 
+      {brakUprawnien && (
+        <BrakUprawnien
+          tytul="Dane firmy zmienia właściciel konta."
+          opis="Nazwa firmy i adres do powiadomień dotyczą całego konta, więc prowadzi je właściciel. Twoje własne ustawienia - hasło, logowanie dwuetapowe i sesje - znajdziesz niżej."
+        />
+      )}
+
+      {!brakUprawnien && (
       <form onSubmit={zapisz} className="flex flex-col gap-5 max-w-xl">
         <div>
           <label htmlFor="nazwa" className="block text-sm font-medium mb-1">
@@ -107,6 +125,7 @@ export default function UstawieniaPage() {
           {zapisuje ? 'Zapisywanie…' : 'Zapisz'}
         </button>
       </form>
+      )}
 
       {/* Osobna sekcja, a nie kolejne pole formularza wyżej: to nie jest
           ustawienie do zapisania razem z nazwą firmy, tylko wieloetapowa
