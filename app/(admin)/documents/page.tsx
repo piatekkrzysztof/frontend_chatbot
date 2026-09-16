@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, FormEvent } from 'react'
+import { useEffect, useRef, useState, FormEvent } from 'react'
 import { apiFetch, BladApi, pobierzPlik } from '@/lib/api'
 import { documentStatus, uploadError } from '@/lib/uploads'
 import UploadField from '@/components/UploadField'
@@ -43,6 +43,12 @@ export default function DocumentsPage() {
   // Id dokumentu, przy którym trwa zapis — blokuje podwójne kliknięcie
   const [przelaczane, setPrzelaczane] = useState<number | null>(null)
   const [pobierany, setPobierany] = useState<number | null>(null)
+  // Usunięcia nie da się cofnąć: kopii pliku nie przechowujemy, a fragmenty
+  // trzeba by policzyć od nowa. Zamiast modala - dwustopniowy przycisk
+  // w miejscu, tak samo jak przy kasowaniu wpisu FAQ.
+  const [doKasacji, setDoKasacji] = useState<number | null>(null)
+  const [kasowany, setKasowany] = useState<number | null>(null)
+  const zegarKasacji = useRef<ReturnType<typeof setTimeout> | null>(null)
   const [file, setFile] = useState<File | null>(null)
   const [uploading, setUploading] = useState(false)
   const [error, setError] = useState('')
@@ -52,6 +58,40 @@ export default function DocumentsPage() {
   const [addingSource, setAddingSource] = useState(false)
   const [sourceError, setSourceError] = useState('')
   const [odswiezane, setOdswiezane] = useState<number | null>(null)
+
+  // Pytanie samo wygasa, żeby uzbrojony przycisk nie został na ekranie.
+  function uzbrojDoKasacji(id: number) {
+    if (zegarKasacji.current) clearTimeout(zegarKasacji.current)
+    setDoKasacji(id)
+    zegarKasacji.current = setTimeout(() => setDoKasacji(null), 5000)
+  }
+
+  useEffect(
+    () => () => {
+      if (zegarKasacji.current) clearTimeout(zegarKasacji.current)
+    },
+    [],
+  )
+
+  async function usunDokument(doc: DocumentItem) {
+    setKasowany(doc.id)
+    setError('')
+    try {
+      await apiFetch(`/documents/${doc.id}/`, { method: 'DELETE' })
+      setDoKasacji(null)
+      await loadDocuments(numerDok)
+    } catch (err) {
+      setError(
+        err instanceof BladApi && err.status === 403
+          ? 'Usuwanie dokumentów jest dostępne dla właściciela i pracownika.'
+          : err instanceof Error
+            ? err.message
+            : 'Nie udało się usunąć dokumentu.',
+      )
+    } finally {
+      setKasowany(null)
+    }
+  }
 
   async function pobierzDokument(doc: DocumentItem) {
     setPobierany(doc.id)
@@ -331,6 +371,7 @@ export default function DocumentsPage() {
             <th className="py-2">Wgrano</th>
             <th className="py-2">W wyszukiwaniu</th>
             <th className="py-2">Plik</th>
+            <th className="py-2">Usuń</th>
           </tr>
         </thead>
         <tbody>
@@ -375,11 +416,28 @@ export default function DocumentsPage() {
                   <span className="text-xs tekst-slaby">–</span>
                 )}
               </td>
+              <td className="py-2">
+                <button
+                  type="button"
+                  onClick={() =>
+                    doKasacji === doc.id ? usunDokument(doc) : uzbrojDoKasacji(doc.id)
+                  }
+                  disabled={kasowany === doc.id}
+                  aria-label={
+                    doKasacji === doc.id
+                      ? `Potwierdź usunięcie: ${doc.name}`
+                      : `Usuń dokument: ${doc.name}`
+                  }
+                  className="text-xs text-[#c0392b] hover:underline disabled:opacity-50"
+                >
+                  {kasowany === doc.id ? 'Usuwam...' : doKasacji === doc.id ? 'Na pewno?' : 'Usuń'}
+                </button>
+              </td>
             </tr>
           ))}
           {documents.length === 0 && (
             <tr>
-              <td colSpan={6} className="py-4 tekst-slaby">
+              <td colSpan={7} className="py-4 tekst-slaby">
                 Brak wgranych dokumentów.
               </td>
             </tr>
