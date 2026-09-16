@@ -3,6 +3,8 @@
 import { useEffect, useState } from 'react'
 import { apiFetch, BladApi, pobierzPlik } from '@/lib/api'
 import Stronicowanie, { naStrone, type StronaListy } from '@/components/Stronicowanie'
+import UploadField from '@/components/UploadField'
+import { uploadError } from '@/lib/uploads'
 
 interface PromptLogItem {
   id: number
@@ -19,9 +21,19 @@ export default function ConversationsPage() {
   const [strona, setStrona] = useState<StronaListy<PromptLogItem> | null>(null)
   const [numer, setNumer] = useState(1)
   const [wczytanyNumer, setWczytanyNumer] = useState(0)
+  // Zwiększana po imporcie, żeby wczytać tę samą stronę od nowa.
+  const [wersja, setWersja] = useState(0)
   const [error, setError] = useState('')
   const [copied, setCopied] = useState<string | null>(null)
   const [eksportuje, setEksportuje] = useState(false)
+  // Import tworzy dane i nie ma ochrony przed powtórką: ten sam plik wgrany
+  // dwa razy dopisze historię dwa razy. Stąd potwierdzenie przed wysłaniem
+  // i sekcja widoczna tylko dla ról, które backend przepuści.
+  const [mojaRola, setMojaRola] = useState('')
+  const [plikCsv, setPlikCsv] = useState<File | null>(null)
+  const [wgrywa, setWgrywa] = useState(false)
+  const [potwierdzaImport, setPotwierdzaImport] = useState(false)
+  const [wynikImportu, setWynikImportu] = useState('')
 
   // Wyliczone, nie trzymane osobno - jak w Dzienniku: zapomniana gałąź
   // zostawiłaby "wczytuję" na ekranie bez końca.
@@ -47,7 +59,25 @@ export default function ConversationsPage() {
     return () => {
       active = false
     }
-  }, [numer])
+  }, [numer, wersja])
+
+  useEffect(() => {
+    let active = true
+
+    // Rola decyduje tylko o tym, czy pokazać sekcję importu. Zapisu i tak
+    // pilnuje backend: rola podglądu dostaje 403.
+    apiFetch('/accounts/me/')
+      .then((dane) => {
+        if (active) setMojaRola((dane as { role?: string }).role || '')
+      })
+      .catch(() => {
+        // Bez odpowiedzi zostaje sam odczyt historii - nic mylącego.
+      })
+
+    return () => {
+      active = false
+    }
+  }, [])
 
   async function eksportuj() {
     setEksportuje(true)
@@ -79,6 +109,44 @@ export default function ConversationsPage() {
     }
   }
 
+  async function wgrajCsv() {
+    // Format i rozmiar pilnuje przycisk (disabled) razem z UploadField;
+    // tutaj wystarczy brak pliku.
+    if (!plikCsv) return
+    if (!potwierdzaImport) {
+      setPotwierdzaImport(true)
+      return
+    }
+
+    setWgrywa(true)
+    setError('')
+    setWynikImportu('')
+    try {
+      const dane = new FormData()
+      dane.append('file', plikCsv)
+      const odpowiedz = await apiFetch('/chat/import/', { method: 'POST', body: dane })
+      const ile = (odpowiedz as { imported?: number }).imported ?? 0
+      setWynikImportu(`Zaimportowano wpisów: ${ile}.`)
+      setPlikCsv(null)
+      setPotwierdzaImport(false)
+      // Historia od nowa, żeby wgrane wpisy były widoczne bez odświeżania.
+      setNumer(1)
+      setWersja((poprzednia) => poprzednia + 1)
+    } catch (err) {
+      // Backend odmawia po polsku przy złym kodowaniu, brakujących kolumnach
+      // i błędnym wierszu - jego zdanie mówi, co poprawić w pliku.
+      setError(
+        err instanceof BladApi && err.status === 403
+          ? 'Import historii jest dostępny dla właściciela i pracownika.'
+          : err instanceof Error
+            ? err.message
+            : 'Nie udało się wgrać pliku.',
+      )
+    } finally {
+      setWgrywa(false)
+    }
+  }
+
   const logs = strona?.results ?? []
 
   return (
@@ -100,6 +168,43 @@ export default function ConversationsPage() {
           {eksportuje ? 'Przygotowuję plik...' : 'Pobierz CSV'}
         </button>
       </div>
+
+      {mojaRola === 'owner' || mojaRola === 'employee' ? (
+        <section className="rounded border obramowanie p-4 mb-6 max-w-2xl">
+          <h2 className="font-medium mb-2">Wgraj historię z pliku CSV</h2>
+          <UploadField
+            id="import-rozmow"
+            label="Plik CSV"
+            kind="csv"
+            file={plikCsv}
+            onChange={(plik) => {
+              setPlikCsv(plik)
+              setPotwierdzaImport(false)
+              setWynikImportu('')
+            }}
+            disabled={wgrywa}
+          />
+          <button
+            type="button"
+            onClick={wgrajCsv}
+            disabled={!plikCsv || wgrywa || Boolean(uploadError(plikCsv, 'csv'))}
+            className="btn-primary !py-2 !px-4 !text-sm mt-3 disabled:opacity-50"
+          >
+            {wgrywa ? 'Wgrywam...' : potwierdzaImport ? 'Na pewno wgrać?' : 'Wgraj historię'}
+          </button>
+          {potwierdzaImport && !wgrywa && (
+            <p className="text-sm tekst-drugi mt-2">
+              Wpisy z pliku dopiszą się do historii. Tego nie da się cofnąć jednym kliknięciem -
+              ponowne wgranie tego samego pliku zdubluje rozmowy.
+            </p>
+          )}
+          {wynikImportu && (
+            <p role="status" className="text-sm text-[#1f7a4d] mt-2">
+              {wynikImportu}
+            </p>
+          )}
+        </section>
+      ) : null}
 
       {error && <p role="alert" className="text-sm text-[#c0392b] mb-4">{error}</p>}
 

@@ -1,4 +1,4 @@
-export type UploadKind = 'document' | 'image'
+export type UploadKind = 'document' | 'image' | 'csv'
 
 export const uploadRules = {
   document: {
@@ -12,6 +12,15 @@ export const uploadRules = {
     bytes: 2 * 1024 * 1024,
     hint: 'PNG, JPEG lub WebP · do 2 MiB, 4 mln pikseli i 4096 px na bok. Bez animacji. Obraz zostanie zmniejszony do 1024 px i zapisany jako PNG.',
     formatError: 'Wybierz obraz PNG, JPEG lub WebP bez animacji.',
+  },
+  // Limit z CSV_IMPORT_MAX_UPLOAD_BYTES w backendzie. Kolumny i kodowanie
+  // sprawdza backend - tu tylko rozmiar i rozszerzenie, żeby nie wysyłać
+  // megabajtów po to, by dostać odmowę.
+  csv: {
+    accept: '.csv',
+    bytes: 2 * 1024 * 1024,
+    hint: 'CSV w UTF-8 z kolumnami prompt i response · do 2 MiB. Wgrywa się w całości albo wcale. Wpisy dopisują się do historii - ten sam plik wgrany dwa razy zdubluje rozmowy.',
+    formatError: 'Wybierz plik CSV.',
   },
 } as const
 
