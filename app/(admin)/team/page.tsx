@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, FormEvent } from 'react'
+import { useEffect, useRef, useState, FormEvent } from 'react'
 import { apiFetch, BladApi } from '@/lib/api'
 import BrakUprawnien from '@/components/BrakUprawnien'
 
@@ -54,7 +54,12 @@ export default function TeamPage() {
   // wyboru komuś, kogo backend i tak odbije. Sam zapis pilnuje backend.
   const [mojaRola, setMojaRola] = useState('')
   const [zmieniana, setZmieniana] = useState<number | null>(null)
-  const [bladRoli, setBladRoli] = useState('')
+  const [bladZespolu, setBladZespolu] = useState('')
+  // Usunięcie konta odbiera dostęp do panelu i nie da się go cofnąć, więc
+  // pytamy w miejscu - tak samo jak przy kasowaniu dokumentu i wpisu FAQ.
+  const [doUsuniecia, setDoUsuniecia] = useState<number | null>(null)
+  const [usuwany, setUsuwany] = useState<number | null>(null)
+  const zegarUsuniecia = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const [email, setEmail] = useState('')
   const [role, setRole] = useState('employee')
@@ -114,7 +119,7 @@ export default function TeamPage() {
   async function zmienRole(member: TeamMember, nowa: string) {
     const poprzednia = member.role
     setZmieniana(member.id)
-    setBladRoli('')
+    setBladZespolu('')
     // Zmiana widoczna od razu, cofana przy odmowie: bez tego lista wyboru
     // wracałaby do starej wartości dopiero po odpowiedzi serwera.
     setMembers((obecne) =>
@@ -133,9 +138,39 @@ export default function TeamPage() {
       )
       // Backend odmawia po polsku, np. przy ostatnim właścicielu firmy -
       // jego zdanie niesie powód, więc pokazujemy je wprost.
-      setBladRoli(err instanceof Error ? err.message : 'Nie udało się zmienić roli.')
+      setBladZespolu(err instanceof Error ? err.message : 'Nie udało się zmienić roli.')
     } finally {
       setZmieniana(null)
+    }
+  }
+
+  // Pytanie samo wygasa, żeby uzbrojony przycisk nie został na ekranie.
+  function uzbrojDoUsuniecia(id: number) {
+    if (zegarUsuniecia.current) clearTimeout(zegarUsuniecia.current)
+    setDoUsuniecia(id)
+    zegarUsuniecia.current = setTimeout(() => setDoUsuniecia(null), 5000)
+  }
+
+  useEffect(
+    () => () => {
+      if (zegarUsuniecia.current) clearTimeout(zegarUsuniecia.current)
+    },
+    [],
+  )
+
+  async function usunOsobe(member: TeamMember) {
+    setUsuwany(member.id)
+    setBladZespolu('')
+    try {
+      await apiFetch(`/users/${member.id}/`, { method: 'DELETE' })
+      setDoUsuniecia(null)
+      const dane = await apiFetch('/users/')
+      setMembers(Array.isArray(dane) ? dane : dane.results || [])
+    } catch (err) {
+      // Backend odmawia po polsku, m.in. przy ostatnim aktywnym właścicielu.
+      setBladZespolu(err instanceof Error ? err.message : 'Nie udało się usunąć osoby.')
+    } finally {
+      setUsuwany(null)
     }
   }
 
@@ -215,9 +250,9 @@ export default function TeamPage() {
           Wczytuję zespół…
         </p>
       )}
-      {bladRoli && (
+      {bladZespolu && (
         <p role="alert" className="text-sm text-[#c0392b] mb-4">
-          {bladRoli}
+          {bladZespolu}
         </p>
       )}
 
@@ -232,6 +267,7 @@ export default function TeamPage() {
             <th className="py-2">E-mail</th>
             <th className="py-2">Rola</th>
             <th className="py-2">Ostatnie logowanie</th>
+            {mojaRola === 'owner' && <th className="py-2">Usuń</th>}
           </tr>
         </thead>
         <tbody>
@@ -263,11 +299,34 @@ export default function TeamPage() {
                   ? new Date(member.last_login).toLocaleString('pl-PL')
                   : 'nigdy'}
               </td>
+              {mojaRola === 'owner' && (
+                <td className="py-2">
+                  <button
+                    type="button"
+                    onClick={() =>
+                      doUsuniecia === member.id ? usunOsobe(member) : uzbrojDoUsuniecia(member.id)
+                    }
+                    disabled={usuwany === member.id}
+                    aria-label={
+                      doUsuniecia === member.id
+                        ? `Potwierdź usunięcie konta: ${member.username}`
+                        : `Usuń konto: ${member.username}`
+                    }
+                    className="text-xs text-[#c0392b] hover:underline disabled:opacity-50"
+                  >
+                    {usuwany === member.id
+                      ? 'Usuwam...'
+                      : doUsuniecia === member.id
+                        ? 'Na pewno?'
+                        : 'Usuń'}
+                  </button>
+                </td>
+              )}
             </tr>
           ))}
           {members !== null && members.length === 0 && (
             <tr>
-              <td colSpan={4} className="py-4 tekst-slaby">
+              <td colSpan={mojaRola === 'owner' ? 5 : 4} className="py-4 tekst-slaby">
                 Brak użytkowników.
               </td>
             </tr>
