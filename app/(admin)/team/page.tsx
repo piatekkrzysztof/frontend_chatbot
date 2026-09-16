@@ -50,6 +50,11 @@ export default function TeamPage() {
   // a 403 na liście zaproszeń - "nie właściciel".
   const [brakUprawnien, setBrakUprawnien] = useState(false)
   const [mozeZapraszac, setMozeZapraszac] = useState(true)
+  // Rolę zalogowanej osoby bierzemy z /accounts/me/, żeby nie pokazywać list
+  // wyboru komuś, kogo backend i tak odbije. Sam zapis pilnuje backend.
+  const [mojaRola, setMojaRola] = useState('')
+  const [zmieniana, setZmieniana] = useState<number | null>(null)
+  const [bladRoli, setBladRoli] = useState('')
 
   const [email, setEmail] = useState('')
   const [role, setRole] = useState('employee')
@@ -91,11 +96,48 @@ export default function TeamPage() {
         if (active && err instanceof BladApi && err.status === 403) setMozeZapraszac(false)
       })
 
+    apiFetch('/accounts/me/')
+      .then((dane) => {
+        if (active) setMojaRola((dane as { role?: string }).role || '')
+      })
+      .catch(() => {
+        // Bez tej odpowiedzi zostaje widok do odczytu - mniej możliwości,
+        // ale nic mylącego.
+      })
+
     // nie ustawiamy stanu, jeśli komponent zdążył się odmontować
     return () => {
       active = false
     }
   }, [])
+
+  async function zmienRole(member: TeamMember, nowa: string) {
+    const poprzednia = member.role
+    setZmieniana(member.id)
+    setBladRoli('')
+    // Zmiana widoczna od razu, cofana przy odmowie: bez tego lista wyboru
+    // wracałaby do starej wartości dopiero po odpowiedzi serwera.
+    setMembers((obecne) =>
+      (obecne ?? []).map((osoba) => (osoba.id === member.id ? { ...osoba, role: nowa } : osoba)),
+    )
+    try {
+      await apiFetch(`/users/${member.id}/`, {
+        method: 'PATCH',
+        body: JSON.stringify({ role: nowa }),
+      })
+    } catch (err) {
+      setMembers((obecne) =>
+        (obecne ?? []).map((osoba) =>
+          osoba.id === member.id ? { ...osoba, role: poprzednia } : osoba,
+        ),
+      )
+      // Backend odmawia po polsku, np. przy ostatnim właścicielu firmy -
+      // jego zdanie niesie powód, więc pokazujemy je wprost.
+      setBladRoli(err instanceof Error ? err.message : 'Nie udało się zmienić roli.')
+    } finally {
+      setZmieniana(null)
+    }
+  }
 
   async function handleInvite(e: FormEvent) {
     e.preventDefault()
@@ -173,6 +215,11 @@ export default function TeamPage() {
           Wczytuję zespół…
         </p>
       )}
+      {bladRoli && (
+        <p role="alert" className="text-sm text-[#c0392b] mb-4">
+          {bladRoli}
+        </p>
+      )}
 
       {/* Tabela przewija się sama — bez tego rozpychała całą stronę */}
 
@@ -192,7 +239,25 @@ export default function TeamPage() {
             <tr key={member.id} className="border-b obramowanie">
               <td className="py-2">{member.username}</td>
               <td className="py-2 tekst-drugi">{member.email}</td>
-              <td className="py-2">{ROLE_LABELS[member.role] || member.role}</td>
+              <td className="py-2">
+                {mojaRola === 'owner' ? (
+                  <select
+                    value={member.role}
+                    onChange={(e) => zmienRole(member, e.target.value)}
+                    disabled={zmieniana === member.id}
+                    aria-label={`Rola: ${member.username}`}
+                    className="input !py-1 !text-sm"
+                  >
+                    {Object.entries(ROLE_LABELS).map(([kod, etykieta]) => (
+                      <option key={kod} value={kod}>
+                        {etykieta}
+                      </option>
+                    ))}
+                  </select>
+                ) : (
+                  ROLE_LABELS[member.role] || member.role
+                )}
+              </td>
               <td className="py-2 tekst-slaby">
                 {member.last_login
                   ? new Date(member.last_login).toLocaleString('pl-PL')
