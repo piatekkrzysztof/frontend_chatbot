@@ -140,4 +140,55 @@ async function odczytaj(response: Response) {
   return response.json()
 }
 
+/** Nazwa pliku z naglowka odpowiedzi; bez niej zapisujemy pod nazwa domyslna. */
+function nazwaZOdpowiedzi(naglowek: string | null): string {
+  if (!naglowek) return ''
+  const dopasowanie = /filename\*?=(?:UTF-8'')?"?([^";]+)"?/i.exec(naglowek)
+  return dopasowanie ? decodeURIComponent(dopasowanie[1]) : ''
+}
+
+/**
+ * Pobiera plik z API i zapisuje go na dysku uzytkownika.
+ *
+ * Zwykly link nie wystarczy: te koncowki wymagaja naglowka z tokenem, a
+ * przegladarka nie doklei go do <a href>. Token w adresie odpada - trafilby
+ * do historii przegladarki i do logow serwera.
+ *
+ * Odswiezanie sesji jak w apiFetch: token zyje 15 minut, wiec eksport
+ * kliknięty po dluzszej przerwie musi sie udac za drugim podejsciem.
+ */
+export async function pobierzPlik(path: string, nazwaDomyslna: string): Promise<void> {
+  let odpowiedz = await wyslij(path, {})
+
+  if (odpowiedz.status === 401 && (await odswiezSesje())) {
+    odpowiedz = await wyslij(path, {})
+  }
+
+  if (odpowiedz.status === 401) {
+    zapomnijToken()
+    naEkranLogowania()
+    throw new Error('Sesja wygasła. Zaloguj się ponownie.')
+  }
+
+  if (!odpowiedz.ok) {
+    let komunikat = odpowiedz.statusText
+    try {
+      komunikat = tekstBledu(await odpowiedz.json()) || komunikat
+    } catch {
+      // odpowiedz bledu bez tresci JSON
+    }
+    throw new BladApi(odpowiedz.status, komunikat)
+  }
+
+  const blob = await odpowiedz.blob()
+  const adres = URL.createObjectURL(blob)
+  const link = document.createElement('a')
+  link.href = adres
+  link.download = nazwaZOdpowiedzi(odpowiedz.headers.get('Content-Disposition')) || nazwaDomyslna
+  document.body.appendChild(link)
+  link.click()
+  link.remove()
+  URL.revokeObjectURL(adres)
+}
+
 export { API_URL }

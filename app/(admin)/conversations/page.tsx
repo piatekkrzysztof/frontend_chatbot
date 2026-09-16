@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { apiFetch } from '@/lib/api'
+import { apiFetch, BladApi, pobierzPlik } from '@/lib/api'
 import Stronicowanie, { naStrone, type StronaListy } from '@/components/Stronicowanie'
 
 interface PromptLogItem {
@@ -21,6 +21,7 @@ export default function ConversationsPage() {
   const [wczytanyNumer, setWczytanyNumer] = useState(0)
   const [error, setError] = useState('')
   const [copied, setCopied] = useState<string | null>(null)
+  const [eksportuje, setEksportuje] = useState(false)
 
   // Wyliczone, nie trzymane osobno - jak w Dzienniku: zapomniana gałąź
   // zostawiłaby "wczytuję" na ekranie bez końca.
@@ -48,6 +49,26 @@ export default function ConversationsPage() {
     }
   }, [numer])
 
+  async function eksportuj() {
+    setEksportuje(true)
+    setError('')
+    try {
+      await pobierzPlik('/chat/export/', 'rozmowy.csv')
+    } catch (err) {
+      // 403 to granica roli, nie awaria. Angielskie zdanie z DRF kazałoby
+      // szukać usterki, której nie ma.
+      setError(
+        err instanceof BladApi && err.status === 403
+          ? 'Eksport rozmów jest dostępny dla właściciela i pracownika.'
+          : err instanceof Error
+            ? err.message
+            : 'Nie udało się pobrać pliku.',
+      )
+    } finally {
+      setEksportuje(false)
+    }
+  }
+
   async function copySessionId(sessionId: string) {
     try {
       await navigator.clipboard.writeText(sessionId)
@@ -63,10 +84,22 @@ export default function ConversationsPage() {
   return (
     <div>
       <h1 className="text-2xl font-bold mb-1">Konwersacje</h1>
-      <p className="tekst-drugi mb-6">
-        Identyfikator rozmowy przydaje się, gdy ktoś poprosi o usunięcie swoich danych —
-        wklej go w zakładce Prywatność.
-      </p>
+      <div className="flex flex-wrap items-start justify-between gap-3 mb-6">
+        <p className="tekst-drugi max-w-2xl">
+          Identyfikator rozmowy przydaje się, gdy ktoś poprosi o usunięcie swoich danych —
+          wklej go w zakładce Prywatność.
+        </p>
+        {/* Backend potrafił to od dawna i zapisuje eksport w dzienniku, ale
+            panel nie miał czym tego wywołać. */}
+        <button
+          type="button"
+          onClick={eksportuj}
+          disabled={eksportuje}
+          className="btn-ghost shrink-0 disabled:opacity-50"
+        >
+          {eksportuje ? 'Przygotowuję plik...' : 'Pobierz CSV'}
+        </button>
+      </div>
 
       {error && <p role="alert" className="text-sm text-[#c0392b] mb-4">{error}</p>}
 
