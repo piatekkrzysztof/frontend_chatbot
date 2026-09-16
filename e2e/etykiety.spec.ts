@@ -88,6 +88,31 @@ for (const ekran of EKRANY_PANELU) {
   })
 }
 
+test('/widget-settings: pola za przelacznikami tez maja nazwy', async ({ page, context }) => {
+  // Martwe pole poprzedniego pomiaru: liczyl tylko pola WIDOCZNE w stanie,
+  // ktory zwraca atrapa. Cztery pola bialej etykiety i osiem pol zaczepki
+  // siedzi za warunkami, wiec nigdy sie nie renderowaly - i przez to zaden
+  // test nie zauwazyl, ze nie maja etykiet powiazanych z polem.
+  await zalogowany(context)
+  await podstawBackend(page)
+  await page.goto('/widget-settings')
+  await page.locator('h1').first().waitFor({ state: 'visible' })
+
+  await page.getByRole('radio', { name: /White-label/ }).check()
+  await page.getByRole('checkbox', { name: /Zaczepka/ }).check()
+  await page.getByRole('radio', { name: /Zawsze jeden/ }).check()
+
+  const braki = await polaBezNazwy(page)
+
+  expect(braki, 'pola bez nazwy dostepnej po odslonieciu galezi').toEqual([])
+
+  // Grupy przyciskow radiowych: kazdy przycisk ma wlasna etykiete, ale bez
+  // nazwy grupy czytnik ekranu oglasza "White-label" bez slowa o tym, czego
+  // ten wybor dotyczy. Pomiar pol tego nie wychwyci, wiec sprawdzamy osobno.
+  await expect(page.getByRole('radiogroup', { name: 'Branding' })).toBeVisible()
+  await expect(page.getByRole('radiogroup', { name: 'Języki odpowiedzi' })).toBeVisible()
+})
+
 for (const ekran of EKRANY_PUBLICZNE) {
   test(`${ekran}: kazde pole ma nazwe dla czytnika ekranu`, async ({ page }) => {
     await podstawBackend(page)
