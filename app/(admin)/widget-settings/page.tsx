@@ -221,8 +221,12 @@ export default function WidgetSettingsPage() {
             własnego pudełka, więc układ formularza się nie zmienia. */}
         <fieldset disabled={!wczytane} className="contents">
         <div>
-          <label className="label">Branding</label>
-          <div className="flex flex-col gap-2">
+          {/* Grupy przycisków radiowych nie opisuje `label`: etykieta wiąże się
+              z jednym polem. Nazwę grupy niesie `aria-labelledby` na grupie. */}
+          <p className="label" id="branding-nazwa">
+            Branding
+          </p>
+          <div className="flex flex-col gap-2" role="radiogroup" aria-labelledby="branding-nazwa">
             <label className="flex items-center gap-2 text-sm">
               <input
                 type="radio"
@@ -268,8 +272,11 @@ export default function WidgetSettingsPage() {
         {brandingMode === 'white_label' && (
           <>
             <div>
-              <label className="label">Nazwa widgetu</label>
+              <label className="label" htmlFor="nazwa-widgetu">
+                Nazwa widgetu
+              </label>
               <input
+                id="nazwa-widgetu"
                 type="text"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
@@ -277,8 +284,11 @@ export default function WidgetSettingsPage() {
               />
             </div>
             <div>
-              <label className="label">Kolor</label>
+              <label className="label" htmlFor="kolor-widgetu">
+                Kolor
+              </label>
               <input
+                id="kolor-widgetu"
                 type="color"
                 value={color}
                 onChange={(e) => setColor(e.target.value)}
@@ -286,8 +296,11 @@ export default function WidgetSettingsPage() {
               />
             </div>
             <div>
-              <label className="label">Pozycja</label>
+              <label className="label" htmlFor="pozycja-widgetu">
+                Pozycja
+              </label>
               <select
+                id="pozycja-widgetu"
                 value={position}
                 onChange={(e) => setPosition(e.target.value)}
                 className="input"
@@ -327,8 +340,11 @@ export default function WidgetSettingsPage() {
               />
             </div>
             <div>
-              <label className="label">Stopka widgetu</label>
+              <label className="label" htmlFor="stopka-widgetu">
+                Stopka widgetu
+              </label>
               <input
+                id="stopka-widgetu"
                 type="text"
                 value={footerText}
                 onChange={(e) => setFooterText(e.target.value)}
@@ -381,10 +397,14 @@ Gdzie was znaleźć?`}
         </div>
 
         <div>
-          <label className="label">
+          <p className="label" id="jezyki-nazwa">
             Języki odpowiedzi
-          </label>
-          <div className="flex flex-col gap-2 mb-3">
+          </p>
+          <div
+            className="flex flex-col gap-2 mb-3"
+            role="radiogroup"
+            aria-labelledby="jezyki-nazwa"
+          >
             <label className="flex items-start gap-2 text-sm">
               <input
                 type="radio"
@@ -491,10 +511,14 @@ Gdzie was znaleźć?`}
           {proactiveEnabled && (
             <>
               <div className="mb-3">
-                <label className="block text-sm text-[color:var(--tekst)] mb-1">
+                <label
+                  className="block text-sm text-[color:var(--tekst)] mb-1"
+                  htmlFor="zaczepka-opoznienie"
+                >
                   Pokaż po (sekundy)
                 </label>
                 <input
+                  id="zaczepka-opoznienie"
                   type="number"
                   min={0}
                   value={proactiveDelay}
@@ -512,11 +536,15 @@ Gdzie was znaleźć?`}
               <div className="flex flex-col gap-2">
                 {JEZYKI.map((jezyk) => (
                   <div key={jezyk.kod}>
-                    <label className="block text-xs tekst-drugi mb-1">
+                    <label
+                      className="block text-xs tekst-drugi mb-1"
+                      htmlFor={`zaczepka-${jezyk.kod}`}
+                    >
                       {jezyk.nazwa}
                       {jezyk.kod === defaultLanguage && ' — domyślny'}
                     </label>
                     <input
+                      id={`zaczepka-${jezyk.kod}`}
                       type="text"
                       maxLength={200}
                       value={proactiveTexts[jezyk.kod] || ''}
