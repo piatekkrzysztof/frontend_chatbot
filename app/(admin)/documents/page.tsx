@@ -5,6 +5,7 @@ import { apiFetch, BladApi, pobierzPlik } from '@/lib/api'
 import { documentStatus, uploadError } from '@/lib/uploads'
 import UploadField from '@/components/UploadField'
 import Stronicowanie, { naStrone } from '@/components/Stronicowanie'
+import ZajetoscBazy from '@/components/ZajetoscBazy'
 
 interface DocumentItem {
   id: number
@@ -289,6 +290,8 @@ export default function DocumentsPage() {
         Wszystko, na czym chatbot opiera odpowiedzi. Bez tych materiałów odmawia
         odpowiedzi na pytania o firmę — celowo, żeby ich nie zmyślać.
       </p>
+
+      <ZajetoscBazy wersja={numerDok} />
 
       <h2 id="naglowek-opis" className="text-xl font-bold mb-1">Opis działalności</h2>
       <p className="text-sm tekst-slaby mb-3">
