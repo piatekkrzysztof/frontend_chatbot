@@ -25,6 +25,8 @@ interface Sygnal {
   ostatnie_pobranie?: string | null
   godzin_temu?: number
   zaleglych_rozmow?: number
+  zaleglych_biletow?: number
+  do_rozliczenia?: number
   przyklad_bledu?: string
   dokumentow?: number
   bez_fragmentow?: string[]
@@ -46,6 +48,7 @@ interface StanZadan {
   slady_w_danych: {
     pobieranie_stron: Sygnal
     czyszczenie_rodo: Sygnal
+    rozliczanie_rezerwacji: Sygnal
   }
   // Dwa sygnaly o tym, co widzi klient, a nie o zapleczu — dlatego poza
   // `slady_w_danych` i poza ogolnym poziomem.
@@ -153,6 +156,7 @@ export default function StanPage() {
   const broker = zadania?.broker_i_workery
   const pobieranie = zadania?.slady_w_danych.pobieranie_stron
   const rodo = zadania?.slady_w_danych.czyszczenie_rodo
+  const rezerwacje = zadania?.slady_w_danych.rozliczanie_rezerwacji
 
   return (
     <div className="dashboard-content">
@@ -161,9 +165,9 @@ export default function StanPage() {
           <span className="section-kicker">Stan systemu</span>
           <h1>Czy zaplecze robi swoje.</h1>
           <p className="tekst-drugi">
-            Część pracy dzieje się poza Twoim widokiem: pobieranie treści z Twojej strony
-            i usuwanie starych rozmów. Gdy to przestanie działać, nic się nie wywali —
-            po prostu przestanie się dziać. Tutaj to widać.
+            Część pracy dzieje się poza Twoim widokiem: pobieranie treści z Twojej strony,
+            usuwanie starych rozmów i rozliczanie pracy bota. Gdy to przestanie działać,
+            nic się nie wywali — po prostu przestanie się dziać. Tutaj to widać.
           </p>
         </div>
         <div className="dashboard-heading-actions">
@@ -237,10 +241,24 @@ export default function StanPage() {
               />
             )}
 
+            {rezerwacje && (
+              <Sygnal
+                nazwa="Rozliczanie pracy bota"
+                indeks="04"
+                sygnal={rezerwacje}
+                szczegoly={[
+                  // Liczba na pierwszym miejscu, bo to jedyna pozycja na tej
+                  // stronie, ktora oznacza zajety limit wiadomosci.
+                  `Wiadomości czekających na rozliczenie: ${rezerwacje.do_rozliczenia ?? 0}`,
+                  `Biletów po terminie sprzątania: ${rezerwacje.zaleglych_biletow ?? 0}`,
+                ]}
+              />
+            )}
+
             {zadania.baza_wiedzy && (
               <Sygnal
                 nazwa="Wiedza, którą zna bot"
-                indeks="04"
+                indeks="05"
                 sygnal={zadania.baza_wiedzy}
                 szczegoly={[
                   `Dokumentów w wyszukiwaniu: ${zadania.baza_wiedzy.dokumentow ?? 0}`,
@@ -259,7 +277,7 @@ export default function StanPage() {
             {zadania.poczta && (
               <Sygnal
                 nazwa="Powiadomienia e-mail"
-                indeks="05"
+                indeks="06"
                 sygnal={zadania.poczta}
                 szczegoly={zadania.poczta.adres ? [`Adres: ${zadania.poczta.adres}`] : []}
               />
