@@ -26,13 +26,25 @@ export default function TestBotaPage() {
   const [wysyla, setWysyla] = useState(false)
   const [blad, setBlad] = useState('')
   const dol = useRef<HTMLDivElement>(null)
+  const activeRequest = useRef<AbortController | null>(null)
+  const [czysci, setCzysci] = useState(false)
+  const interactionStarted = useRef(false)
 
   useEffect(() => {
+    let mounted = true
     apiFetch('/chat/test/')
-      .then((d) => setWiadomosci((d as { messages: Wiadomosc[] }).messages || []))
+      .then((d) => {
+        if (mounted && !interactionStarted.current) {
+          setWiadomosci((d as { messages: Wiadomosc[] }).messages || [])
+        }
+      })
       .catch(() => {
         // Brak historii nie jest błędem — po prostu zaczynamy od pustej rozmowy
       })
+    return () => {
+      mounted = false
+      activeRequest.current?.abort()
+    }
   }, [])
 
   useEffect(() => {
@@ -41,19 +53,29 @@ export default function TestBotaPage() {
 
   async function wyslij() {
     const pytanie = tekst.trim()
-    if (!pytanie || wysyla) return
+    if (!pytanie || wysyla || czysci) return
+    interactionStarted.current = true
 
     setTekst('')
     setBlad('')
     setWysyla(true)
     setWiadomosci((p) => [...p, { sender: 'user', text: pytanie }])
+    const controller = new AbortController()
+    activeRequest.current = controller
 
     try {
       const res = await fetch(`${API_URL}/chat/test/`, {
         method: 'POST',
+        signal: controller.signal,
         headers: { 'Content-Type': 'application/json', ...authHeaders() },
         body: JSON.stringify({ message: pytanie }),
       })
+      if (controller.signal.aborted) return
+      if (res.status === 410) {
+        setWiadomosci([])
+        setBlad('Rozmowa została usunięta. Możesz rozpocząć nową.')
+        return
+      }
       if (!res.ok || !res.body) throw new Error('Bot nie odpowiedział. Spróbuj ponownie.')
 
       setWiadomosci((p) => [...p, { sender: 'bot', text: '' }])
@@ -66,6 +88,10 @@ export default function TestBotaPage() {
       // nie mógł się rozjechać z tym, co widzi odwiedzający.
       while (true) {
         const { done, value } = await czytnik.read()
+        if (controller.signal.aborted) {
+          await czytnik.cancel()
+          return
+        }
         if (done) break
 
         bufor += dekoder.decode(value, { stream: true })
@@ -76,6 +102,16 @@ export default function TestBotaPage() {
           const linia = surowe.trim()
           if (!linia.startsWith('data: ')) continue
           const zdarzenie = JSON.parse(linia.slice(6))
+
+          if (zdarzenie.type === 'error') {
+            await czytnik.cancel()
+            if (zdarzenie.code === 'conversation_deleted') {
+              setWiadomosci([])
+              setBlad('Rozmowa została usunięta. Możesz rozpocząć nową.')
+              return
+            }
+            throw new Error(zdarzenie.message || 'Bot nie odpowiedział. Spróbuj ponownie.')
+          }
 
           if (zdarzenie.type === 'delta') {
             setWiadomosci((p) => {
@@ -97,20 +133,29 @@ export default function TestBotaPage() {
         }
       }
     } catch (err) {
+      if (controller.signal.aborted) return
       setBlad(err instanceof Error ? err.message : 'Coś poszło nie tak.')
       // Zdejmujemy pusty dymek, żeby nie został po nim ślad po nieudanej próbie
       setWiadomosci((p) => (p.length && p[p.length - 1].sender === 'bot' && !p[p.length - 1].text ? p.slice(0, -1) : p))
     } finally {
+      activeRequest.current = null
       setWysyla(false)
     }
   }
 
   async function wyczysc() {
+    if (czysci) return
+    setCzysci(true)
+    interactionStarted.current = true
+    activeRequest.current?.abort()
     try {
       await apiFetch('/chat/test/', { method: 'DELETE' })
       setWiadomosci([])
+      setBlad('')
     } catch (err) {
       setBlad(err instanceof Error ? err.message : 'Nie udało się wyczyścić rozmowy.')
+    } finally {
+      setCzysci(false)
     }
   }
 
@@ -165,16 +210,16 @@ export default function TestBotaPage() {
             onKeyDown={(e) => e.key === 'Enter' && wyslij()}
             placeholder="Np. Ile kosztuje wynajem sali w sobotę?"
             aria-label="Pytanie do bota"
-            disabled={wysyla}
+            disabled={wysyla || czysci}
           />
-          <button type="button" className="btn-primary" onClick={wyslij} disabled={wysyla || !tekst.trim()}>
+          <button type="button" className="btn-primary" onClick={wyslij} disabled={wysyla || czysci || !tekst.trim()}>
             Wyślij
           </button>
         </div>
       </div>
 
       {wiadomosci.length > 0 && (
-        <button type="button" onClick={wyczysc} className="test-bota-reset">
+        <button type="button" onClick={wyczysc} disabled={czysci} className="test-bota-reset">
           Wyczyść rozmowę i zacznij od nowa
         </button>
       )}

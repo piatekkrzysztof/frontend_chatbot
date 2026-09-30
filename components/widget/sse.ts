@@ -38,7 +38,11 @@ export type ZdarzenieDone = {
  * na każdym polu. Zdarzenie o nieznanym `type` po prostu nie wpadnie w żadną
  * gałąź po stronie widgetu — i o to chodzi.
  */
-export type Zdarzenie = ZdarzenieDelta | ZdarzenieDone
+export type Zdarzenie = ZdarzenieDelta | ZdarzenieDone | {
+  type: 'error'
+  code?: string
+  message?: string
+}
 
 export interface WynikCzytania {
   zdarzenia: Zdarzenie[]
