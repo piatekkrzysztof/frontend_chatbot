@@ -135,6 +135,22 @@ export default function WidgetChat() {
   const [contactOpen, setContactOpen] = useState(false)
   const [contactValue, setContactValue] = useState('')
   const [contactSent, setContactSent] = useState(false)
+  const [notice, setNotice] = useState('')
+  const generation = useRef(0)
+  const activeRequest = useRef<AbortController | null>(null)
+
+  function resetDeletedConversation() {
+    generation.current += 1
+    activeRequest.current?.abort()
+    localStorage.removeItem(`widget_session_${apiKey}`)
+    localStorage.removeItem(historyKey(apiKey))
+    setMessages([])
+    setOfferContact(false)
+    setContactOpen(false)
+    setContactValue('')
+    setContactSent(false)
+    setNotice('Rozmowa została usunięta. Napisz nową wiadomość, aby rozpocząć kolejną.')
+  }
 
   useEffect(() => {
     if (!apiKey) return
@@ -180,11 +196,16 @@ export default function WidgetChat() {
     setMessages((prev) => [...prev, { sender: 'user', text }])
     setInput('')
     setSending(true)
+    setNotice('')
+    const requestGeneration = generation.current
+    const controller = new AbortController()
+    activeRequest.current = controller
 
     try {
       const sessionId = getSessionId(apiKey)
       const res = await fetch(`${API_URL}/widget/chat/stream/`, {
         method: 'POST',
+        signal: controller.signal,
         headers: {
           'Content-Type': 'application/json',
           'X-API-Key': apiKey,
@@ -194,6 +215,12 @@ export default function WidgetChat() {
           conversation_session_id: sessionId,
         }),
       })
+
+      if (requestGeneration !== generation.current) return
+      if (res.status === 410) {
+        resetDeletedConversation()
+        return
+      }
 
       if (!res.ok || !res.body) {
         // Odmowa z powodu rozliczeń jest stanem TRWAŁYM: wygasła subskrypcja,
@@ -224,6 +251,10 @@ export default function WidgetChat() {
 
       while (true) {
         const { done, value } = await reader.read()
+        if (requestGeneration !== generation.current) {
+          await reader.cancel()
+          return
+        }
         if (done) break
 
         buffer += decoder.decode(value, { stream: true })
@@ -231,6 +262,14 @@ export default function WidgetChat() {
         buffer = reszta
 
         for (const event of zdarzenia) {
+          if (event.type === 'error') {
+            await reader.cancel()
+            if (event.code === 'conversation_deleted') {
+              resetDeletedConversation()
+              return
+            }
+            throw new Error(event.message || 'Wystąpił błąd. Spróbuj ponownie.')
+          }
           if (event.type === 'delta') {
             setMessages((prev) => {
               const next = [...prev]
@@ -266,11 +305,13 @@ export default function WidgetChat() {
         }
       }
     } catch (err) {
+      if (requestGeneration !== generation.current) return
       setMessages((prev) => [
         ...prev,
         { sender: 'bot', text: err instanceof Error ? err.message : 'Wystąpił błąd. Spróbuj ponownie.' },
       ])
     } finally {
+      activeRequest.current = null
       setSending(false)
     }
   }
@@ -301,9 +342,11 @@ export default function WidgetChat() {
   async function handleContactSubmit() {
     const value = contactValue.trim()
     if (!value || !apiKey) return
+    const requestGeneration = generation.current
+    setNotice('')
 
     try {
-      await fetch(`${API_URL}/widget/contact/`, {
+      const res = await fetch(`${API_URL}/widget/contact/`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'X-API-Key': apiKey },
         body: JSON.stringify({
@@ -312,12 +355,20 @@ export default function WidgetChat() {
           conversation_session_id: getSessionId(apiKey),
         }),
       })
+      if (requestGeneration !== generation.current) return
+      if (res.status === 410) {
+        resetDeletedConversation()
+        return
+      }
+      if (!res.ok) throw new Error('Nie udało się wysłać kontaktu. Spróbuj ponownie.')
       setContactSent(true)
       setContactOpen(false)
       setOfferContact(false)
       setContactValue('')
     } catch {
-      // brak sieci — nie blokujemy rozmowy, użytkownik może spróbować ponownie
+      if (requestGeneration === generation.current) {
+        setNotice('Nie udało się wysłać kontaktu. Spróbuj ponownie.')
+      }
     }
   }
 
@@ -347,6 +398,8 @@ export default function WidgetChat() {
       style={{ background: theme.canvas, fontFamily: 'var(--font-body)' }}
     >
       <PasekTytulu theme={theme} logoUrl={theme.isWhiteLabel ? branding?.widget_logo : null} />
+
+      {notice && <p role="status" className="px-3.5 py-2 text-[13px]" style={{ color: theme.text }}>{notice}</p>}
 
       {/* aria-live sprawia, że czytnik ekranu ogłasza odpowiedzi w miarę ich
           napływania — bez tego niewidomy użytkownik nie wie, że bot odpowiedział.
