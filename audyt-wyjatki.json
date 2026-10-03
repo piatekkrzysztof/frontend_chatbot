@@ -1,0 +1,11 @@
+{
+  "_opis": "Wyjątki bramki audytu zależności. Zasady: scripts/audyt-logika.mjs. Każdy wyjątek dotyczy jednego zgłoszenia, ma powód i datę przeglądu, nie może dotyczyć pakietu trafiającego do produkcji. Po dacie przeglądu albo gdy zgłoszenie zniknie, CI znów jest czerwone.",
+  "wyjatki": [
+    {
+      "ghsa": "GHSA-vfj7-8cjw-p6xm",
+      "pakiet": "braces",
+      "powod": "Wyczerpanie stosu przy głęboko zagnieżdżonych wzorcach. Zgłoszenie obejmuje wszystkie wydane wersje (<= 3.0.3, a 3.0.3 jest ostatnią) - nie ma czego podbić. Wchodzi wyłącznie przez eslint-config-next -> @next/eslint-plugin-next -> fast-glob -> micromatch, czyli narzędzia lintowania; npm ls --omit=dev nie zawiera braces. Wyzwolenie wymaga złośliwego wzorca w plikach naszego własnego repozytorium.",
+      "przeglad_do": "2026-11-03"
+    }
+  ]
+}

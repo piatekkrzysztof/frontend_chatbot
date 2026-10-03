@@ -20,7 +20,11 @@ jobs:
           node-version: '22'
           cache: npm
       - run: npm ci
-      - run: npm audit --audit-level=moderate
+      # Zamiast `npm audit --audit-level=moderate`. Bez wyjątków w
+      # audyt-wyjatki.json zachowuje się tak samo; wyjątek jest wąski,
+      # datowany i nie może dotyczyć pakietu trafiającego do produkcji.
+      # Uzasadnienie i zasady: scripts/audyt-logika.mjs.
+      - run: node scripts/audyt-zaleznosci.mjs
 
   jakosc:
     name: Lint, typy i build
