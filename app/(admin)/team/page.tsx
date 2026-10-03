@@ -17,7 +17,6 @@ interface Invitation {
   id: number
   email: string
   role: string
-  token: string
   accept_url: string
   expires_at: string | null
   is_valid: boolean
@@ -341,8 +340,9 @@ export default function TeamPage() {
         <>
       <h2 className="text-xl font-bold mb-1">Zaproś osobę</h2>
       <p className="text-sm tekst-slaby mb-4">
-        Wyślemy e-mail z linkiem. Link dostajesz też tutaj — na wypadek gdyby wiadomość
-        nie dotarła.
+        Wyślemy e-mail z linkiem do założenia konta. Tutaj dostajesz drugi link, do
+        przekazania na przykład czatem, gdy wiadomość nie dotarła. Ten drugi nie zakłada
+        konta - wysyła zaproszenie jeszcze raz, na podany adres.
       </p>
 
       <form onSubmit={handleInvite} className="flex flex-wrap items-end gap-3 mb-4">
@@ -400,8 +400,8 @@ export default function TeamPage() {
         <div className="rounded border border-[color:var(--obramowanie-mocne)] bg-[color:var(--tlo)] p-3 mb-8">
           <p className="text-sm mb-2">
             {lastInvite.emailSent
-              ? 'Zaproszenie wysłane. Możesz też przekazać link bezpośrednio:'
-              : 'Zaproszenie utworzone, ale e-maila nie udało się wysłać — przekaż link ręcznie:'}
+              ? 'Zaproszenie wysłane. Jeśli nie dotrze, przekaż ten link - wyśle je jeszcze raz:'
+              : 'Zaproszenie utworzone, ale e-maila nie udało się wysłać. Przekaż ten link - wyśle je jeszcze raz:'}
           </p>
           <button
             onClick={() => copyLink(lastInvite.url)}

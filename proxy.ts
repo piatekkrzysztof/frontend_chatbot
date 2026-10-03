@@ -195,7 +195,14 @@ function zNaglowkami(zadanie: NextRequest) {
 
   const odpowiedz = NextResponse.next({ request: { headers: naglowkiZadania } })
   odpowiedz.headers.set('Content-Security-Policy', polityka)
-  if (['/potwierdz-email', '/aktywacja', '/odzyskaj-haslo', '/reset-hasla'].includes(zadanie.nextUrl.pathname)) {
+  // Strony z kluczem w adresie. Zaproszenia dopisane w 2.20.0: klucz przyjecia
+  // stal sie wtedy dowodem tozsamosci, wiec nie moze lezec w pamieci podrecznej
+  // ani wychodzic w naglowku Referer - tak samo jak klucz aktywacji.
+  const sciezka = zadanie.nextUrl.pathname
+  if (
+    ['/potwierdz-email', '/aktywacja', '/odzyskaj-haslo', '/reset-hasla'].includes(sciezka) ||
+    sciezka.startsWith('/invite/')
+  ) {
     odpowiedz.headers.set('Cache-Control', 'no-store')
     odpowiedz.headers.set('Referrer-Policy', 'no-referrer')
   }
