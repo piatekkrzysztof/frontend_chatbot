@@ -6,9 +6,10 @@ import { API_URL } from '@/lib/api'
 import { ustawToken } from '@/lib/auth'
 import { sessionRequest } from '@/lib/session-lock'
 
+// Bez adresu e-mail: od 2.20.0 podgląd go nie podaje. Odpowiada każdemu, kto ma
+// klucz, a wcześniej podsuwał adres, który formularz potem „sprawdzał".
 interface InvitePreview {
   company: string
-  email: string
   role: string
   is_valid: boolean
   expires_at: string | null
@@ -33,7 +34,6 @@ export default function AcceptInvitePage({
   const [loadError, setLoadError] = useState('')
 
   const [username, setUsername] = useState('')
-  const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState('')
@@ -51,7 +51,6 @@ export default function AcceptInvitePage({
       .then((data: InvitePreview) => {
         if (!active) return
         setPreview(data)
-        setEmail(data.email || '')
         setLoading(false)
       })
       .catch((err) => {
@@ -75,7 +74,9 @@ export default function AcceptInvitePage({
       const res = await fetch(`${API_URL}/accounts/accept-invite/`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ token, username, email, password }),
+        // Adresu nie wysylamy: backend bierze go z zaproszenia. Klucz z tego
+        // linku przyszedl mailem na ten adres i to on jest dowodem tozsamosci.
+        body: JSON.stringify({ token, username, password }),
       })
 
       if (!res.ok) {
@@ -89,12 +90,11 @@ export default function AcceptInvitePage({
       }
 
       // Konto założone — logujemy od razu, żeby nie odsyłać na ekran logowania.
-      // Endpoint oczekuje klucza `username`; backend przyjmuje pod nim zarówno
-      // nazwę użytkownika, jak i adres e-mail.
+      // Nazwą użytkownika, bo adresu ta strona już nie zna.
       const loginRes = await sessionRequest(`${API_URL}/accounts/login/`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username: email, password }),
+        body: JSON.stringify({ username, password }),
         credentials: 'include',
       })
 
@@ -173,17 +173,9 @@ export default function AcceptInvitePage({
             className="input mb-4"
           />
 
-          <label className="label" htmlFor="zaproszenie-email">E-mail</label>
-          <input
-            id="zaproszenie-email"
-            type="email"
-            value={email}
-            readOnly
-            aria-describedby="zaproszenie-adresat"
-            required
-            className="input mb-4"
-          />
-          <p id="zaproszenie-adresat" className="hint mb-4">Jednorazowe zaproszenie jest przypisane do tego adresu.</p>
+          <p className="hint mb-4">
+            Konto powstanie na adres, na który przyszło to zaproszenie.
+          </p>
 
           <label className="label" htmlFor="zaproszenie-haslo">Hasło</label>
           <input
