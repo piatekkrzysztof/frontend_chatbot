@@ -34,6 +34,12 @@ export default function ConversationsPage() {
   const [wgrywa, setWgrywa] = useState(false)
   const [potwierdzaImport, setPotwierdzaImport] = useState(false)
   const [wynikImportu, setWynikImportu] = useState('')
+  // Usuwanie rozmowy w dwóch kliknięciach, jak przy osobach w Zespole:
+  // pierwsze uzbraja, drugie usuwa. Do 2.21.0 trzeba było skopiować
+  // identyfikator i wkleić go w zakładce Prywatność.
+  const [doUsuniecia, setDoUsuniecia] = useState<string | null>(null)
+  const [usuwa, setUsuwa] = useState(false)
+  const [wynikUsuniecia, setWynikUsuniecia] = useState('')
 
   // Wyliczone, nie trzymane osobno - jak w Dzienniku: zapomniana gałąź
   // zostawiłaby "wczytuję" na ekranie bez końca.
@@ -109,6 +115,42 @@ export default function ConversationsPage() {
     }
   }
 
+  async function usunRozmowe(sesja: string) {
+    if (doUsuniecia !== sesja) {
+      setDoUsuniecia(sesja)
+      setWynikUsuniecia('')
+      return
+    }
+
+    setUsuwa(true)
+    setError('')
+    setWynikUsuniecia('')
+    try {
+      const dane = await apiFetch(`/privacy/conversations/${sesja}/`, { method: 'DELETE' })
+      const lacznie = Object.values((dane.deleted ?? {}) as Record<string, number>).reduce(
+        (suma, n) => suma + n,
+        0,
+      )
+      setWynikUsuniecia(`Usunięto rozmowę razem z kontaktem i logami. Rekordów: ${lacznie}.`)
+      setDoUsuniecia(null)
+      // Ta sama strona od nowa: usunięte wpisy znikają, reszta się przesuwa.
+      setWersja((poprzednia) => poprzednia + 1)
+    } catch (err) {
+      setError(
+        err instanceof BladApi && err.status === 403
+          ? 'Usuwanie rozmów jest dostępne dla właściciela i pracownika.'
+          : err instanceof BladApi && err.status === 404
+            ? 'Tej rozmowy już nie ma - mogła zostać usunięta wcześniej.'
+            : err instanceof Error
+              ? err.message
+              : 'Nie udało się usunąć rozmowy.',
+      )
+      setDoUsuniecia(null)
+    } finally {
+      setUsuwa(false)
+    }
+  }
+
   async function wgrajCsv() {
     // Format i rozmiar pilnuje przycisk (disabled) razem z UploadField;
     // tutaj wystarczy brak pliku.
@@ -154,8 +196,8 @@ export default function ConversationsPage() {
       <h1 className="text-2xl font-bold mb-1">Konwersacje</h1>
       <div className="flex flex-wrap items-start justify-between gap-3 mb-6">
         <p className="tekst-drugi max-w-2xl">
-          Identyfikator rozmowy przydaje się, gdy ktoś poprosi o usunięcie swoich danych —
-          wklej go w zakładce Prywatność.
+          Gdy ktoś poprosi o usunięcie swoich danych, usuń jego rozmowę przyciskiem przy
+          wpisie. Znika cała rozmowa, razem z zostawionym kontaktem.
         </p>
         {/* Backend potrafił to od dawna i zapisuje eksport w dzienniku, ale
             panel nie miał czym tego wywołać. */}
@@ -207,6 +249,11 @@ export default function ConversationsPage() {
       ) : null}
 
       {error && <p role="alert" className="text-sm text-[#c0392b] mb-4">{error}</p>}
+      {wynikUsuniecia && (
+        <p role="status" className="text-sm mb-4">
+          {wynikUsuniecia}
+        </p>
+      )}
 
       <div className="flex flex-col gap-3">
         {logs.map((log) => (
@@ -224,15 +271,33 @@ export default function ConversationsPage() {
               {log.response || '–'}
             </p>
             {log.conversation_session_id && (
-              <button
-                onClick={() => copySessionId(log.conversation_session_id!)}
-                title="Kopiuj identyfikator rozmowy"
-                className="mt-3 text-xs font-mono tekst-slaby hover:text-[color:var(--tekst)]"
-              >
-                {copied === log.conversation_session_id
-                  ? 'Skopiowano'
-                  : log.conversation_session_id}
-              </button>
+              <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
+                <button
+                  onClick={() => copySessionId(log.conversation_session_id!)}
+                  title="Kopiuj identyfikator rozmowy"
+                  className="text-xs font-mono tekst-slaby hover:text-[color:var(--tekst)]"
+                >
+                  {copied === log.conversation_session_id
+                    ? 'Skopiowano'
+                    : log.conversation_session_id}
+                </button>
+                {(mojaRola === 'owner' || mojaRola === 'employee') && (
+                  <button
+                    type="button"
+                    onClick={() => usunRozmowe(log.conversation_session_id!)}
+                    disabled={usuwa}
+                    className="text-xs text-[#c0392b] hover:underline disabled:opacity-50"
+                  >
+                    {/* Lista pokazuje pojedyncze wymiany, a usuwamy całą rozmowę -
+                        dlatego potwierdzenie mówi wprost, co zniknie. */}
+                    {doUsuniecia === log.conversation_session_id
+                      ? usuwa
+                        ? 'Usuwam...'
+                        : 'Potwierdź: usuń całą rozmowę, kontakt i logi (nieodwracalne)'
+                      : 'Usuń rozmowę'}
+                  </button>
+                )}
+              </div>
             )}
           </div>
         ))}
