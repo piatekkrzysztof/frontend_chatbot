@@ -81,6 +81,42 @@ function historyKey(apiKey: string) {
   return `widget_history_${apiKey}`
 }
 
+const KOMUNIKAT_ROZMOWA_USUNIETA =
+  'Rozmowa została usunięta. Napisz nową wiadomość, aby rozpocząć kolejną.'
+
+function wyczyscZapisanaRozmowe(apiKey: string) {
+  localStorage.removeItem(`widget_session_${apiKey}`)
+  localStorage.removeItem(historyKey(apiKey))
+}
+
+/**
+ * Czy firma usunęła rozmowę zapisaną w tej przeglądarce.
+ *
+ * Historia leży w localStorage odwiedzającego i do 2.21.0 pokazywała się
+ * bez pytania serwera - znikała dopiero przy następnej wysłanej wiadomości.
+ * Odbiór 5.10.2026: rozmowa usunięta w panelu wciąż była na ekranie.
+ * Ktoś, kto poprosił o usunięcie swoich danych, uznałby, że go nie było.
+ *
+ * `true` wyłącznie przy 410. Każdy inny wynik - brak sieci, błąd serwera,
+ * przekroczony czas - zostawia historię: nieudane sprawdzenie nie może
+ * kasować odwiedzającemu jego własnej kopii rozmowy.
+ */
+async function rozmowaUsunieta(apiKey: string, sesja: string): Promise<boolean> {
+  const przerwij = new AbortController()
+  const limit = setTimeout(() => przerwij.abort(), 3000)
+  try {
+    const res = await fetch(`${API_URL}/widget/rozmowa/${encodeURIComponent(sesja)}/`, {
+      headers: { 'X-API-Key': apiKey },
+      signal: przerwij.signal,
+    })
+    return res.status === 410
+  } catch {
+    return false
+  } finally {
+    clearTimeout(limit)
+  }
+}
+
 const MAX_STORED_MESSAGES = 50
 
 function loadHistory(apiKey: string): Message[] {
@@ -142,14 +178,13 @@ export default function WidgetChat() {
   function resetDeletedConversation() {
     generation.current += 1
     activeRequest.current?.abort()
-    localStorage.removeItem(`widget_session_${apiKey}`)
-    localStorage.removeItem(historyKey(apiKey))
+    wyczyscZapisanaRozmowe(apiKey)
     setMessages([])
     setOfferContact(false)
     setContactOpen(false)
     setContactValue('')
     setContactSent(false)
-    setNotice('Rozmowa została usunięta. Napisz nową wiadomość, aby rozpocząć kolejną.')
+    setNotice(KOMUNIKAT_ROZMOWA_USUNIETA)
   }
 
   useEffect(() => {
@@ -165,8 +200,26 @@ export default function WidgetChat() {
         if (active) setBranding(null)
       })
 
-    setMessages(loadHistory(apiKey))
-    setHistoryLoaded(true)
+    const zapisana = loadHistory(apiKey)
+    const sesja = localStorage.getItem(`widget_session_${apiKey}`)
+    if (!zapisana.length || !sesja) {
+      setMessages(zapisana)
+      setHistoryLoaded(true)
+    } else {
+      // Historię pokazujemy dopiero po odpowiedzi serwera. Pokazana od razu
+      // mignęłaby na ekranie, zanim zniknie - a to jest dokładnie ten widok,
+      // który odwiedzający miał przestać oglądać.
+      rozmowaUsunieta(apiKey, sesja).then((usunieta) => {
+        if (!active) return
+        if (usunieta) {
+          wyczyscZapisanaRozmowe(apiKey)
+          setNotice(KOMUNIKAT_ROZMOWA_USUNIETA)
+        } else {
+          setMessages(zapisana)
+        }
+        setHistoryLoaded(true)
+      })
+    }
 
     return () => {
       active = false

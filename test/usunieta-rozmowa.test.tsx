@@ -30,9 +30,20 @@ function stream() {
   }))
 }
 
-function mockBackend(chat: () => Response, contact: () => Response = () => new Response('{}')) {
+function mockBackend(
+  chat: () => Response,
+  contact: () => Response = () => new Response('{}'),
+  // Sprawdzenie przy otwarciu widgetu (2.21.0). W testach ponizej rozmowa
+  // zostaje usunieta pozniej, w trakcie wysylania - wiec przy otwarciu
+  // jeszcze istnieje. Bez tej trasy zapytanie trafialo do `chat()`.
+  status: () => Response = () => new Response(null, { status: 204 }),
+) {
   const fetch = vi.fn((url: string) => Promise.resolve(
-    url.includes('widget-settings') ? new Response('{}') : url.includes('/contact/') ? contact() : chat(),
+    url.includes('widget-settings')
+      ? new Response('{}')
+      : url.includes('/widget/rozmowa/')
+        ? status()
+        : url.includes('/contact/') ? contact() : chat(),
   ))
   vi.stubGlobal('fetch', fetch)
   return fetch
@@ -66,7 +77,8 @@ it.each(['http', 'sse'])('widget czyści starą historię po usunięciu (%s), ko
   const body = JSON.parse(calls[1][1]!.body as string)
   expect(body.message).toBe('nowe pytanie')
   expect(body.conversation_session_id).not.toBe('stara-sesja')
-  expect(fetch).toHaveBeenCalledTimes(3)
+  // ustawienia, sprawdzenie rozmowy przy otwarciu, dwa pytania
+  expect(fetch).toHaveBeenCalledTimes(4)
 })
 
 it.each([410, 503])('kontakt nie zgłasza sukcesu po HTTP %s', async status => {

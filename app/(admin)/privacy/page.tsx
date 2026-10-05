@@ -89,7 +89,7 @@ export default function PrivacyPage() {
         (sum, n) => sum + n,
         0,
       )
-      setEraseResult(`Usunięto rozmowę i powiązane dane (${total} rekordów).`)
+      setEraseResult(`Usunięto rozmowę i powiązane dane. Rekordów: ${total}.`)
       setSessionId('')
     } catch (err) {
       setEraseError(err instanceof Error ? err.message : 'Nie udało się usunąć danych.')
@@ -189,9 +189,10 @@ export default function PrivacyPage() {
 
       <h2 className="text-xl font-bold mb-1">Usunięcie danych na żądanie</h2>
       <p id="kasowanie-opis" className="text-sm tekst-slaby mb-4">
-        Gdy ktoś poprosi o usunięcie swoich danych, znajdź jego rozmowę w zakładce
-        Konwersacje i wklej tutaj jej identyfikator. Kasujemy rozmowę razem ze wszystkimi
-        logami i zostawionym kontaktem. Operacji nie da się cofnąć.
+        Gdy ktoś poprosi o usunięcie swoich danych, najprościej usunąć jego rozmowę
+        przyciskiem w zakładce Konwersacje. Jeśli podał Ci identyfikator rozmowy, możesz
+        wkleić go tutaj. Kasujemy rozmowę razem ze wszystkimi logami i zostawionym
+        kontaktem. Operacji nie da się cofnąć.
       </p>
 
       <form onSubmit={handleErase} className="flex items-center gap-3">
