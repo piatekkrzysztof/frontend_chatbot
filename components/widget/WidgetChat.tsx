@@ -155,6 +155,33 @@ function saveHistory(apiKey: string, messages: Message[]) {
  */
 const KOD_CZAT_NIEDOSTEPNY = 'czat_niedostepny'
 
+/**
+ * Odmowa z braku miejsca na rozmowę (`ServerBusy` w api/capacity.py).
+ *
+ * Odwrotność czat_niedostepny: stan CHWILOWY. Serwer ma ograniczoną liczbę
+ * rozmów naraz i odmawia od razu zamiast kazać czekać. Do 2.24 widget
+ * pokazywał wtedy „Wystąpił błąd" - odwiedzający na stronie klienta widział
+ * awarię jego czatu, choć wystarczyło spróbować sekundę później.
+ */
+const KOD_SERWER_ZAJETY = 'server_busy'
+
+/** Odstępy kolejnych prób w sekundach - razem około 10 s, potem komunikat. */
+const PONOWIENIA_ZAJETEGO_S = [1, 2, 3, 4]
+
+/** Czeka, ale przerywa razem z wysyłką (nowa rozmowa, zamknięcie widgetu). */
+function czekaj(sekundy: number, sygnal: AbortSignal) {
+  return new Promise<void>((resolve) => {
+    const zegar = setTimeout(resolve, sekundy * 1000)
+    sygnal.addEventListener('abort', () => { clearTimeout(zegar); resolve() }, { once: true })
+  })
+}
+
+async function czySerwerZajety(res: Response) {
+  if (res.status !== 503) return false
+  const tresc = await res.clone().json().catch(() => null)
+  return tresc?.code === KOD_SERWER_ZAJETY
+}
+
 export default function WidgetChat() {
   const searchParams = useSearchParams()
   const apiKey = searchParams.get('key') || ''
@@ -256,7 +283,7 @@ export default function WidgetChat() {
 
     try {
       const sessionId = getSessionId(apiKey)
-      const res = await fetch(`${API_URL}/widget/chat/stream/`, {
+      const wyslij = () => fetch(`${API_URL}/widget/chat/stream/`, {
         method: 'POST',
         signal: controller.signal,
         headers: {
@@ -269,7 +296,22 @@ export default function WidgetChat() {
         }),
       })
 
+      // Zajęty serwer odmawia przed utworzeniem rozmowy i przed pobraniem
+      // wiadomości z limitu, więc ponowienie niczego nie dubluje.
+      let res = await wyslij()
+      let zajety = await czySerwerZajety(res)
+      for (const odstep of PONOWIENIA_ZAJETEGO_S) {
+        if (!zajety || requestGeneration !== generation.current) break
+        setNotice('Chwileczkę, odpowiadamy teraz innym osobom…')
+        const wskazany = Number(res.headers.get('Retry-After'))
+        await czekaj(Math.max(odstep, Number.isFinite(wskazany) ? wskazany : 0), controller.signal)
+        if (requestGeneration !== generation.current) return
+        res = await wyslij()
+        zajety = await czySerwerZajety(res)
+      }
+
       if (requestGeneration !== generation.current) return
+      setNotice('')
       if (res.status === 410) {
         resetDeletedConversation()
         return
@@ -290,6 +332,10 @@ export default function WidgetChat() {
           // Celowo bez słowa o subskrypcji czy limicie: rozliczenia firmy
           // nie są sprawą osób odwiedzających jej stronę.
           throw new Error('Czat jest chwilowo niedostępny.')
+        }
+
+        if (zajety) {
+          throw new Error('Rozmawiamy teraz z wieloma osobami naraz. Spróbuj za chwilę.')
         }
 
         throw new Error('Wystąpił błąd. Spróbuj ponownie.')
