@@ -45,8 +45,10 @@ export const metadata: Metadata = {
     'Chatbot, który odpowiada klientom na podstawie wiedzy Twojej firmy. '
     + 'Wdrożenie w kilkanaście minut, bez programisty.',
   icons: {
-    icon: [{ url: '/img/favicon.svg', type: 'image/svg+xml' }],
-    shortcut: '/img/favicon.svg',
+    // Nowy adres zamiast /img/favicon.svg: przeglądarki trzymają favikonę
+    // w pamięci po adresie i po zmianie samego pliku pokazywały stary znak.
+    icon: [{ url: '/img/sygnet-trasa.svg', type: 'image/svg+xml' }],
+    shortcut: '/img/sygnet-trasa.svg',
   },
   openGraph: {
     title: 'SM-art Chat: czat AI dla Twojej strony',
