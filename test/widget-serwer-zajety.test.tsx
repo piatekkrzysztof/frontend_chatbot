@@ -89,3 +89,48 @@ it('inny błąd 503 nie jest ponawiany', async () => {
   expect(await screen.findByText('Wystąpił błąd. Spróbuj ponownie.')).toBeInTheDocument()
   expect(ileWyslan()).toBe(1)
 })
+
+function limit(retryAfter?: string) {
+  const naglowki: Record<string, string> = { 'Content-Type': 'application/json' }
+  if (retryAfter) naglowki['Retry-After'] = retryAfter
+  return new Response(JSON.stringify({ detail: 'Request was throttled.' }), { status: 429, headers: naglowki })
+}
+
+it('limit wiadomości: mówi, ile poczekać, i nie ponawia', async () => {
+  const ileWyslan = backend(() => limit('720'))
+  render(<WidgetChat />)
+
+  await wyslij()
+
+  expect(
+    await screen.findByText('Wysłano dużo wiadomości w krótkim czasie. Spróbuj ponownie za 12 min.'),
+  ).toBeInTheDocument()
+  await act(() => vi.advanceTimersByTimeAsync(15000))
+  expect(ileWyslan()).toBe(1)
+  expect(screen.queryByText(/Wystąpił błąd/)).not.toBeInTheDocument()
+})
+
+it('limit wiadomości bez Retry-After (przeglądarka go nie pokazała): komunikat ogólny o czekaniu', async () => {
+  backend(() => limit())
+  render(<WidgetChat />)
+
+  await wyslij()
+
+  expect(await screen.findByText(/Spróbuj ponownie za kilka minut/)).toBeInTheDocument()
+})
+
+it('firma ma naraz za dużo rozmów (czat_chwilowo_zajety): ponawia jak przy zajętym serwerze', async () => {
+  let proby = 0
+  const ileWyslan = backend(() =>
+    ++proby === 1
+      ? new Response(JSON.stringify({ error: 'Bot obsługuje teraz inne wiadomości.', kod: 'czat_chwilowo_zajety' }), { status: 429 })
+      : odpowiedz(),
+  )
+  render(<WidgetChat />)
+
+  await wyslij()
+  await act(() => vi.advanceTimersByTimeAsync(3000))
+
+  expect(await screen.findByText('Torty od 120 zł.')).toBeInTheDocument()
+  expect(ileWyslan()).toBe(2)
+})
