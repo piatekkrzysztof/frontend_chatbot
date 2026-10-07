@@ -98,7 +98,7 @@ export default function BezpieczenstwoKonta() {
         <p className="tekst-drugi text-sm mb-4">Zarządzasz wyłącznie swoim kontem. Jedna sesja może obejmować kilka kart przeglądarki.
           Zmiana hasła zakończy wszystkie Twoje dotychczasowe sesje. MFA pozostanie włączone.</p>
         {loading && <p role="status">Wczytuję sesje…</p>}
-        {loadError && <div><p role="alert" className="text-[#b42318] mb-3">{loadError}</p>
+        {loadError && <div><p role="alert" className="text-[var(--blad)] mb-3">{loadError}</p>
           <button type="button" className="btn-ghost min-h-11 disabled:opacity-50 disabled:cursor-not-allowed" onClick={() => reload(1)}>Ponów odczyt sesji</button></div>}
         {data && !loading && !loadError && <>
           <div className="flex flex-wrap gap-3 mb-5">
@@ -122,7 +122,7 @@ export default function BezpieczenstwoKonta() {
             {data.mfa_enabled && <div><label className="label" htmlFor="account-code">Kod MFA lub kod zapasowy</label>
               <input id="account-code" value={code} onChange={event => setCode(event.target.value)} required maxLength={64}
                 autoComplete="one-time-code" className="input" aria-describedby="account-security-error" /></div>}
-            <p id="account-security-error" role={error ? 'alert' : undefined} tabIndex={-1} className="text-sm text-[#b42318]">{error}</p>
+            <p id="account-security-error" role={error ? 'alert' : undefined} tabIndex={-1} className="text-sm text-[var(--blad)]">{error}</p>
             <div className="flex flex-wrap gap-3">
               <button type="submit" className="btn-primary min-h-11 !whitespace-normal" disabled={busy}>{busy ? 'Potwierdzam…' : action.kind === 'password' ? 'Zmień hasło i wyloguj' : 'Potwierdź zakończenie sesji'}</button>
               <button type="button" className="btn-ghost min-h-11 disabled:opacity-50 disabled:cursor-not-allowed" disabled={busy} onClick={clear}>Anuluj</button>

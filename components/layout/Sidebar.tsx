@@ -7,38 +7,38 @@ import Logo from './Logo'
 const GRUPY = [
   {
     tytul: null,
-    linki: [{ href: '/dashboard', label: 'Pulpit', kod: '01' }],
+    linki: [{ href: '/dashboard', label: 'Pulpit' }],
   },
   {
     tytul: 'Wiedza bota',
     linki: [
-      { href: '/documents', label: 'Baza wiedzy', kod: '02' },
-      { href: '/faq', label: 'FAQ', kod: '03' },
+      { href: '/documents', label: 'Baza wiedzy' },
+      { href: '/faq', label: 'FAQ' },
       // Zaraz pod źródłami wiedzy, bo to ich sprawdzenie: wgrywasz, pytasz,
       // widzisz. Nie w „Obsłudze klienta" — to nie jest ruch klientów.
-      { href: '/test-bota', label: 'Test bota', kod: '04' },
-      { href: '/widget-settings', label: 'Widget', kod: '05' },
+      { href: '/test-bota', label: 'Test bota' },
+      { href: '/widget-settings', label: 'Widget' },
     ],
   },
   {
     tytul: 'Obsługa klienta',
     linki: [
-      { href: '/conversations', label: 'Konwersacje', kod: '06' },
-      { href: '/leads', label: 'Zapytania', kod: '07' },
+      { href: '/conversations', label: 'Konwersacje' },
+      { href: '/leads', label: 'Zapytania' },
     ],
   },
   {
     tytul: 'Konto',
     linki: [
-      { href: '/ustawienia', label: 'Ustawienia konta', kod: '08' },
-      { href: '/team', label: 'Zespół', kod: '09' },
-      { href: '/subskrypcja', label: 'Subskrypcja', kod: '10' },
-      { href: '/privacy', label: 'Prywatność', kod: '11' },
+      { href: '/ustawienia', label: 'Ustawienia konta' },
+      { href: '/team', label: 'Zespół' },
+      { href: '/subskrypcja', label: 'Subskrypcja' },
+      { href: '/privacy', label: 'Prywatność' },
       // Obok prywatności, bo to ta sama sprawa z drugiej strony: tam widać,
       // co system trzyma o odwiedzających, tutaj - co z tym robili ludzie
       // z Twojej firmy.
-      { href: '/dziennik', label: 'Dziennik zdarzeń', kod: '12' },
-      { href: '/stan', label: 'Stan systemu', kod: '13' },
+      { href: '/dziennik', label: 'Dziennik zdarzeń' },
+      { href: '/stan', label: 'Stan systemu' },
     ],
   },
 ]
@@ -49,8 +49,7 @@ export default function Sidebar() {
   return (
     <aside className="admin-sidebar">
       <div className="admin-sidebar-brand">
-        <Logo wysokosc={28} className="admin-sidebar-logo" />
-        <span className="admin-edition">Console / 01</span>
+        <Logo wysokosc={42} className="admin-sidebar-logo" />
       </div>
 
       <nav className="admin-nav" aria-label="Główna nawigacja panelu">
@@ -67,7 +66,8 @@ export default function Sidebar() {
                   aria-current={aktywny ? 'page' : undefined}
                   className={`admin-nav-link ${aktywny ? 'is-active' : ''}`}
                 >
-                  <span className="admin-nav-code">{link.kod}</span>
+                  {/* Znacznik zamiast numeru: numery w menu niczego nie liczyły. */}
+                  <span className="admin-nav-code" aria-hidden="true" />
                   <span>{link.label}</span>
                   <span className="admin-nav-arrow" aria-hidden="true">↗</span>
                 </Link>
@@ -79,13 +79,13 @@ export default function Sidebar() {
 
       <div className="admin-sidebar-footer">
         <div className="admin-support-card">
-          <span className="admin-support-kicker">Wsparcie priorytetowe</span>
-          <p>Potrzebujesz pomocy z konfiguracją?</p>
+          <span className="admin-support-kicker">Pomoc przy konfiguracji</span>
+          <p>Odpisuję w 2 godziny robocze.</p>
           <a
             href="mailto:krzysztof@agencjasm-art.pl"
-            aria-label="Napisz do nas na krzysztof@agencjasm-art.pl"
+            aria-label="Napisz na krzysztof@agencjasm-art.pl"
           >
-            Napisz do nas <span aria-hidden="true">↗</span>
+            Napisz do mnie <span aria-hidden="true">↗</span>
           </a>
           <span className="admin-support-email">krzysztof@agencjasm-art.pl</span>
         </div>

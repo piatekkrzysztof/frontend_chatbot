@@ -111,15 +111,15 @@ export default function UstawieniaPage() {
             nie wpływa na logowanie.
           </p>
           {wczytane && !adres && (
-            <p className="text-sm text-[#b3261e] mt-1.5">
+            <p className="text-sm text-[var(--blad)] mt-1.5">
               Bez adresu nie wyślemy Ci powiadomienia o zapytaniu — zobaczysz je
               tylko po zalogowaniu do panelu.
             </p>
           )}
         </div>
 
-        {blad && <p className="text-sm text-[#c0392b]">{blad}</p>}
-        {zapisano && <p className="text-sm text-[#1f7a4d]">Zapisano.</p>}
+        {blad && <p className="text-sm text-[var(--blad)]">{blad}</p>}
+        {zapisano && <p className="text-sm text-[var(--sukces)]">Zapisano.</p>}
 
         <button type="submit" className="btn-primary w-fit" disabled={zapisuje || !wczytane}>
           {zapisuje ? 'Zapisywanie…' : 'Zapisz'}

@@ -113,12 +113,12 @@ export default function PrivacyPage() {
         </p>
       )}
       {bladOdczytu && (
-        <p role="alert" className="text-sm text-[#c0392b] mb-4">
+        <p role="alert" className="text-sm text-[var(--blad)] mb-4">
           {bladOdczytu} Formularz odblokuje się po poprawnym odczycie - odśwież stronę.
         </p>
       )}
       {error && (
-        <p role="alert" className="text-sm text-[#c0392b] mb-4">
+        <p role="alert" className="text-sm text-[var(--blad)] mb-4">
           {error}
         </p>
       )}
@@ -212,14 +212,14 @@ export default function PrivacyPage() {
         <button
           type="submit"
           disabled={!sessionId.trim() || erasing}
-          className="rounded border border-red-600 px-4 py-2 text-sm text-[#c0392b] font-medium disabled:opacity-50 shrink-0"
+          className="rounded border border-red-600 px-4 py-2 text-sm text-[var(--blad)] font-medium disabled:opacity-50 shrink-0"
         >
           {erasing ? 'Usuwanie...' : 'Usuń dane'}
         </button>
       </form>
 
       {eraseResult && <p className="text-sm text-green-700 mt-3">{eraseResult}</p>}
-      {eraseError && <p className="text-sm text-[#c0392b] mt-3">{eraseError}</p>}
+      {eraseError && <p className="text-sm text-[var(--blad)] mt-3">{eraseError}</p>}
     </div>
   )
 }

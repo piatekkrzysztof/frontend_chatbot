@@ -31,8 +31,8 @@ interface EtykietaProps {
 export function Etykieta({ children, style, className = '' }: EtykietaProps) {
   return (
     <span
-      className={`text-[10px] font-bold uppercase tracking-[0.14em] leading-tight ${className}`}
-      style={{ fontFamily: 'var(--font-display)', ...style }}
+      className={`text-[10px] font-medium uppercase tracking-[0.12em] leading-tight ${className}`}
+      style={{ fontFamily: 'var(--font-mono)', ...style }}
     >
       {children}
     </span>
@@ -75,12 +75,12 @@ export function PasekTytulu({
       ) : (
         <span
           aria-hidden="true"
-          className="h-7 w-7 shrink-0 grid place-items-center text-[13px] font-extrabold"
+          className="h-7 w-7 shrink-0 grid place-items-center text-[13px] font-semibold"
           style={{
             background: theme.accent,
             color: theme.onAccent,
             borderRadius: KANT,
-            fontFamily: 'var(--font-display)',
+            fontFamily: 'var(--font-body)',
           }}
         >
           {theme.name.charAt(0).toUpperCase()}
@@ -89,8 +89,8 @@ export function PasekTytulu({
 
       <span className="min-w-0">
         <span
-          className="block truncate text-[15px] font-extrabold tracking-tight leading-none"
-          style={{ fontFamily: 'var(--font-display)', color: theme.headerText }}
+          className="block truncate text-[15px] font-semibold leading-none"
+          style={{ fontFamily: 'var(--font-body)', color: theme.headerText }}
         >
           {theme.name}
         </span>
@@ -187,15 +187,15 @@ export function Sugestie({
       </div>
 
       <div style={{ borderTop: `1px solid ${theme.line}` }}>
-        {pytania.map((pytanie, i) => {
+        {pytania.map((pytanie) => {
           const tresc = (
             <>
+              {/* Znacznik zamiast numeru: propozycje pytań nie mają kolejności. */}
               <span
-                className="text-[10px] font-bold tabular-nums shrink-0"
-                style={{ color: theme.accentText, fontFamily: 'var(--font-display)' }}
-              >
-                /{String(i + 1).padStart(2, '0')}
-              </span>
+                aria-hidden="true"
+                className="shrink-0"
+                style={{ width: 6, height: 6, borderRadius: 1.5, background: theme.accent }}
+              />
               <span className="flex-1 text-[13px] leading-snug" style={{ color: theme.text }}>
                 {pytanie}
               </span>

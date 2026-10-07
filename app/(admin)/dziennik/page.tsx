@@ -97,7 +97,7 @@ export default function DziennikPage() {
       </p>
 
       {blad && (
-        <p role="alert" className="text-sm text-[#c0392b] mb-4">
+        <p role="alert" className="text-sm text-[var(--blad)] mb-4">
           {blad}
         </p>
       )}
@@ -216,12 +216,12 @@ export default function DziennikPage() {
  */
 function Wynik({ status }: { status: number }) {
   if (udana(status)) {
-    return <span className="text-xs text-[#1f7a4d]">wykonano</span>
+    return <span className="text-xs text-[var(--sukces)]">wykonano</span>
   }
   if (status >= 500) {
-    return <span className="text-xs text-[#c0392b]">błąd serwera</span>
+    return <span className="text-xs text-[var(--blad)]">błąd serwera</span>
   }
-  return <span className="text-xs text-[#c0392b]">odmowa ({status})</span>
+  return <span className="text-xs text-[var(--blad)]">odmowa ({status})</span>
 }
 
 function sformatujCzas(czas: string): string {

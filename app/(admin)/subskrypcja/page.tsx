@@ -190,7 +190,7 @@ export default function SubskrypcjaPage() {
         Limit dotyczy wiadomości wysłanych przez odwiedzających Twoją stronę w danym miesiącu.
       </p>
 
-      {error && <p role="alert" className="text-sm text-[#c0392b] mb-4">{error}</p>}
+      {error && <p role="alert" className="text-sm text-[var(--blad)] mb-4">{error}</p>}
       {komunikat && <p role="status" className="text-sm tekst-drugi mb-4">{komunikat}</p>}
       {!data && !error && (
         <p role="status" className="text-sm tekst-slaby mb-4">
@@ -199,8 +199,8 @@ export default function SubskrypcjaPage() {
       )}
 
       {current && nieudanaPlatnosc && (
-        <div role="alert" className="card p-5 mb-6 border-2 border-[#c0392b]">
-          <p className="font-medium text-[#c0392b]">Płatność za odnowienie nie przeszła</p>
+        <div role="alert" className="card p-5 mb-6 border-2 border-[var(--blad)]">
+          <p className="font-medium text-[var(--blad)]">Płatność za odnowienie nie przeszła</p>
           <p className="text-sm tekst-drugi mt-1">
             Chatbot działa do {dataPl(current.access_until)}. Stripe ponowi próbę w najbliższych
             dniach. Zmień kartę przed tym terminem, żeby widget nie przestał odpowiadać
@@ -226,7 +226,7 @@ export default function SubskrypcjaPage() {
             <p className="font-medium">
               Twój plan: {current.name || 'brak'}
               {!current.is_active && (
-                <span className="ml-2 text-sm text-[#c0392b] font-normal">nieaktywny</span>
+                <span className="ml-2 text-sm text-[var(--blad)] font-normal">nieaktywny</span>
               )}
             </p>
             <p className="text-sm tekst-slaby">
@@ -238,10 +238,10 @@ export default function SubskrypcjaPage() {
             <div
               className={`h-full ${
                 wykorzystanie >= 95
-                  ? 'bg-[#c0392b]'
+                  ? 'bg-[var(--blad)]'
                   : wykorzystanie >= 80
-                    ? 'bg-[#e8890b]'
-                    : 'bg-ember-500'
+                    ? 'bg-[var(--akcent)]'
+                    : 'bg-[var(--wykres)]'
               }`}
               style={{ width: `${wykorzystanie}%` }}
             />
@@ -250,12 +250,12 @@ export default function SubskrypcjaPage() {
           {/* Progi te same co w alertach mailowych (accounts/plans.py) — inaczej
               klient widziałby w panelu inną historię niż w wiadomości od nas */}
           {wykorzystanie >= 100 ? (
-            <p className="text-sm text-[#c0392b] mt-2">
+            <p className="text-sm text-[var(--blad)] mt-2">
               Limit wyczerpany — chatbot nie odpowiada już odwiedzającym.
               Przejdź na wyższy plan, żeby go przywrócić.
             </p>
           ) : wykorzystanie >= 95 ? (
-            <p className="text-sm text-[#c0392b] mt-2">
+            <p className="text-sm text-[var(--blad)] mt-2">
               Limit prawie wyczerpany. Po jego przekroczeniu chatbot przestanie odpowiadać
               odwiedzającym Twoją stronę.
             </p>
@@ -275,7 +275,7 @@ export default function SubskrypcjaPage() {
               subskrypcje jak zwykly odnawiany plan, a po obnizce - stary plan
               bez slowa o zmianie. */}
           {current.is_active && current.cancel_at && (
-            <p className="text-sm text-[#c0392b] mt-3">
+            <p className="text-sm text-[var(--blad)] mt-3">
               Subskrypcja anulowana - działa do {dataPl(current.cancel_at)}, potem chatbot przestanie
               odpowiadać.
               {current.can_manage && ' Anulowanie cofniesz w „Zarządzaj subskrypcją”.'}
@@ -306,7 +306,7 @@ export default function SubskrypcjaPage() {
       )}
 
       {bladDomen && (
-        <p role="alert" className="card p-5 mb-6 text-sm text-[#c0392b]">
+        <p role="alert" className="card p-5 mb-6 text-sm text-[var(--blad)]">
           Nie udało się wczytać listy witryn z widgetem. Odśwież stronę, żeby zobaczyć, ile miejsc
           zostało w planie.
         </p>
@@ -340,7 +340,7 @@ export default function SubskrypcjaPage() {
                       minimum 24 px celu wskaznika (WCAG 2.2, 2.5.8) */}
                   <button
                     onClick={() => usunDomene(domena.id)}
-                    className="-mr-2 px-2 py-1 text-xs tekst-slaby hover:text-[#c0392b]"
+                    className="-mr-2 px-2 py-1 text-xs tekst-slaby hover:text-[var(--blad)]"
                   >
                     Usuń
                   </button>

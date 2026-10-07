@@ -106,11 +106,11 @@ export default function StronaGlowna() {
     <main className="overflow-hidden">
       {/* ─── Nawigacja ─── */}
       <header className="sticky top-0 z-50 backdrop-blur-lg"
-              style={{ background: 'rgba(17,12,4,0.72)', borderBottom: '1px solid var(--border-subtle)' }}>
+              style={{ background: 'rgba(14,21,39,0.78)', borderBottom: '1px solid var(--border-subtle)' }}>
         <nav className="max-w-6xl mx-auto px-5 h-[68px] flex items-center justify-between">
-          <Logo wysokosc={28} jakoLink />
+          <Logo wysokosc={38} jakoLink />
           <div className="flex items-center gap-3">
-            <Link href="/login" className="text-sm text-sand-300 hover:text-cream transition-colors">
+            <Link href="/login" className="text-sm text-mgla-300 hover:text-papier transition-colors">
               Zaloguj się
             </Link>
             <Link href="/rejestracja" className="btn-primary !py-2.5 !px-5 !text-sm">
@@ -126,7 +126,7 @@ export default function StronaGlowna() {
         <div
           aria-hidden
           className="absolute -top-56 -right-40 w-[46rem] h-[46rem] rounded-full pointer-events-none"
-          style={{ background: 'radial-gradient(circle, rgba(249,115,22,0.13) 0%, transparent 62%)' }}
+          style={{ background: 'radial-gradient(circle, rgba(255,165,82,0.06) 0%, transparent 62%)' }}
         />
 
         <div className="relative max-w-6xl mx-auto px-5 pt-10 pb-8 md:pt-14 md:pb-10
@@ -141,10 +141,10 @@ export default function StronaGlowna() {
               style={{ animationDelay: '0.08s' }}>
             Twoja strona odpowiada{' '}
             <br className="hidden sm:inline" />
-            <span className="text-ember-500">zanim klient zdąży wyjść</span>
+            <span className="text-zakreslacz-500">zanim klient zdąży wyjść</span>
           </h1>
 
-          <p className="mt-5 max-w-xl mx-auto sm:mx-0 text-sand-300 text-pretty wejscie" style={{ animationDelay: '0.16s' }}>
+          <p className="mt-5 max-w-xl mx-auto sm:mx-0 text-mgla-300 text-pretty wejscie" style={{ animationDelay: '0.16s' }}>
             Uczy się wyłącznie z Twoich materiałów. Wdrożenie to kilkanaście
             minut i jedna linijka kodu.
           </p>
@@ -154,8 +154,8 @@ export default function StronaGlowna() {
           <ul className="mt-6 grid gap-x-7 gap-y-2 sm:grid-cols-2 lg:grid-cols-4 max-w-5xl text-sm text-left inline-grid sm:grid wejscie"
               style={{ animationDelay: '0.2s' }}>
             {KORZYSCI_SKROT.map((k) => (
-              <li key={k} className="flex gap-2.5 text-sand-300">
-                <span className="text-ember-500 shrink-0">→</span>
+              <li key={k} className="flex gap-2.5 text-mgla-300">
+                <span className="text-zakreslacz-500 shrink-0">→</span>
                 <span>{k}</span>
               </li>
             ))}
@@ -173,7 +173,7 @@ export default function StronaGlowna() {
             <div style={{ filter: 'drop-shadow(0 24px 60px rgba(0,0,0,0.45))' }}>
               <WidgetPreview
                 brandingMode="smart"
-                color="#F97316"
+                color="#FFA552"
                 title="Sm-art"
                 footerText=""
                 welcomeMessage="Cześć! Pytaj o ceny, godziny i dostępność — odpowiem od razu."
@@ -195,11 +195,11 @@ export default function StronaGlowna() {
             {/* Przełącznik okresu. Rabat roczny podany wprost, bo to
                 najczęstsze pytanie przy wyborze planu. */}
             <div className="flex items-center gap-1 rounded-full p-1"
-                 style={{ background: 'var(--color-espresso-700)' }}>
+                 style={{ background: 'var(--color-atrament-700)' }}>
               <button
                 onClick={() => setRocznie(false)}
                 className={`rounded-full px-4 py-2 text-sm font-semibold transition-all ${
-                  !rocznie ? 'bg-ember-500 text-espresso-800' : 'text-sand-300'
+                  !rocznie ? 'bg-zakreslacz-500 text-atrament-800' : 'text-mgla-300'
                 }`}
               >
                 Miesięcznie
@@ -207,7 +207,7 @@ export default function StronaGlowna() {
               <button
                 onClick={() => setRocznie(true)}
                 className={`rounded-full px-4 py-2 text-sm font-semibold transition-all ${
-                  rocznie ? 'bg-ember-500 text-espresso-800' : 'text-sand-300'
+                  rocznie ? 'bg-zakreslacz-500 text-atrament-800' : 'text-mgla-300'
                 }`}
               >
                 Rocznie −20%
@@ -216,7 +216,7 @@ export default function StronaGlowna() {
           </div>
 
           {plany.length === 0 ? (
-            <p className="mt-12 text-sand-400">Wczytywanie cennika...</p>
+            <p className="mt-12 text-mgla-400">Wczytywanie cennika...</p>
           ) : (
             <div className="mt-8 grid gap-5 md:grid-cols-3">
               {plany.map((plan, i) => {
@@ -229,7 +229,7 @@ export default function StronaGlowna() {
                       wyrozniony ? 'md:-translate-y-4' : ''
                     }`}
                     style={{
-                      background: wyrozniony ? 'var(--color-espresso-700)' : 'var(--color-espresso-900)',
+                      background: wyrozniony ? 'var(--color-atrament-700)' : 'var(--color-atrament-900)',
                       border: `1px solid ${wyrozniony ? 'var(--ember-bdr)' : 'var(--border-subtle)'}`,
                       boxShadow: wyrozniony ? '0 20px 60px rgba(0,0,0,0.35)' : 'none',
                     }}
@@ -242,25 +242,25 @@ export default function StronaGlowna() {
 
                     <p className="mt-3 font-display font-extrabold text-[2.75rem] leading-none">
                       {cena}
-                      <span className="text-base font-normal text-sand-400"> zł/mies.</span>
+                      <span className="text-base font-normal text-mgla-400"> zł/mies.</span>
                     </p>
-                    <p className="mt-1 text-xs text-sand-400">
+                    <p className="mt-1 text-xs text-mgla-400">
                       {rocznie ? `Płatne rocznie: ${cena * 12} zł netto` : 'netto, bez zobowiązania'}
                     </p>
 
-                    <ul className="mt-6 mb-7 flex flex-col gap-2.5 text-sm text-sand-300">
+                    <ul className="mt-6 mb-7 flex flex-col gap-2.5 text-sm text-mgla-300">
                       <li className="flex gap-2.5">
-                        <span className="text-ember-500">→</span>
-                        <span><strong className="text-cream">
+                        <span className="text-zakreslacz-500">→</span>
+                        <span><strong className="text-papier">
                           {plan.message_limit.toLocaleString('pl-PL')}
                         </strong> rozmów miesięcznie</span>
                       </li>
                       <li className="flex gap-2.5">
-                        <span className="text-ember-500">→</span>
+                        <span className="text-zakreslacz-500">→</span>
                         <span>{plan.knowledge_base_mb} MB bazy wiedzy</span>
                       </li>
                       <li className="flex gap-2.5">
-                        <span className="text-ember-500">→</span>
+                        <span className="text-zakreslacz-500">→</span>
                         <span>
                           {plan.max_domains === 1 ? '1 witryna' : `${plan.max_domains} witryn`}
                           {' · '}
@@ -268,7 +268,7 @@ export default function StronaGlowna() {
                         </span>
                       </li>
                       <li className="flex gap-2.5">
-                        <span className="text-ember-500">→</span>
+                        <span className="text-zakreslacz-500">→</span>
                         <span>{BRANDING_OPIS[plan.branding] || plan.branding}</span>
                       </li>
                     </ul>
@@ -285,7 +285,7 @@ export default function StronaGlowna() {
             </div>
           )}
 
-          <p className="mt-8 text-sm text-sand-400">
+          <p className="mt-8 text-sm text-mgla-400">
             Wszystkie plany zawierają rozpoznawanie języka pytania, cytowanie źródeł
             odpowiedzi, zbieranie kontaktów i zgodność z RODO oraz EU AI Act.
           </p>
@@ -293,7 +293,7 @@ export default function StronaGlowna() {
       </section>
 
       {/* ─── Korzyści ─── */}
-      <section className="relative py-20 md:py-28" style={{ background: 'var(--color-espresso-800)' }}>
+      <section className="relative py-20 md:py-28" style={{ background: 'var(--color-atrament-800)' }}>
         <div className="max-w-6xl mx-auto px-5 text-center sm:text-left">
           <span className="label-eyebrow">Co z tego masz</span>
           <h2 className="mt-4 max-w-2xl mx-auto sm:mx-0 text-[clamp(1.6rem,4vw,3rem)] text-balance">
@@ -303,10 +303,10 @@ export default function StronaGlowna() {
           <div className="mt-14 grid gap-px md:grid-cols-2"
                style={{ background: 'var(--border-subtle)' }}>
             {KORZYSCI.map((k) => (
-              <div key={k.tytul} className="p-8 md:p-10 transition-colors hover:bg-espresso-700"
-                   style={{ background: 'var(--color-espresso-800)' }}>
+              <div key={k.tytul} className="p-8 md:p-10 transition-colors hover:bg-atrament-700"
+                   style={{ background: 'var(--color-atrament-800)' }}>
                 <h3 className="text-xl">{k.tytul}</h3>
-                <p className="mt-3 text-sand-300 text-pretty">{k.tresc}</p>
+                <p className="mt-3 text-mgla-300 text-pretty">{k.tresc}</p>
               </div>
             ))}
           </div>
@@ -333,7 +333,7 @@ export default function StronaGlowna() {
                   {krok.numer}
                 </span>
                 <h3 className="mt-2 text-lg">{krok.tytul}</h3>
-                <p className="mt-2 text-sand-300 text-sm text-pretty">{krok.tresc}</p>
+                <p className="mt-2 text-mgla-300 text-sm text-pretty">{krok.tresc}</p>
               </div>
             ))}
           </div>
@@ -346,7 +346,7 @@ export default function StronaGlowna() {
           <h2 className="text-[clamp(1.6rem,4.5vw,3.25rem)] text-balance">
             Ile pytań zostało dziś bez odpowiedzi?
           </h2>
-          <p className="mt-5 text-lg text-sand-300 text-pretty">
+          <p className="mt-5 text-lg text-mgla-300 text-pretty">
             Wgraj cennik, wklej jedną linijkę i zobacz, o co naprawdę pytają
             odwiedzający Twoją stronę.
           </p>
@@ -355,16 +355,16 @@ export default function StronaGlowna() {
       </section>
 
       <footer className="py-10" style={{ borderTop: '1px solid var(--border-subtle)' }}>
-        <div className="max-w-6xl mx-auto px-5 flex flex-wrap items-center justify-between gap-4 text-sm text-sand-400">
+        <div className="max-w-6xl mx-auto px-5 flex flex-wrap items-center justify-between gap-4 text-sm text-mgla-400">
           <div className="flex items-center gap-3">
-            <Logo wysokosc={22} />
+            <Logo wysokosc={30} />
             <span>© {new Date().getFullYear()}</span>
           </div>
           <div className="flex gap-6">
-            <a href="https://agencjasm-art.pl" className="hover:text-cream transition-colors">
+            <a href="https://agencjasm-art.pl" className="hover:text-papier transition-colors">
               agencjasm-art.pl
             </a>
-            <Link href="/privacy" className="hover:text-cream transition-colors">
+            <Link href="/privacy" className="hover:text-papier transition-colors">
               Prywatność
             </Link>
           </div>

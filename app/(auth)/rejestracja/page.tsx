@@ -148,7 +148,7 @@ function FormularzRejestracji() {
   if (sent) return (
     <div className="w-full max-w-md">
       <h1 className="text-3xl mb-4" tabIndex={-1} ref={element => element?.focus()}>Sprawdź skrzynkę e-mail</h1>
-      <p role="status" className="text-sand-300 break-words">
+      <p role="status" className="text-mgla-300 break-words">
         Otwórz link wysłany na {email} i ustaw hasło. Konto oraz 14-dniowy trial powstaną
         po potwierdzeniu. Link jest ważny 24 godziny; sprawdź także spam.
       </p>
@@ -163,11 +163,11 @@ function FormularzRejestracji() {
   return (
     <div className="w-full max-w-md">
       <div className="mb-7">
-        <Logo wysokosc={30} jakoLink />
+        <Logo wysokosc={40} jakoLink />
       </div>
 
       <h1 className="text-3xl mb-2">Załóż konto</h1>
-      <p className="text-sand-300 text-sm mb-7">
+      <p className="text-mgla-300 text-sm mb-7">
         14 dni bez opłat i bez karty. Dane firmy zbieramy od razu, żeby faktura i umowa
         były gotowe, zanim będą potrzebne — nie prosimy o nie drugi raz przy płatności.
         Hasło ustawisz po potwierdzeniu adresu e-mail.
@@ -326,9 +326,9 @@ function FormularzRejestracji() {
         </button>
       </form>
 
-      <p className="text-sm text-sand-400 mt-6">
+      <p className="text-sm text-mgla-400 mt-6">
         Masz już konto?{' '}
-        <Link href="/login" className="text-ember-500 hover:text-ember-400 transition-colors">
+        <Link href="/login" className="text-zakreslacz-500 hover:text-zakreslacz-400 transition-colors">
           Zaloguj się
         </Link>
       </p>
@@ -342,7 +342,7 @@ function FormularzRejestracji() {
  */
 export default function RejestracjaPage() {
   return (
-    <Suspense fallback={<p className="text-sand-400">Wczytywanie...</p>}>
+    <Suspense fallback={<p className="text-mgla-400">Wczytywanie...</p>}>
       <FormularzRejestracji />
     </Suspense>
   )

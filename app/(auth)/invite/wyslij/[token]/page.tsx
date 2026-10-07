@@ -55,19 +55,19 @@ export default function WyslijZaproszeniePage({
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-espresso-700 px-4">
-      <div className="w-full max-w-sm rounded-lg bg-espresso-800 p-6 shadow">
+    <div className="min-h-screen flex items-center justify-center bg-atrament-700 px-4">
+      <div className="w-full max-w-sm rounded-lg bg-atrament-800 p-6 shadow">
         <h1 className="text-xl font-bold mb-2">Zaproszenie do zespołu</h1>
 
         {stan === 'wyslane' ? (
-          <p role="status" className="text-sm text-sand-300">
+          <p role="status" className="text-sm text-mgla-300">
             Wysłaliśmy zaproszenie na adres, na który zostało wystawione. Otwórz link z tej
             wiadomości, żeby założyć konto. Nic nie przyszło? Sprawdź folder ze spamem albo
             poproś osobę zapraszającą o sprawdzenie adresu.
           </p>
         ) : (
           <>
-            <p className="text-sm text-sand-300 mb-5">
+            <p className="text-sm text-mgla-300 mb-5">
               Ten link nie zakłada konta. Wyśle zaproszenie na adres, na który zostało
               wystawione - konto założysz z linku w tej wiadomości.
             </p>

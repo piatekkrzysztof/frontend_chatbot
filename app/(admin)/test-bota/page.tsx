@@ -169,7 +169,7 @@ export default function TestBotaPage() {
         statystyk ani do raportu pytań bez pokrycia.
       </p>
 
-      {blad && <p className="text-sm text-[#c0392b] mb-4">{blad}</p>}
+      {blad && <p className="text-sm text-[var(--blad)] mb-4">{blad}</p>}
 
       <div className="test-bota">
         <div className="test-bota-rozmowa">

@@ -138,7 +138,7 @@ export default function DaneRozliczeniowe() {
             Zostaw puste, jeśli kupujesz jako osoba prywatna.
           </p>
           {bledy.nip && (
-            <p role="alert" className="mt-1.5 text-sm text-[#c0392b]">
+            <p role="alert" className="mt-1.5 text-sm text-[var(--blad)]">
               {bledy.nip}
             </p>
           )}
@@ -189,11 +189,11 @@ export default function DaneRozliczeniowe() {
         </div>
 
         {blad && (
-          <p role="alert" className="text-sm text-[#c0392b]">
+          <p role="alert" className="text-sm text-[var(--blad)]">
             {blad}
           </p>
         )}
-        {zapisano && <p className="text-sm text-[#1f7a4d]">Zapisano.</p>}
+        {zapisano && <p className="text-sm text-[var(--sukces)]">Zapisano.</p>}
 
         <button type="submit" className="btn-primary w-fit" disabled={zapisuje || !wczytane}>
           {zapisuje ? 'Zapisywanie…' : 'Zapisz dane do faktury'}

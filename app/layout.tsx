@@ -2,29 +2,45 @@ import './globals.css'
 import { ReactNode } from 'react'
 import type { Metadata } from 'next'
 import { headers } from 'next/headers'
-import { Syne, DM_Sans } from 'next/font/google'
+import localFont from 'next/font/local'
+import { JetBrains_Mono } from 'next/font/google'
 
 /**
- * Kroje z witryny agencji. Ładowane przez next/font, a nie linkiem do Google —
- * pliki lądują na naszym serwerze, więc nie ma skoku tekstu przy wczytywaniu
- * ani zapytania do obcego hosta na każdej podstronie klienta.
+ * Kroje z witryny agencji (system „Przypis”): Gambetta w nagłówkach i dużych
+ * liczbach, Switzer w interfejsie, JetBrains Mono w danych i etykietach.
+ * Gambetta i Switzer pochodzą z Fontshare, którego nie ma w next/font/google,
+ * więc pliki leżą w app/fonts. CSP panelu ma font-src 'self', zewnętrzny
+ * arkusz Fontshare i tak zostałby zablokowany.
  */
-const syne = Syne({
-  subsets: ['latin-ext'],
-  weight: ['600', '700', '800'],
-  variable: '--font-syne',
+const gambetta = localFont({
+  src: [
+    { path: './fonts/Gambetta-Regular.woff2', weight: '400', style: 'normal' },
+    { path: './fonts/Gambetta-Italic.woff2', weight: '400', style: 'italic' },
+    { path: './fonts/Gambetta-Medium.woff2', weight: '500', style: 'normal' },
+  ],
+  variable: '--font-gambetta',
   display: 'swap',
 })
 
-const dmSans = DM_Sans({
+const switzer = localFont({
+  src: [
+    { path: './fonts/Switzer-Regular.woff2', weight: '400', style: 'normal' },
+    { path: './fonts/Switzer-Medium.woff2', weight: '500', style: 'normal' },
+    { path: './fonts/Switzer-Semibold.woff2', weight: '600', style: 'normal' },
+  ],
+  variable: '--font-switzer',
+  display: 'swap',
+})
+
+const jetbrains = JetBrains_Mono({
   subsets: ['latin-ext'],
-  weight: ['300', '400', '500', '700'],
-  variable: '--font-dm-sans',
+  weight: ['400', '500'],
+  variable: '--font-jetbrains',
   display: 'swap',
 })
 
 export const metadata: Metadata = {
-  title: 'Sm-art Chatbot — asystent AI dla Twojej strony',
+  title: 'SM-art Chat: czat AI dla Twojej strony',
   description:
     'Chatbot, który odpowiada klientom na podstawie wiedzy Twojej firmy. '
     + 'Wdrożenie w kilkanaście minut, bez programisty.',
@@ -33,7 +49,7 @@ export const metadata: Metadata = {
     shortcut: '/img/favicon.svg',
   },
   openGraph: {
-    title: 'Sm-art Chatbot — asystent AI dla Twojej strony',
+    title: 'SM-art Chat: czat AI dla Twojej strony',
     description: 'Chatbot oparty na wiedzy Twojej firmy, gotowy do obsługi klientów 24/7.',
     type: 'website',
     locale: 'pl_PL',
@@ -42,13 +58,13 @@ export const metadata: Metadata = {
         url: '/img/og-image.svg',
         width: 1200,
         height: 600,
-        alt: 'SM-art — technologia, automatyzacja i marketing',
+        alt: 'SM-art Chat',
       },
     ],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Sm-art Chatbot — asystent AI dla Twojej strony',
+    title: 'SM-art Chat: czat AI dla Twojej strony',
     description: 'Chatbot oparty na wiedzy Twojej firmy, gotowy do obsługi klientów 24/7.',
     images: ['/img/og-image.svg'],
   },
@@ -72,7 +88,7 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
   await headers()
 
   return (
-    <html lang="pl" className={`${syne.variable} ${dmSans.variable}`}>
+    <html lang="pl" className={`${gambetta.variable} ${switzer.variable} ${jetbrains.variable}`}>
       <body>{children}</body>
     </html>
   )

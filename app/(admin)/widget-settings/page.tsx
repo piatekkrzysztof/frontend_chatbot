@@ -210,7 +210,7 @@ export default function WidgetSettingsPage() {
         </p>
       )}
       {bladOdczytu && (
-        <p role="alert" className="text-sm text-[#c0392b] mb-4">
+        <p role="alert" className="text-sm text-[var(--blad)] mb-4">
           {bladOdczytu} Formularz odblokuje się po poprawnym odczycie - odśwież stronę.
         </p>
       )}
@@ -259,7 +259,7 @@ export default function WidgetSettingsPage() {
                 disabled={branding === 'wymagany' && !hideBranding}
                 onChange={(e) => setHideBranding(e.target.checked)}
               />
-              Ukryj stopkę „Powered by Sm-art"
+              Ukryj stopkę „SM-art Chat”
             </label>
             <p className="text-xs tekst-slaby mt-1">
               {branding === 'wymagany'
@@ -566,8 +566,8 @@ Gdzie was znaleźć?`}
           )}
         </div>
 
-        {error && <p role="alert" className="text-sm text-[#c0392b]">{error}</p>}
-        {saved && <p role="status" className="text-sm text-[#1f7a4d]">Zapisano.</p>}
+        {error && <p role="alert" className="text-sm text-[var(--blad)]">{error}</p>}
+        {saved && <p role="status" className="text-sm text-[var(--sukces)]">Zapisano.</p>}
         <button
           type="submit"
           disabled={

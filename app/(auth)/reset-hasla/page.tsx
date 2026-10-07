@@ -71,7 +71,7 @@ export default function ResetPasswordPage() {
   }
   return (
     <div className="w-full max-w-md">
-      <div className="mb-7"><Logo wysokosc={30} jakoLink /></div>
+      <div className="mb-7"><Logo wysokosc={40} jakoLink /></div>
       <h1 id="reset-done" tabIndex={-1} className="text-3xl mb-4">{done ? 'Hasło zmienione' : 'Ustaw nowe hasło'}</h1>
       {loading ? <p role="status">Sprawdzam link…</p> : done ? (
         <div role="status">

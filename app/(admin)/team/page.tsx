@@ -240,7 +240,7 @@ export default function TeamPage() {
       </p>
 
       {error && (
-        <p role="alert" className="text-sm text-[#c0392b] mb-4">
+        <p role="alert" className="text-sm text-[var(--blad)] mb-4">
           {error}
         </p>
       )}
@@ -250,7 +250,7 @@ export default function TeamPage() {
         </p>
       )}
       {bladZespolu && (
-        <p role="alert" className="text-sm text-[#c0392b] mb-4">
+        <p role="alert" className="text-sm text-[var(--blad)] mb-4">
           {bladZespolu}
         </p>
       )}
@@ -311,7 +311,7 @@ export default function TeamPage() {
                         ? `Potwierdź usunięcie konta: ${member.username}`
                         : `Usuń konto: ${member.username}`
                     }
-                    className="text-xs text-[#c0392b] hover:underline disabled:opacity-50"
+                    className="text-xs text-[var(--blad)] hover:underline disabled:opacity-50"
                   >
                     {usuwany === member.id
                       ? 'Usuwam...'
@@ -394,7 +394,7 @@ export default function TeamPage() {
         </button>
       </form>
 
-      {inviteError && <p className="text-sm text-[#c0392b] mb-4">{inviteError}</p>}
+      {inviteError && <p className="text-sm text-[var(--blad)] mb-4">{inviteError}</p>}
 
       {lastInvite && (
         <div className="rounded border border-[color:var(--obramowanie-mocne)] bg-[color:var(--tlo)] p-3 mb-8">
@@ -445,7 +445,7 @@ export default function TeamPage() {
                   </div>
                   <button
                     onClick={() => handleRevoke(invite.id)}
-                    className="text-sm text-[#c0392b] hover:underline shrink-0"
+                    className="text-sm text-[var(--blad)] hover:underline shrink-0"
                   >
                     Cofnij
                   </button>

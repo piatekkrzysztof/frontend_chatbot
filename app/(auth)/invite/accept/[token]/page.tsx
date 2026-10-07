@@ -115,18 +115,18 @@ export default function AcceptInvitePage({
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-espresso-700">
-        <p className="text-sand-400">Sprawdzam zaproszenie...</p>
+      <div className="min-h-screen flex items-center justify-center bg-atrament-700">
+        <p className="text-mgla-400">Sprawdzam zaproszenie...</p>
       </div>
     )
   }
 
   if (loadError || !preview) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-espresso-700 px-4">
-        <div className="w-full max-w-sm rounded-lg bg-espresso-800 p-6 shadow">
+      <div className="min-h-screen flex items-center justify-center bg-atrament-700 px-4">
+        <div className="w-full max-w-sm rounded-lg bg-atrament-800 p-6 shadow">
           <h1 className="text-xl font-bold mb-2">Zaproszenie nieaktualne</h1>
-          <p className="text-sm text-sand-300">
+          <p className="text-sm text-mgla-300">
             {loadError || 'Ten link zaproszenia jest nieprawidłowy.'} Poproś osobę, która
             Cię zapraszała, o nowy link.
           </p>
@@ -137,10 +137,10 @@ export default function AcceptInvitePage({
 
   if (!preview.is_valid) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-espresso-700 px-4">
-        <div className="w-full max-w-sm rounded-lg bg-espresso-800 p-6 shadow">
+      <div className="min-h-screen flex items-center justify-center bg-atrament-700 px-4">
+        <div className="w-full max-w-sm rounded-lg bg-atrament-800 p-6 shadow">
           <h1 className="text-xl font-bold mb-2">Zaproszenie wygasło</h1>
-          <p className="text-sm text-sand-300">
+          <p className="text-sm text-mgla-300">
             Link do zespołu {preview.company} stracił ważność albo został już wykorzystany.
             Poproś o nowy.
           </p>
@@ -150,10 +150,10 @@ export default function AcceptInvitePage({
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-espresso-700 px-4">
-      <div className="w-full max-w-sm rounded-lg bg-espresso-800 p-6 shadow">
+    <div className="min-h-screen flex items-center justify-center bg-atrament-700 px-4">
+      <div className="w-full max-w-sm rounded-lg bg-atrament-800 p-6 shadow">
         <h1 className="text-xl font-bold mb-1">Dołącz do zespołu</h1>
-        <p className="text-sm text-sand-300 mb-5">
+        <p className="text-sm text-mgla-300 mb-5">
           Zaproszenie do <span className="font-medium">{preview.company}</span> w roli{' '}
           {ROLE_LABELS[preview.role] || preview.role}.
         </p>

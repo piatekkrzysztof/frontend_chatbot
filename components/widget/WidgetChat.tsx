@@ -51,7 +51,7 @@ function normalizujZrodla(surowe: unknown): Zrodlo[] {
 
 interface Branding {
   branding_mode: 'smart' | 'white_label'
-  // Środkowy próg cennika: od planu Grow stopka "Powered by Sm-art" znika.
+  // Środkowy próg cennika: od planu Grow stopka "SM-art Chat" znika.
   // Pole musi być w tym interfejsie, bo resolveTheme czyta je z tego obiektu —
   // bez niego TypeScript by je przepuścił, ale stopka nigdy by nie zniknęła.
   widget_hide_branding: boolean

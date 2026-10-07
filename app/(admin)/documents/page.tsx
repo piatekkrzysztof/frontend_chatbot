@@ -323,7 +323,7 @@ export default function DocumentsPage() {
             <span className="text-xs text-amber-600">Niezapisane zmiany</span>
           )}
         </div>
-        {descriptionError && <p className="text-sm text-[#c0392b] mt-2">{descriptionError}</p>}
+        {descriptionError && <p className="text-sm text-[var(--blad)] mt-2">{descriptionError}</p>}
       </form>
 
       <h2 className="text-xl font-bold mb-1">Dokumenty</h2>
@@ -359,7 +359,7 @@ export default function DocumentsPage() {
         </button>
       </form>
 
-      {error && <p role="alert" className="text-sm text-[#c0392b] mb-4">{error}</p>}
+      {error && <p role="alert" className="text-sm text-[var(--blad)] mb-4">{error}</p>}
 
       {/* Tabela przewija się sama — bez tego rozpychała całą stronę */}
 
@@ -384,7 +384,7 @@ export default function DocumentsPage() {
               <td className="py-2">
                 {documentStatus(doc.status)}
                 {doc.processing_error && (
-                  <p className="text-xs text-[#c0392b] mt-1 max-w-sm">{doc.processing_error}</p>
+                  <p className="text-xs text-[var(--blad)] mt-1 max-w-sm">{doc.processing_error}</p>
                 )}
               </td>
               <td className="py-2">{doc.chunk_count}</td>
@@ -431,7 +431,7 @@ export default function DocumentsPage() {
                       ? `Potwierdź usunięcie: ${doc.name}`
                       : `Usuń dokument: ${doc.name}`
                   }
-                  className="text-xs text-[#c0392b] hover:underline disabled:opacity-50"
+                  className="text-xs text-[var(--blad)] hover:underline disabled:opacity-50"
                 >
                   {kasowany === doc.id ? 'Usuwam...' : doKasacji === doc.id ? 'Na pewno?' : 'Usuń'}
                 </button>
@@ -486,7 +486,7 @@ export default function DocumentsPage() {
         </button>
       </form>
 
-      {sourceError && <p className="text-sm text-[#c0392b] mb-4">{sourceError}</p>}
+      {sourceError && <p className="text-sm text-[var(--blad)] mb-4">{sourceError}</p>}
 
       {/* Tabela przewija się sama — bez tego rozpychała całą stronę */}
 
@@ -519,7 +519,7 @@ export default function DocumentsPage() {
                 </button>
                 <button
                   onClick={() => handleRemoveSource(source.id)}
-                  className="text-[#c0392b] hover:underline"
+                  className="text-[var(--blad)] hover:underline"
                 >
                   Usuń
                 </button>

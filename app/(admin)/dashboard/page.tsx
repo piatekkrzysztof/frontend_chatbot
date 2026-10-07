@@ -75,22 +75,22 @@ function buildDailyQuestions(counts: { date: string; count: number }[]): DailyQu
 }
 
 interface MetricProps {
-  index: string
   label: string
   value: string | number
   detail: string
   tone?: 'signal' | 'neutral'
 }
 
-function Metric({ index, label, value, detail, tone = 'neutral' }: MetricProps) {
+function Metric({ label, value, detail, tone = 'neutral' }: MetricProps) {
+  // Bez numerów 01-04: cztery kafle nie mają kolejności, więc etykieta
+  // stoi tam, gdzie wcześniej był numer.
   return (
     <article className={`executive-metric ${tone === 'signal' ? 'is-signal' : ''}`}>
       <div className="metric-topline">
-        <span>{index}</span>
+        <h3>{label}</h3>
         <span className="metric-mark" aria-hidden="true" />
       </div>
       <p className="metric-value">{value}</p>
-      <h3>{label}</h3>
       <p className="metric-detail">{detail}</p>
     </article>
   )
@@ -306,7 +306,7 @@ export default function DashboardPage() {
     <div className="dashboard-page">
       <section className="dashboard-heading wejscie">
         <div>
-          <span className="section-kicker">Centrum operacyjne / 01</span>
+          <span className="section-kicker">Pulpit</span>
           <h1>{data?.tenant_name ? `Dzień dobry, ${data.tenant_name}.` : 'Dzień dobry.'}</h1>
           <p>Najważniejsze sygnały z obsługi klienta — bez szumu, w jednym miejscu.</p>
         </div>
@@ -367,17 +367,15 @@ export default function DashboardPage() {
           </section>
 
           <section className="executive-metrics wejscie" aria-label="Kluczowe wskaźniki" style={{ animationDelay: '120ms' }}>
-            <Metric index="01" label="Rozmowy" value={data.conversations.last_7d} detail={`${data.conversations.total} od początku`} />
-            <Metric index="02" label="Pytania klientów" value={data.questions.last_7d} detail={`${data.questions.total} łącznie`} />
+            <Metric label="Rozmowy" value={data.conversations.last_7d} detail={`${data.conversations.total} od początku`} />
+            <Metric label="Pytania klientów" value={data.questions.last_7d} detail={`${data.questions.total} łącznie`} />
             <Metric
-              index="03"
               label="Pokrycie wiedzą"
               value={coverage === null ? '—' : `${coverage}%`}
               detail={coverage === null ? 'Brak danych do oceny' : `${answeredFromContent} potwierdzonych odpowiedzi`}
               tone="signal"
             />
             <Metric
-              index="04"
               label="Wykorzystanie planu"
               value={data.usage.limit ? `${usagePercent}%` : data.usage.used}
               detail={data.usage.plan ? `Plan ${data.usage.plan}` : 'Bez aktywnego planu'}
@@ -391,7 +389,6 @@ export default function DashboardPage() {
                   <span className="section-kicker">Jakość odpowiedzi</span>
                   <h2>Pokrycie materiałami</h2>
                 </div>
-                <span className="panel-index">/ 02</span>
               </div>
 
               <div className="coverage-display">
@@ -414,7 +411,6 @@ export default function DashboardPage() {
                   <span className="section-kicker">Gotowość systemu</span>
                   <h2>Baza wiedzy</h2>
                 </div>
-                <span className="panel-index">/ 03</span>
               </div>
               <div className="knowledge-score-row">
                 <div className="knowledge-score"><strong>{knowledgeScore}</strong><span>/100</span></div>
@@ -455,9 +451,9 @@ export default function DashboardPage() {
                 {data.unanswered
                   .filter((item) => !zalatwione.includes(item.question))
                   .slice(0, 5)
-                  .map((item, index) => (
+                  .map((item) => (
                   <article key={item.question} className="unanswered-row">
-                    <span className="row-index">{String(index + 1).padStart(2, '0')}</span>
+                    <span className="row-index" aria-hidden="true" />
                     <p>
                       {item.question}
                       {/* Krotność mówi, co uzupełnić najpierw. Przy jednym

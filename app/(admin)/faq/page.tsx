@@ -145,7 +145,7 @@ export default function FAQPage() {
         </button>
       </form>
 
-      {error && <p className="text-sm text-[#c0392b] mb-4">{error}</p>}
+      {error && <p className="text-sm text-[var(--blad)] mb-4">{error}</p>}
 
       {items.length === 0 ? (
         <p className="text-sm tekst-slaby">Brak wpisów w FAQ.</p>
@@ -167,7 +167,7 @@ export default function FAQPage() {
                       ? `Potwierdź usunięcie: ${item.question}`
                       : `Usuń pytanie: ${item.question}`
                   }
-                  className="text-sm text-[#c0392b] hover:underline shrink-0"
+                  className="text-sm text-[var(--blad)] hover:underline shrink-0"
                 >
                   {doKasacji === item.id ? 'Na pewno?' : 'Usuń'}
                 </button>
