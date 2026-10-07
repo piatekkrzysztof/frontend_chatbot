@@ -4,7 +4,7 @@ export const uploadRules = {
   document: {
     accept: '.pdf,.docx,.txt,.md',
     bytes: 10 * 1024 * 1024,
-    hint: 'PDF, DOCX, TXT lub MD · do 10 MiB. PDF do 200 stron; tekst do 2 097 152 znaków. TXT i MD w UTF-8. Skany wymagają OCR.',
+    hint: 'PDF, DOCX, TXT lub MD · do 10 MiB. PDF do 200 stron; tekst do 2 097 152 znaków. TXT i MD: UTF-8, UTF-16 z BOM, Windows-1250 lub ISO-8859-2. Skany wymagają OCR.',
     formatError: 'Wybierz dokument PDF, DOCX, TXT lub MD.',
   },
   image: {
