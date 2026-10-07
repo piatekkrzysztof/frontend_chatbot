@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef, useState, FormEvent } from 'react'
+import { Fragment, useEffect, useRef, useState, FormEvent } from 'react'
 import { apiFetch, BladApi, pobierzPlik } from '@/lib/api'
 import { documentStatus, uploadError } from '@/lib/uploads'
 import UploadField from '@/components/UploadField'
@@ -20,6 +20,14 @@ interface DocumentItem {
   // Dokument z importu strony WWW ma treść, ale nie ma pliku do pobrania.
   ma_plik: boolean
 }
+
+interface FragmentDokumentu {
+  id: number
+  content: string
+}
+
+/** Ile fragmentów pokazujemy naraz. Duży PDF ma ich setki. */
+const FRAGMENTOW_NA_RAZ = 10
 
 interface WebsiteSourceItem {
   id: number
@@ -53,6 +61,15 @@ export default function DocumentsPage() {
   const [file, setFile] = useState<File | null>(null)
   const [uploading, setUploading] = useState(false)
   const [error, setError] = useState('')
+
+  // Podgląd tego, co bot faktycznie wie z dokumentu: tekst fragmentów, które
+  // trafiają do wyszukiwania. Bez tego dało się zobaczyć tylko ich liczbę,
+  // a nie to, czy np. tabela z DOCX nie rozsypała się na osobne komórki.
+  const [rozwiniety, setRozwiniety] = useState<number | null>(null)
+  const [fragmenty, setFragmenty] = useState<Record<number, FragmentDokumentu[]>>({})
+  const [ilePokazac, setIlePokazac] = useState(FRAGMENTOW_NA_RAZ)
+  const [wczytujeFragmenty, setWczytujeFragmenty] = useState<number | null>(null)
+  const [bladFragmentow, setBladFragmentow] = useState('')
 
   const [sources, setSources] = useState<WebsiteSourceItem[]>([])
   const [newUrl, setNewUrl] = useState('')
@@ -109,6 +126,28 @@ export default function DocumentsPage() {
       )
     } finally {
       setPobierany(null)
+    }
+  }
+
+  async function przelaczFragmenty(doc: DocumentItem) {
+    if (rozwiniety === doc.id) {
+      setRozwiniety(null)
+      return
+    }
+    setRozwiniety(doc.id)
+    setIlePokazac(FRAGMENTOW_NA_RAZ)
+    setBladFragmentow('')
+    if (fragmenty[doc.id]) return
+    setWczytujeFragmenty(doc.id)
+    try {
+      const dane = await apiFetch(`/documents/${doc.id}/chunks/`)
+      const lista: FragmentDokumentu[] = Array.isArray(dane) ? dane : dane.results || []
+      // Trasa nie ustala kolejności; numer fragmentu rośnie z miejscem w tekście.
+      setFragmenty((poprzednie) => ({ ...poprzednie, [doc.id]: [...lista].sort((a, b) => a.id - b.id) }))
+    } catch (err) {
+      setBladFragmentow(err instanceof Error ? err.message : 'Nie udało się pobrać fragmentów.')
+    } finally {
+      setWczytujeFragmenty(null)
     }
   }
 
@@ -379,7 +418,8 @@ export default function DocumentsPage() {
         </thead>
         <tbody>
           {documents.map((doc) => (
-            <tr key={doc.id} className="border-b obramowanie">
+            <Fragment key={doc.id}>
+            <tr className="border-b obramowanie">
               <td className="py-2">{doc.name}</td>
               <td className="py-2">
                 {documentStatus(doc.status)}
@@ -387,7 +427,21 @@ export default function DocumentsPage() {
                   <p className="text-xs text-[var(--blad)] mt-1 max-w-sm">{doc.processing_error}</p>
                 )}
               </td>
-              <td className="py-2">{doc.chunk_count}</td>
+              <td className="py-2">
+                {doc.chunk_count}
+                {doc.chunk_count > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => przelaczFragmenty(doc)}
+                    aria-expanded={rozwiniety === doc.id}
+                    aria-controls={`fragmenty-${doc.id}`}
+                    aria-label={`${rozwiniety === doc.id ? 'Ukryj' : 'Pokaż'} fragmenty: ${doc.name}`}
+                    className="ml-2 text-xs underline underline-offset-4"
+                  >
+                    {rozwiniety === doc.id ? 'Ukryj' : 'Pokaż'}
+                  </button>
+                )}
+              </td>
               <td className="py-2">{new Date(doc.uploaded_at).toLocaleString('pl-PL')}</td>
               <td className="py-2">
                 <label className="flex items-center gap-2 cursor-pointer">
@@ -437,6 +491,42 @@ export default function DocumentsPage() {
                 </button>
               </td>
             </tr>
+            {rozwiniety === doc.id && (
+              <tr className="border-b obramowanie">
+                <td colSpan={7} className="py-3" id={`fragmenty-${doc.id}`}>
+                  {wczytujeFragmenty === doc.id ? (
+                    <p className="text-sm tekst-slaby">Wczytuję fragmenty...</p>
+                  ) : bladFragmentow ? (
+                    <p role="alert" className="text-sm text-[var(--blad)]">{bladFragmentow}</p>
+                  ) : (
+                    <>
+                      <p className="text-xs tekst-slaby mb-2">
+                        Tak bot widzi ten dokument: {fragmenty[doc.id]?.length ?? 0} fragmentów.
+                        Odpowiada wyłącznie z tego tekstu.
+                      </p>
+                      <ol className="space-y-2">
+                        {(fragmenty[doc.id] ?? []).slice(0, ilePokazac).map((fragment, numer) => (
+                          <li key={fragment.id} className="border obramowanie rounded p-2">
+                            <p className="text-xs tekst-slaby mb-1">Fragment {numer + 1}</p>
+                            <p className="text-sm whitespace-pre-wrap break-words">{fragment.content}</p>
+                          </li>
+                        ))}
+                      </ol>
+                      {(fragmenty[doc.id]?.length ?? 0) > ilePokazac && (
+                        <button
+                          type="button"
+                          onClick={() => setIlePokazac((ile) => ile + FRAGMENTOW_NA_RAZ)}
+                          className="mt-2 text-xs underline underline-offset-4"
+                        >
+                          Pokaż kolejne (zostało {(fragmenty[doc.id]?.length ?? 0) - ilePokazac})
+                        </button>
+                      )}
+                    </>
+                  )}
+                </td>
+              </tr>
+            )}
+            </Fragment>
           ))}
           {documents.length === 0 && (
             <tr>

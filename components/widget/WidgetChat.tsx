@@ -165,6 +165,12 @@ const KOD_CZAT_NIEDOSTEPNY = 'czat_niedostepny'
  */
 const KOD_SERWER_ZAJETY = 'server_busy'
 
+/**
+ * Firma ma naraz najwięcej rozmów, ile pozwala jej limit (`ChatAdmissionDenied`
+ * w accounts/message_quota.py, 429). Też stan chwilowy - ponawiamy tak samo.
+ */
+const KOD_CZAT_CHWILOWO_ZAJETY = 'czat_chwilowo_zajety'
+
 /** Odstępy kolejnych prób w sekundach - razem około 10 s, potem komunikat. */
 const PONOWIENIA_ZAJETEGO_S = [1, 2, 3, 4]
 
@@ -176,10 +182,38 @@ function czekaj(sekundy: number, sygnal: AbortSignal) {
   })
 }
 
-async function czySerwerZajety(res: Response) {
-  if (res.status !== 503) return false
-  const tresc = await res.clone().json().catch(() => null)
-  return tresc?.code === KOD_SERWER_ZAJETY
+interface PowodOdmowy {
+  code?: string
+  kod?: string
+}
+
+/** Treść odmowy, czytana raz. Udanej odpowiedzi nie ruszamy - to strumień. */
+async function powodOdmowy(res: Response): Promise<PowodOdmowy | null> {
+  if (res.ok) return null
+  return res.json().catch(() => null)
+}
+
+function czySerwerZajety(res: Response, powod: PowodOdmowy | null) {
+  if (res.status !== 503 && res.status !== 429) return false
+  return powod?.code === KOD_SERWER_ZAJETY || powod?.kod === KOD_CZAT_CHWILOWO_ZAJETY
+}
+
+/**
+ * Komunikat przy limicie liczby wiadomości (429 z throttlingu DRF).
+ *
+ * Limit odwiedzającego to 20 wiadomości na godzinę. Ponawianie nic tu nie da,
+ * a „Wystąpił błąd" wyglądało jak awaria czatu - odwiedzający musi wiedzieć,
+ * że wystarczy poczekać, i mniej więcej ile.
+ */
+function komunikatLimitu(res: Response) {
+  const sekundy = Number(res.headers.get('Retry-After'))
+  if (!Number.isFinite(sekundy) || sekundy <= 0) {
+    return 'Wysłano dużo wiadomości w krótkim czasie. Spróbuj ponownie za kilka minut.'
+  }
+  if (sekundy < 60) {
+    return 'Wysłano dużo wiadomości w krótkim czasie. Spróbuj ponownie za chwilę.'
+  }
+  return `Wysłano dużo wiadomości w krótkim czasie. Spróbuj ponownie za ${Math.ceil(sekundy / 60)} min.`
 }
 
 export default function WidgetChat() {
@@ -299,7 +333,8 @@ export default function WidgetChat() {
       // Zajęty serwer odmawia przed utworzeniem rozmowy i przed pobraniem
       // wiadomości z limitu, więc ponowienie niczego nie dubluje.
       let res = await wyslij()
-      let zajety = await czySerwerZajety(res)
+      let powod = await powodOdmowy(res)
+      let zajety = czySerwerZajety(res, powod)
       for (const odstep of PONOWIENIA_ZAJETEGO_S) {
         if (!zajety || requestGeneration !== generation.current) break
         setNotice('Chwileczkę, odpowiadamy teraz innym osobom…')
@@ -307,7 +342,8 @@ export default function WidgetChat() {
         await czekaj(Math.max(odstep, Number.isFinite(wskazany) ? wskazany : 0), controller.signal)
         if (requestGeneration !== generation.current) return
         res = await wyslij()
-        zajety = await czySerwerZajety(res)
+        powod = await powodOdmowy(res)
+        zajety = czySerwerZajety(res, powod)
       }
 
       if (requestGeneration !== generation.current) return
@@ -325,8 +361,6 @@ export default function WidgetChat() {
         // Zamiast tego proponujemy zostawienie kontaktu, tak samo jak wtedy,
         // gdy bot nie zna odpowiedzi. Nieudana rozmowa zamienia się w zapytanie
         // handlowe, zamiast w zamkniętą kartę.
-        const powod = await res.json().catch(() => null)
-
         if (powod?.kod === KOD_CZAT_NIEDOSTEPNY) {
           if (!contactSent) setOfferContact(true)
           // Celowo bez słowa o subskrypcji czy limicie: rozliczenia firmy
@@ -336,6 +370,10 @@ export default function WidgetChat() {
 
         if (zajety) {
           throw new Error('Rozmawiamy teraz z wieloma osobami naraz. Spróbuj za chwilę.')
+        }
+
+        if (res.status === 429) {
+          throw new Error(komunikatLimitu(res))
         }
 
         throw new Error('Wystąpił błąd. Spróbuj ponownie.')
