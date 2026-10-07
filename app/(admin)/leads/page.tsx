@@ -108,7 +108,7 @@ export default function LeadsPage() {
         {nieobsluzone > 0 && ` Nieobsłużone: ${nieobsluzone}.`}
       </p>
 
-      {error && <p role="alert" className="text-sm text-[#c0392b] mb-4">{error}</p>}
+      {error && <p role="alert" className="text-sm text-[var(--blad)] mb-4">{error}</p>}
 
       {/* Zapytanie powstaje tylko wtedy, gdy ktoś świadomie zostawi namiary —
           a propozycja pojawia się dopiero, gdy bot nie umie odpowiedzieć.
@@ -162,7 +162,7 @@ export default function LeadsPage() {
                       właściciel czeka na maila, który nigdy nie przyszedł,
                       i nie ma jak się dowiedzieć, że nie przyjdzie. */}
                   {item.blad_powiadomienia && (
-                    <p className="text-xs mt-1.5 text-[#b3261e]">
+                    <p className="text-xs mt-1.5 text-[var(--blad)]">
                       {item.blad_powiadomienia.startsWith('BRAK_ADRESU') ? (
                         <>
                           Nie mamy dokąd wysłać powiadomienia —{' '}

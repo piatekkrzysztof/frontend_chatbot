@@ -113,7 +113,7 @@ export default function DrugiSkladnik() {
   }
 
   if (!stan) return <section><h2 className="text-xl font-bold mb-3">Logowanie dwuetapowe</h2>
-    {blad ? <><p role="alert" className="text-[#b42318] mb-3">{blad}</p>
+    {blad ? <><p role="alert" className="text-[var(--blad)] mb-3">{blad}</p>
       <button type="button" className="btn-ghost min-h-11 disabled:opacity-50 disabled:cursor-not-allowed" onClick={() => { setBlad(''); setOdczyt(odczyt + 1) }}>Ponów odczyt MFA</button></>
       : <p role="status" className="tekst-drugi">Sprawdzam ustawienia logowania...</p>}
   </section>
@@ -127,7 +127,7 @@ export default function DrugiSkladnik() {
       </p>
 
       {blad && (
-        <p role="alert" className="mb-4 text-sm text-[#c0392b]">
+        <p role="alert" className="mb-4 text-sm text-[var(--blad)]">
           {blad}
         </p>
       )}

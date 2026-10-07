@@ -53,7 +53,7 @@ export default function ResendConfirmation({ initialEmail = '' }: { initialEmail
       <button type="submit" className="btn-primary min-h-11" disabled={busy || seconds > 0}>
         {busy ? 'Wysyłam…' : seconds ? `Wyślij ponownie za ${seconds} s` : 'Wyślij nowy link'}
       </button>
-      {message && <p role="status" className="text-sm text-sand-300">{message}</p>}
+      {message && <p role="status" className="text-sm text-mgla-300">{message}</p>}
       {error && <p role="alert" className="text-sm text-rose-400">{error}</p>}
     </form>
   )

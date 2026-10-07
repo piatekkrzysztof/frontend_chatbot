@@ -241,14 +241,14 @@ export default function ConversationsPage() {
             </p>
           )}
           {wynikImportu && (
-            <p role="status" className="text-sm text-[#1f7a4d] mt-2">
+            <p role="status" className="text-sm text-[var(--sukces)] mt-2">
               {wynikImportu}
             </p>
           )}
         </section>
       ) : null}
 
-      {error && <p role="alert" className="text-sm text-[#c0392b] mb-4">{error}</p>}
+      {error && <p role="alert" className="text-sm text-[var(--blad)] mb-4">{error}</p>}
       {wynikUsuniecia && (
         <p role="status" className="text-sm mb-4">
           {wynikUsuniecia}
@@ -286,7 +286,7 @@ export default function ConversationsPage() {
                     type="button"
                     onClick={() => usunRozmowe(log.conversation_session_id!)}
                     disabled={usuwa}
-                    className="text-xs text-[#c0392b] hover:underline disabled:opacity-50"
+                    className="text-xs text-[var(--blad)] hover:underline disabled:opacity-50"
                   >
                     {/* Lista pokazuje pojedyncze wymiany, a usuwamy całą rozmowę -
                         dlatego potwierdzenie mówi wprost, co zniknie. */}

@@ -3,13 +3,14 @@
  * w panelu. Rozdzielone kopie rozjechałyby się przy pierwszej zmianie, a wtedy
  * podgląd pokazywałby coś innego, niż zobaczy odwiedzający.
  *
- * Układ jest szwajcarski: kremowe płótno, białe powierzchnie, włoskowate
+ * Układ jest szwajcarski: papierowe płótno, jaśniejsze powierzchnie, włoskowate
  * linie zamiast cieni i zaokrągleń, jeden ciemny pas u góry. Pomarańcz
  * pojawia się rzadko i zawsze jako blok albo linia — nigdy jako wypełnienie
  * połowy ekranu. Wcześniej całe okno było espresso, więc czat wyglądał jak
  * konsola, a nie jak element strony klienta.
  *
- * Paleta ta sama co na agencjasm-art.pl: espresso, ember, krem, piasek.
+ * Paleta ta sama co na agencjasm-art.pl (system „Przypis”): atrament,
+ * papier, zakreślacz i mgła.
  */
 
 /* ─── Rachunek kontrastu ───
@@ -63,29 +64,31 @@ export function doTekstu(kolor: string, tlo: string, prog = 4.5) {
 
 /** Czerń albo biel — to, co lepiej czyta się na wypełnieniu danym kolorem. */
 export function naWypelnieniu(kolor: string) {
-  return kontrast(kolor, '#1a1108') >= kontrast(kolor, '#ffffff') ? '#1a1108' : '#ffffff'
+  return kontrast(kolor, '#16233f') >= kontrast(kolor, '#ffffff') ? '#16233f' : '#ffffff'
 }
 
 export const SMART_THEME = {
-  /* Ciemny pas nagłówka — ten sam kolor, co tło strony agencji */
-  pasek: '#110c04',
-  /* Wiadomość odwiedzającego: espresso o ton jaśniejsze, żeby odróżniało się
+  /* Granatowy pas nagłówka: atrament ze strony agencji (system „Przypis”) */
+  pasek: '#16233f',
+  /* Wiadomość odwiedzającego: atrament o ton jaśniejszy, żeby odróżniała się
      od paska, gdy oba trafią obok siebie przy krótkiej rozmowie */
-  ciemne: '#1a1108',
-  akcent: '#F97316',
-  krem: '#FAF8F5',
-  /* Płótno rozmowy i powierzchnie */
-  plotno: '#F7F5F2',
-  powierzchnia: '#ffffff',
-  /* Tekst na jasnym. Wartości z jasnego motywu panelu — jeden zestaw
-     w całym produkcie, żeby widget i panel nie miały dwóch różnych szarości. */
-  tekst: '#241a0e',
-  tekstDrugi: '#5f5346',
-  tekstSlaby: '#6b5a48',
-  /* Piasek do napisów na ciemnym pasku (na jasnym daje 3,35:1 — za mało) */
-  piasekNaCiemnym: '#a89880',
-  linia: 'rgba(36, 26, 14, 0.12)',
-  liniaMocna: 'rgba(36, 26, 14, 0.22)',
+  ciemne: '#1c2b4b',
+  /* Zakreślacz. Na papierze 1,7:1, więc do liter doTekstu() schodzi
+     o kilka tonów; wypełnienia zostają w tym odcieniu. */
+  akcent: '#FFA552',
+  krem: '#F5F2EA',
+  /* Płótno rozmowy i powierzchnie: papier i jaśniejsza kartka */
+  plotno: '#F5F2EA',
+  powierzchnia: '#fbfaf6',
+  /* Tekst na jasnym. Te same wartości co jasny motyw panelu, żeby widget
+     i panel nie miały dwóch różnych szarości. */
+  tekst: '#16233f',
+  tekstDrugi: '#4a4f5c',
+  tekstSlaby: '#575c68',
+  /* Mgła do napisów na granatowym pasku: 8,3:1 na #16233f */
+  piasekNaCiemnym: '#aeb4c2',
+  linia: 'rgba(22, 35, 63, 0.12)',
+  liniaMocna: 'rgba(22, 35, 63, 0.22)',
 }
 
 export interface ThemeInput {
@@ -101,14 +104,14 @@ export function resolveTheme(branding: ThemeInput | null | undefined) {
   const isWhiteLabel = branding?.branding_mode === 'white_label'
   const accent = isWhiteLabel ? branding?.widget_color || '#111827' : SMART_THEME.akcent
 
-  /* Pas nagłówka: w trybie Sm-art espresso, w białej etykiecie kolor klienta.
+  /* Pas nagłówka: w trybie SM-art atrament, w białej etykiecie kolor klienta.
      Napis dobierany rachunkiem, bo przy jasnej marce biel znika. */
   const headerBg = isWhiteLabel ? accent : SMART_THEME.pasek
   const headerText = isWhiteLabel ? naWypelnieniu(accent) : SMART_THEME.krem
 
   return {
     isWhiteLabel,
-    name: isWhiteLabel ? branding?.widget_title || 'Chatbot' : 'Sm-art',
+    name: isWhiteLabel ? branding?.widget_title || 'Chatbot' : 'SM-art',
 
     /* Wypełnienia i linie — tu kolor klienta zostaje nietknięty */
     accent,
@@ -122,7 +125,7 @@ export function resolveTheme(branding: ThemeInput | null | undefined) {
     headerMuted: isWhiteLabel
       ? headerText === '#ffffff'
         ? 'rgba(255,255,255,0.78)'
-        : 'rgba(26,17,8,0.72)'
+        : 'rgba(22,35,63,0.72)'
       : SMART_THEME.piasekNaCiemnym,
 
     canvas: SMART_THEME.plotno,
@@ -146,7 +149,7 @@ export function resolveTheme(branding: ThemeInput | null | undefined) {
       ? branding?.widget_footer_text || ''
       : branding?.widget_hide_branding
         ? ''
-        : 'Powered by Sm-art',
+        : 'SM-art Chat',
   }
 }
 

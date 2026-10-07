@@ -5,12 +5,14 @@ import { ReactNode, useState } from 'react'
 import Sidebar from '@/components/layout/Sidebar'
 import Navbar from '@/components/layout/Navbar'
 import { withAuth } from '@/lib/withAuth'
+import { useMotyw } from '@/lib/motyw'
 
 function AdminLayout({ children }: { children: ReactNode }) {
   const [menuOtwarte, setMenuOtwarte] = useState(false)
+  const { motyw, przelacz } = useMotyw()
 
   return (
-    <div className="motyw-jasny admin-shell">
+    <div className={`${motyw === 'ciemny' ? 'motyw-ciemny' : 'motyw-jasny'} admin-shell`}>
       <div className="admin-sidebar-desktop">
         <Sidebar />
       </div>
@@ -29,7 +31,12 @@ function AdminLayout({ children }: { children: ReactNode }) {
       )}
 
       <div className="admin-workspace">
-        <Navbar onToggleMenu={() => setMenuOtwarte((v) => !v)} menuOtwarte={menuOtwarte} />
+        <Navbar
+          onToggleMenu={() => setMenuOtwarte((v) => !v)}
+          menuOtwarte={menuOtwarte}
+          motyw={motyw}
+          onZmienMotyw={przelacz}
+        />
         <main className="admin-main">{children}</main>
       </div>
     </div>

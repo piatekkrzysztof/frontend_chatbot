@@ -102,11 +102,11 @@ export default function ConfirmEmailPage() {
 
   return (
     <div className="w-full max-w-md">
-      <div className="mb-7"><Logo wysokosc={30} jakoLink /></div>
+      <div className="mb-7"><Logo wysokosc={40} jakoLink /></div>
       <h1 className="text-3xl mb-4">{done ? 'Konto gotowe' : 'Potwierdź adres e-mail'}</h1>
       {loading ? <p role="status">Sprawdzam link…</p> : done ? (
         <div role="status">
-          <p className="text-sand-300 mb-5">{paid
+          <p className="text-mgla-300 mb-5">{paid
             ? 'Adres potwierdzony. Zaloguj się, aby wybrać plan i przejść do płatności.'
             : 'Adres potwierdzony. Twój 14-dniowy okres próbny rozpoczął się teraz.'}</p>
           <Link className="btn-primary" href={paid ? '/login?dalej=subskrypcja' : '/login'}>
@@ -123,7 +123,7 @@ export default function ConfirmEmailPage() {
           )}
           {preview && !invalid && (
             <form onSubmit={activate} className="flex flex-col gap-4">
-              <p className="text-sand-300 break-words">Konto dla {preview.email} w firmie {preview.company_name}.
+              <p className="text-mgla-300 break-words">Konto dla {preview.email} w firmie {preview.company_name}.
                 Ustaw własne hasło, aby zakończyć rejestrację.</p>
               <input type="hidden" autoComplete="username" value={preview.email} />
               <label className="label" htmlFor="activation-password">Hasło</label>
@@ -142,7 +142,7 @@ export default function ConfirmEmailPage() {
           )}
           <p id="activation-error" role={error ? 'alert' : undefined} className="text-sm text-rose-400 mt-3">{error}</p>
           {invalid && <ResendConfirmation initialEmail={preview?.email} />}
-          <p className="text-sm text-sand-400 mt-6">Konto zostało już aktywowane?{' '}
+          <p className="text-sm text-mgla-400 mt-6">Konto zostało już aktywowane?{' '}
             <Link className="underline" href="/login">Zaloguj się</Link>.{' '}
             <Link className="underline" href="/rejestracja">Wróć do rejestracji</Link>.
           </p>

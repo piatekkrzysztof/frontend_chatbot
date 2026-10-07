@@ -46,11 +46,11 @@
     } catch (e) { /* brak pamięci sesji nie może wywrócić widgetu */ }
   }
 
-  // Paleta z agencjasm-art.pl. Kolor klienta w białej etykiecie dociąga
-  // zaplanujZaczepke() — do tego czasu stoi espresso, nie przypadkowy granat.
-  var ESPRESSO = '#110c04';
-  var EMBER = '#F97316';
-  var KREM = '#FAF8F5';
+  // Paleta z agencjasm-art.pl (atrament, zakreślacz, papier). Kolor klienta w białej etykiecie dociąga
+  // zaplanujZaczepke() — do tego czasu stoi atrament marki, nie przypadkowy kolor.
+  var ATRAMENT = '#16233F';
+  var ZAKRESLACZ = '#FFA552';
+  var KREM = '#F5F2EA';
   var KANT = '2px';
 
   var button = document.createElement('button');
@@ -69,10 +69,10 @@
     // co reszta okna czatu. Emoji zastąpione rysunkiem, bo 💬 wygląda
     // inaczej na każdym systemie i psuje wrażenie gotowego produktu.
     'border-radius:' + KANT,
-    'background:' + ESPRESSO,
+    'background:' + ATRAMENT,
     'border:none',
-    'border-bottom:2px solid ' + EMBER,
-    'box-shadow:0 6px 20px rgba(17,12,4,0.28)',
+    'border-bottom:2px solid ' + ZAKRESLACZ,
+    'box-shadow:0 6px 20px rgba(22,35,63,0.28)',
     'cursor:pointer',
     'z-index:2147483000',
     'display:flex',
@@ -113,7 +113,7 @@
       'max-height:calc(100vh - 120px)',
       'border:none',
       'border-radius:' + KANT,
-      'box-shadow:0 12px 40px rgba(17,12,4,0.26)',
+      'box-shadow:0 12px 40px rgba(22,35,63,0.26)',
       'z-index:2147483000',
       'display:none',
     ].join(';');
@@ -170,12 +170,12 @@
       'max-width:260px',
       'padding:12px 34px 12px 14px',
       'background:#ffffff',
-      'color:#241a0e',
+      'color:#16233f',
       'font:13px/1.55 system-ui,-apple-system,Segoe UI,sans-serif',
-      'border:1px solid rgba(36,26,14,0.12)',
-      'border-left:2px solid ' + EMBER,
+      'border:1px solid rgba(22,35,63,0.12)',
+      'border-left:2px solid ' + ZAKRESLACZ,
       'border-radius:' + KANT,
-      'box-shadow:0 8px 30px rgba(17,12,4,0.16)',
+      'box-shadow:0 8px 30px rgba(22,35,63,0.16)',
       'z-index:2147483000',
       'cursor:pointer',
     ].join(';');
@@ -191,7 +191,7 @@
       'right:6px',
       'border:none',
       'background:none',
-      'color:#6b5a48',
+      'color:#575c68',
       'font-size:18px',
       'line-height:1',
       'cursor:pointer',
@@ -238,7 +238,7 @@
     });
     var l = 0.2126 * k[0] + 0.7152 * k[1] + 0.0722 * k[2];
     // Próg 0.179 to punkt, w którym biel i czerń dają ten sam kontrast
-    return l > 0.179 ? '#1a1108' : KREM;
+    return l > 0.179 ? '#16233f' : KREM;
   }
 
   function zastosujMarke(dane) {

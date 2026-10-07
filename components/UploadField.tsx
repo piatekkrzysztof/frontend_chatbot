@@ -34,7 +34,7 @@ export default function UploadField({ id, label, kind, file, onChange, disabled 
       <p id={`${id}-hint`} className="text-xs tekst-drugi mt-2 max-w-xl">
         {uploadRules[kind].hint}
       </p>
-      {error && <p id={`${id}-error`} role="alert" className="text-sm text-[#c0392b] mt-2">{error}</p>}
+      {error && <p id={`${id}-error`} role="alert" className="text-sm text-[var(--blad)] mt-2">{error}</p>}
     </div>
   )
 }

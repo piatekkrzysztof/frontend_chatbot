@@ -104,7 +104,7 @@ function FormularzLogowania() {
   return (
     <div className="w-full max-w-sm">
       <div className="mb-7">
-        <Logo wysokosc={30} jakoLink />
+        <Logo wysokosc={40} jakoLink />
       </div>
 
       <h1 className="text-3xl mb-6">{bilet ? 'Potwierdź logowanie' : 'Zaloguj się'}</h1>
@@ -160,7 +160,7 @@ function FormularzLogowania() {
               setKod('')
               setError('')
             }}
-            className="text-sm text-sand-400 underline underline-offset-2"
+            className="text-sm text-mgla-400 underline underline-offset-2"
           >
             Zaloguj się na inne konto
           </button>
@@ -204,15 +204,15 @@ function FormularzLogowania() {
 
       {/* Bez tego jedyną drogą do konta było logowanie — nowy klient
           nie miał gdzie kliknąć, żeby je w ogóle założyć */}
-      <p className="text-sm text-sand-400 mt-6">
+      <p className="text-sm text-mgla-400 mt-6">
         <Link href="/odzyskaj-haslo" className="underline inline-flex min-h-11 items-center">Nie pamiętam hasła</Link>
       </p>
-      <p className="text-sm text-sand-400 mt-6">
+      <p className="text-sm text-mgla-400 mt-6">
         <Link href="/aktywacja" className="underline inline-flex min-h-11 items-center">Nie dotarł link aktywacyjny?</Link>
       </p>
-      <p className="text-sm text-sand-400 mt-6">
+      <p className="text-sm text-mgla-400 mt-6">
         Nie masz konta?{' '}
-        <Link href="/rejestracja" className="text-ember-500 hover:text-ember-400 transition-colors">
+        <Link href="/rejestracja" className="text-zakreslacz-500 hover:text-zakreslacz-400 transition-colors">
           Załóż je za darmo
         </Link>
       </p>

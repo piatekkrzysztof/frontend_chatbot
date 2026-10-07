@@ -5,10 +5,13 @@ import { usePathname, useRouter } from 'next/navigation'
 import { apiFetch } from '@/lib/api'
 import { wyloguj } from '@/lib/auth'
 import Logo from './Logo'
+import type { Motyw } from '@/lib/motyw'
 
 interface Props {
   onToggleMenu?: () => void
   menuOtwarte?: boolean
+  motyw?: Motyw
+  onZmienMotyw?: () => void
 }
 
 // Podpis pod nazwa firmy mowil "Administrator" kazdemu, niezaleznie od roli.
@@ -33,7 +36,7 @@ const PAGE_NAMES: Record<string, string> = {
   '/privacy': 'Prywatność',
 }
 
-export default function Navbar({ onToggleMenu, menuOtwarte }: Props) {
+export default function Navbar({ onToggleMenu, menuOtwarte, motyw = 'jasny', onZmienMotyw }: Props) {
   const router = useRouter()
   const pathname = usePathname()
   const [tenantName, setTenantName] = useState('')
@@ -72,9 +75,9 @@ export default function Navbar({ onToggleMenu, menuOtwarte }: Props) {
             <span aria-hidden="true">{menuOtwarte ? '×' : '≡'}</span>
           </button>
         )}
-        <Logo wysokosc={25} className="lg:hidden" />
+        <Logo wysokosc={32} className="lg:hidden" />
         <div className="admin-breadcrumb hidden lg:flex">
-          <span>Workspace</span>
+          <span>Panel</span>
           <span aria-hidden="true">/</span>
           <strong>{currentPage}</strong>
         </div>
@@ -82,8 +85,20 @@ export default function Navbar({ onToggleMenu, menuOtwarte }: Props) {
 
       <div className="admin-navbar-actions">
         <span className="admin-live-badge hidden md:inline-flex">
-          <span className="status-dot" /> Live
+          <span className="status-dot" /> Czat działa
         </span>
+        {onZmienMotyw && (
+          <button
+            type="button"
+            onClick={onZmienMotyw}
+            className="admin-motyw"
+            aria-pressed={motyw === 'ciemny'}
+            title={motyw === 'ciemny' ? 'Przełącz na jasny motyw' : 'Przełącz na ciemny motyw'}
+          >
+            <span aria-hidden="true">{motyw === 'ciemny' ? '☀' : '☾'}</span>
+            <span className="sr-only">Tryb ciemny</span>
+          </button>
+        )}
         <div className="admin-account hidden sm:flex">
           <span className="admin-avatar">{initials}</span>
           <span className="admin-account-copy">
