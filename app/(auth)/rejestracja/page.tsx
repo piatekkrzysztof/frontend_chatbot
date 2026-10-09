@@ -328,7 +328,9 @@ function FormularzRejestracji() {
 
       <p className="text-sm text-mgla-400 mt-6">
         Masz już konto?{' '}
-        <Link href="/login" className="text-zakreslacz-500 hover:text-zakreslacz-400 transition-colors">
+        {/* Podkreślenie: link w zdaniu różnił się od tekstu tylko kolorem
+            (1,32:1 przy wymaganych 3:1, WCAG 1.4.1). */}
+        <Link href="/login" className="underline underline-offset-4 text-zakreslacz-500 hover:text-zakreslacz-400 transition-colors">
           Zaloguj się
         </Link>
       </p>

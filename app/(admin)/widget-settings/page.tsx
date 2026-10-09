@@ -191,8 +191,12 @@ export default function WidgetSettingsPage() {
         </p>
 
         {embedSnippet ? (
+          // Przewijany w poziomie, więc musi dać się do niego dojść klawiaturą -
+          // inaczej końcówka kodu jest poza zasięgiem osoby bez myszy (WCAG 2.1.1).
           <pre className="bg-[color:var(--tlo)] text-[color:var(--tekst)] text-xs rounded-lg p-4 overflow-x-auto"
-               style={{ border: '1px solid var(--border-subtle)' }}>
+               style={{ border: '1px solid var(--border-subtle)' }}
+               tabIndex={0}
+               aria-label="Kod osadzenia widgetu">
             {embedSnippet}
           </pre>
         ) : (
