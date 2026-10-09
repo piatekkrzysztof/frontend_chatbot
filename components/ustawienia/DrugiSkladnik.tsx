@@ -229,6 +229,18 @@ export default function DrugiSkladnik() {
 
       {!stan.wlaczony && !obrazekQR && kodyZapasowe.length === 0 && (
         <form onSubmit={rozpocznij} className="flex flex-col gap-4 max-w-sm">
+        {/* Bez tego klient widzi „aplikację uwierzytelniającą” dopiero przy
+            kodzie QR i nie wie, co zainstalować - przerywa konfigurację. */}
+        <div className="rounded border border-[color:var(--obramowanie-mocne)] p-4 text-sm">
+          <p className="font-bold mb-1">Najpierw zainstaluj aplikację na telefonie</p>
+          <p className="tekst-drugi">
+            Potrzebna jest darmowa aplikacja do kodów logowania, np. <strong>Google
+            Authenticator</strong> albo <strong>Microsoft Authenticator</strong> - obie są
+            w Google Play i App Store. Działa też każda inna aplikacja tego typu, również
+            menedżer haseł, który generuje takie kody (np. 1Password). Bez SMS-ów i bez
+            dodatkowego konta.
+          </p>
+        </div>
         <p className="tekst-drugi text-sm" id="mfa-password-help">Potwierdź aktualne hasło, aby rozpocząć konfigurację.
           Użyjemy go także przy potwierdzeniu kodu. Nie zapisujemy hasła w przeglądarce.</p>
         <PasswordField id="mfa-setup-password" label="Aktualne hasło" value={haslo}
@@ -246,9 +258,13 @@ export default function DrugiSkladnik() {
       {obrazekQR && (
         <form onSubmit={potwierdz} className="flex flex-col gap-4 max-w-sm">
           <ol className="tekst-drugi text-sm list-decimal pl-5 space-y-1">
-            <li>Otwórz aplikację uwierzytelniającą na telefonie.</li>
-            <li>Zeskanuj kod poniżej.</li>
-            <li>Przepisz sześciocyfrowy kod, który się pojawi.</li>
+            <li>
+              Otwórz aplikację na telefonie (np. Google Authenticator) i dodaj nowe konto,
+              zwykle przyciskiem „+”.
+            </li>
+            {/* Nazwa wpisu = nazwa_wydawcy() w backendzie (accounts/dwuskladnikowe.py). */}
+            <li>Zeskanuj kod poniżej. W aplikacji pojawi się wpis „SM-art Chat”.</li>
+            <li>Przepisz sześciocyfrowy kod z tego wpisu. Zmienia się co 30 sekund.</li>
           </ol>
 
           {/* eslint-disable-next-line @next/next/no-img-element -- obrazek
