@@ -107,11 +107,14 @@ function Sygnal({
       <h3>{nazwa}</h3>
       <p className="tekst-drugi">{sygnal.opis}</p>
       {szczegoly && szczegoly.length > 0 && (
-        <dl className="stan-szczegoly">
+        // Lista, nie <dl>: to gotowe zdania „Etykieta: wartość", a nie pary
+        // termin-definicja. <dl> z samymi <div> czytnik ekranu ogłaszał jako
+        // listę definicji bez żadnej definicji (axe: definition-list).
+        <ul className="stan-szczegoly">
           {szczegoly.map((wiersz) => (
-            <div key={wiersz}>{wiersz}</div>
+            <li key={wiersz}>{wiersz}</li>
           ))}
-        </dl>
+        </ul>
       )}
       {sygnal.przyklad_bledu && (
         <p className="stan-blad">{sygnal.przyklad_bledu}</p>
@@ -296,10 +299,10 @@ export default function StanPage() {
                 Limity chronią Cię przed pojedynczym natrętnym rozmówcą. Żeby działały,
                 serwer musi odróżniać odwiedzających od siebie.
               </p>
-              <dl className="stan-szczegoly">
-                <div>Twój adres widziany przez serwer: {adres.rozpoznany_adres}</div>
-                <div>Zapisywany identyfikator: {adres.zapisywany_identyfikator}</div>
-              </dl>
+              <ul className="stan-szczegoly">
+                <li>Twój adres widziany przez serwer: {adres.rozpoznany_adres}</li>
+                <li>Zapisywany identyfikator: {adres.zapisywany_identyfikator}</li>
+              </ul>
               <p className="tekst-slaby stan-podpowiedz">{adres.podpowiedz}</p>
             </section>
           )}

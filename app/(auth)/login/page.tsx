@@ -212,7 +212,7 @@ function FormularzLogowania() {
       </p>
       <p className="text-sm text-mgla-400 mt-6">
         Nie masz konta?{' '}
-        <Link href="/rejestracja" className="text-zakreslacz-500 hover:text-zakreslacz-400 transition-colors">
+        <Link href="/rejestracja" className="underline underline-offset-4 text-zakreslacz-500 hover:text-zakreslacz-400 transition-colors">
           Załóż je za darmo
         </Link>
       </p>

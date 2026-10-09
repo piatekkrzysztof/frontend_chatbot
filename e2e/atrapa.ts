@@ -31,6 +31,36 @@ const ODPOWIEDZI: Record<string, unknown> = {
     tenant_name: 'Rowerownia Krakowska',
     tenant_api_key: 'klucz-testowy',
   },
+  // Ksztalt z api/views/diagnostyka_zadan.py. Bez tego wpisu atrapa oddawala
+  // tu domyslne `[]` i strona Stan wywracala sie do ekranu bledu Next.js -
+  // test dostepnosci zglaszal wtedy brak tytulu strony, ktorego w prawdziwym
+  // panelu nie ma.
+  '/diagnostyka/zadania/': {
+    sprawdzono: '2026-10-09T08:00:00Z',
+    poziom: 'ok',
+    werdykt: 'Zadania w tle wykonują się normalnie.',
+    broker_i_workery: { broker_osiagalny: true, odpowiedzialo_workerow: 1, nazwy: ['worker@render'] },
+    zadeklarowany_harmonogram: ['czyszczenie-rodo', 'pobieranie-stron', 'rozliczanie-rezerwacji'],
+    slady_w_danych: {
+      pobieranie_stron: {
+        wniosek: 'dziala', opis: 'Strony pobrane w ciągu ostatniej doby.',
+        aktywnych_zrodel: 1, ostatnie_pobranie: '2026-10-09T04:00:00Z', godzin_temu: 4,
+      },
+      czyszczenie_rodo: { wniosek: 'dziala', opis: 'Brak rozmów po terminie.', zaleglych_rozmow: 0 },
+      rozliczanie_rezerwacji: {
+        wniosek: 'dziala', opis: 'Rezerwacje rozliczane na bieżąco.',
+        do_rozliczenia: 0, zaleglych_biletow: 0,
+      },
+    },
+    baza_wiedzy: { wniosek: 'dziala', opis: 'Wszystkie dokumenty mają fragmenty.', dokumentow: 3, bez_fragmentow: [], niepelne: [] },
+    poczta: { wniosek: 'dziala', opis: 'Powiadomienia wychodzą.', adres: 'wlascicielka@rowerownia.pl' },
+  },
+  '/diagnostyka/adres/': {
+    trusted_proxy_depth: 2,
+    rozpoznany_adres: '203.0.113.10',
+    zapisywany_identyfikator: '203.0.113.0',
+    podpowiedz: 'Adres rozpoznany zza dwóch serwerów pośredniczących.',
+  },
   // Ksztalt przepisany z api/views/analytics.py, nie wymyslony. Pierwsza
   // wersja tej atrapy zgadywala nazwy pol i pulpit wywracal sie na
   // `undefined.limit` -- test pokazywal wtedy awarie aplikacji, ktorej
