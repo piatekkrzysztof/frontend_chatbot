@@ -18,7 +18,7 @@
  * rejestracji odroznialny tylko kolorem (1,32:1, WCAG 1.4.1).
  */
 import AxeBuilder from '@axe-core/playwright'
-import { expect, test } from '@playwright/test'
+import { expect, test, type Page, type Request } from '@playwright/test'
 import { podstawBackend, zalogowany } from './atrapa'
 
 const EKRANY_PANELU = [
@@ -28,17 +28,57 @@ const EKRANY_PANELU = [
 const EKRANY_PUBLICZNE = ['/login', '/rejestracja', '/widget?key=klucz-testowy']
 const REGULY = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa']
 
+/**
+ * Czeka, az ekran skonczy wczytywac dane: zadne zapytanie do API nie jest w toku
+ * od 300 ms. Naglowek pojawia sie wczesniej niz dane, a przyciski „Zapisz”
+ * sa do tego czasu wylaczone i polprzezroczyste. axe trafial czasem w chwile
+ * przelaczenia i zglaszal kontrast przycisku, ktory po wczytaniu jest
+ * poprawny - na /ustawienia 3 z 12 przebiegow (9.10.2026). `networkidle`
+ * Playwrighta nie nadaje sie: czeka 500 ms bez ruchu na KAZDYM zasobie
+ * i na ekranach z odpytywaniem nie konczy sie przed limitem.
+ */
+async function poWczytaniuDanych(page: Page) {
+  let wToku = 0
+  let ostatniRuch = Date.now()
+  // Tylko API (atrapa z podstawBackend). Zasoby samego Next.js - prefetch
+  // tras, strumienie RSC - potrafia nie zakonczyc sie wcale.
+  const zApi = (zadanie: Request) => new URL(zadanie.url()).pathname.startsWith('/api/')
+  const start = (zadanie: Request) => {
+    if (!zApi(zadanie)) return
+    wToku += 1
+    ostatniRuch = Date.now()
+  }
+  const koniec = (zadanie: Request) => {
+    if (!zApi(zadanie)) return
+    wToku = Math.max(0, wToku - 1)
+    ostatniRuch = Date.now()
+  }
+  page.on('request', start)
+  page.on('requestfinished', koniec)
+  page.on('requestfailed', koniec)
+  return async () => {
+    await expect
+      .poll(() => wToku === 0 && Date.now() - ostatniRuch >= 300, { timeout: 10_000 })
+      .toBe(true)
+    page.off('request', start)
+    page.off('requestfinished', koniec)
+    page.off('requestfailed', koniec)
+  }
+}
+
 for (const motyw of ['light', 'dark'] as const) {
   for (const ekran of [...EKRANY_PANELU, ...EKRANY_PUBLICZNE]) {
     test(`${ekran} (${motyw}): bez naruszen WCAG 2.1 AA`, async ({ page, context }) => {
       await page.emulateMedia({ colorScheme: motyw, reducedMotion: 'reduce' })
       if (EKRANY_PANELU.includes(ekran)) await zalogowany(context)
       await podstawBackend(page)
+      const wczytane = await poWczytaniuDanych(page)
       await page.goto(ekran)
       await page.waitForLoadState('load')
       // Naglowek albo okno czatu - ekran bledu Next.js nie ma ani jednego,
       // wiec wywrotka strony nie przejdzie jako „brak naruszen”.
       await page.locator('h1, [role=region]').first().waitFor({ state: 'visible' })
+      await wczytane()
 
       const wynik = await new AxeBuilder({ page }).withTags(REGULY).analyze()
 

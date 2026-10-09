@@ -116,8 +116,9 @@ function FormularzLogowania() {
       {bilet ? (
         <form onSubmit={potwierdzKod} className="flex flex-col gap-4">
           <p className="text-sm tekst-drugi">
-            Przepisz sześciocyfrowy kod z aplikacji uwierzytelniającej. Jeśli nie masz
-            telefonu pod ręką, wpisz jeden z kodów zapasowych.
+            Przepisz sześciocyfrowy kod z aplikacji na telefonie (np. Google Authenticator),
+            z wpisu „SM-art Chat”. Jeśli nie masz telefonu pod ręką, wpisz jeden z kodów
+            zapasowych.
           </p>
 
           <div>

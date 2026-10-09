@@ -24,6 +24,18 @@ describe('MFA password confirmation', () => {
     expect(localStorage.length + sessionStorage.length).toBe(0)
   })
 
+  it('before setup tells which app to install, and the QR step names the entry', async () => {
+    vi.mocked(apiFetch).mockResolvedValueOnce({ wlaczony: false, kodow_zapasowych: 0 })
+      .mockResolvedValueOnce({ sekret: 'synthetic', adres_otpauth: 'otpauth://synthetic' })
+    const user = userEvent.setup()
+    render(<DrugiSkladnik />)
+    expect(await screen.findByText('Najpierw zainstaluj aplikację na telefonie')).toBeInTheDocument()
+    expect(screen.getByText(/Google\s+Authenticator/)).toBeInTheDocument()
+    await user.type(screen.getByLabelText('Aktualne hasło'), 'Correct!Password')
+    await user.click(screen.getByRole('button', { name: 'Włącz logowanie dwuetapowe' }))
+    expect(await screen.findByText(/pojawi się wpis „SM-art Chat”/)).toBeInTheDocument()
+  })
+
   it('cancellation clears the password and QR', async () => {
     vi.mocked(apiFetch).mockResolvedValueOnce({ wlaczony: false, kodow_zapasowych: 0 })
       .mockResolvedValueOnce({ sekret: 'synthetic', adres_otpauth: 'otpauth://synthetic' })
