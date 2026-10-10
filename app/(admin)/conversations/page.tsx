@@ -40,6 +40,10 @@ export default function ConversationsPage() {
   const [doUsuniecia, setDoUsuniecia] = useState<string | null>(null)
   const [usuwa, setUsuwa] = useState(false)
   const [wynikUsuniecia, setWynikUsuniecia] = useState('')
+  // Oceny z widgetu („Czy to pomogło? Tak / Nie”). Widget mówi odwiedzającemu „przekażemy to
+  // firmie”, a do 10.10.2026 panel ich nigdzie nie pokazywał - backend
+  // zwracał ocenę i umiał filtrować, ekran to pomijał.
+  const [filtrOceny, setFiltrOceny] = useState<'' | 'true' | 'false'>('')
 
   // Wyliczone, nie trzymane osobno - jak w Dzienniku: zapomniana gałąź
   // zostawiłaby "wczytuję" na ekranie bez końca.
@@ -50,7 +54,7 @@ export default function ConversationsPage() {
 
     // Historia rośnie z każdą rozmową. Wcześniej ekran wczytywał ją całą przy
     // każdym wejściu - teraz stronami, od najnowszych.
-    apiFetch(`/chat/logs/?page=${numer}`)
+    apiFetch(`/chat/logs/?page=${numer}${filtrOceny ? `&is_helpful=${filtrOceny}` : ''}`)
       .then((data) => {
         if (!active) return
         setStrona(naStrone<PromptLogItem>(data))
@@ -65,7 +69,7 @@ export default function ConversationsPage() {
     return () => {
       active = false
     }
-  }, [numer, wersja])
+  }, [numer, wersja, filtrOceny])
 
   useEffect(() => {
     let active = true
@@ -255,12 +259,47 @@ export default function ConversationsPage() {
         </p>
       )}
 
+      <div className="mb-4 max-w-xs">
+        <label className="label" htmlFor="filtr-oceny">
+          Ocena odwiedzającego
+        </label>
+        <select
+          id="filtr-oceny"
+          className="input"
+          value={filtrOceny}
+          onChange={(e) => {
+            setFiltrOceny(e.target.value as '' | 'true' | 'false')
+            setNumer(1)
+          }}
+        >
+          <option value="">Wszystkie odpowiedzi</option>
+          <option value="true">Oceniona jako pomocna</option>
+          <option value="false">Oceniona jako niepomocna</option>
+        </select>
+        <p className="hint mt-1.5">Odwiedzający ocenia odpowiedź w oknie czatu: „Czy to pomogło? Tak / Nie”.</p>
+      </div>
+
       <div className="flex flex-col gap-3">
         {logs.map((log) => (
           <div key={log.id} className="rounded border obramowanie p-4">
             <div className="flex items-center justify-between text-xs tekst-slaby mb-2">
               <span>{new Date(log.created_at).toLocaleString('pl-PL')}</span>
-              <span className="uppercase">{log.source}</span>
+              <span className="flex items-center gap-3">
+                {/* Tekst, nie sam kolor ani ikona: ocena ma być czytelna
+                    także bez rozróżniania barw i dla czytnika ekranu. */}
+                {log.is_helpful !== null && (
+                  <span
+                    className={`rounded border px-2 py-0.5 font-medium normal-case ${
+                      log.is_helpful
+                        ? 'text-[var(--sukces)] border-[color:var(--sukces)]'
+                        : 'text-[var(--blad)] border-[color:var(--blad)]'
+                    }`}
+                  >
+                    {log.is_helpful ? 'Ocena: pomocna' : 'Ocena: niepomocna'}
+                  </span>
+                )}
+                <span className="uppercase">{log.source}</span>
+              </span>
             </div>
             <p className="text-sm mb-1">
               <span className="font-medium">Pytanie: </span>
@@ -302,7 +341,9 @@ export default function ConversationsPage() {
           </div>
         ))}
         {strona && logs.length === 0 && !error && (
-          <p className="tekst-slaby">Brak zarejestrowanych konwersacji.</p>
+          <p className="tekst-slaby">
+            {filtrOceny ? 'Brak odpowiedzi z taką oceną.' : 'Brak zarejestrowanych konwersacji.'}
+          </p>
         )}
       </div>
 
