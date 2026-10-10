@@ -108,6 +108,18 @@ const ODPOWIEDZI: Record<string, unknown> = {
     miasto: 'Kraków',
     kraj: 'PL',
   },
+  // Wpisy z obiema ocenami i bez oceny - przegląd dostępności mierzy wtedy
+  // kontrast oznaczeń ocen w obu motywach, a nie pustą listę.
+  '/chat/logs/': {
+    count: 3,
+    next: null,
+    previous: null,
+    results: [
+      { id: 3, conversation_session_id: null, prompt: 'Czy robicie serwis rowerów elektrycznych?', response: 'Tak, serwisujemy rowery elektryczne.', source: 'widget', tokens: 40, created_at: '2026-10-10T09:30:00Z', is_helpful: true },
+      { id: 2, conversation_session_id: null, prompt: 'Ile kosztuje dojazd do klienta?', response: 'Nie mam tej informacji.', source: 'widget', tokens: 30, created_at: '2026-10-10T09:20:00Z', is_helpful: false },
+      { id: 1, conversation_session_id: null, prompt: 'Do której jesteście otwarci?', response: 'Do 18:00.', source: 'widget', tokens: 20, created_at: '2026-10-10T09:10:00Z', is_helpful: null },
+    ],
+  },
   '/accounts/2fa/': {
     wlaczony: false,
     w_trakcie_konfiguracji: false,
