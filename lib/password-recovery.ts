@@ -1,4 +1,4 @@
-import { API_URL } from '@/lib/api'
+import { API_URL, komunikatPola } from '@/lib/api'
 
 export class RecoveryError extends Error {
   constructor(message: string, public invalidLink = false) { super(message) }
@@ -16,8 +16,8 @@ export async function recoveryRequest(action: 'request' | 'preview' | 'confirm',
     })
     const data = await response.json()
     if (!response.ok) {
-      const field = data.password || data.email || data.token || data.uid
-      const message = Array.isArray(field) ? field.join(' ') : data.detail
+      const message = komunikatPola(data.password || data.email || data.token || data.uid)
+        || komunikatPola(data.detail)
       throw new RecoveryError(
         response.status === 429 ? 'Za dużo prób. Poczekaj kilka minut i spróbuj ponownie.'
           : message || 'Nie udało się wykonać operacji. Spróbuj ponownie za chwilę.',

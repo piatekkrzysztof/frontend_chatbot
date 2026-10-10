@@ -51,6 +51,24 @@ describe('aktywacja', () => {
     expect(screen.queryByLabelText('Hasło')).not.toBeInTheDocument()
   })
 
+  it('link zużyty między podglądem a zatwierdzeniem: pełny komunikat, nie pierwsza litera', async () => {
+    // Backend: ValidationError({"token": INVALID}) -> sam napis (accounts/signup.py).
+    // `data.token?.[0]` dawało z niego „L”.
+    vi.mocked(fetch)
+      .mockResolvedValueOnce(response(200, { email: 'new@example.com', company_name: 'Firma' }))
+      .mockResolvedValueOnce(response(400, {
+        token: 'Link wygasł lub został użyty. Poproś o nowy link albo zaloguj się.',
+      }))
+    const user = userEvent.setup()
+    render(<ConfirmEmailPage />)
+    await user.type(await screen.findByLabelText('Hasło'), 'Secret!Phrase729')
+    await user.type(screen.getByLabelText('Powtórz hasło'), 'Secret!Phrase729')
+    await user.click(screen.getByRole('button', { name: 'Potwierdź e-mail i załóż konto' }))
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'Link wygasł lub został użyty. Poproś o nowy link albo zaloguj się.',
+    )
+  })
+
   it('błędne hasło zachowuje formularz i czytelny błąd', async () => {
     vi.mocked(fetch)
       .mockResolvedValueOnce(response(200, { email: 'new@example.com', company_name: 'Firma' }))

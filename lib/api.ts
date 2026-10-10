@@ -105,6 +105,20 @@ export class BladApi extends Error {
 }
 
 /**
+ * Komunikat jednego pola bledu z backendu.
+ *
+ * DRF daje liste napisow (`{"password": ["..."]}`), ale `ValidationError`
+ * zgloszony recznie ze slownikiem (`{"token": "Link wygasl..."}`) daje sam
+ * napis. Reset hasla pokazywal wtedy ogolne „Nie udalo sie wykonac operacji”,
+ * a aktywacja przez `[0]` - pierwsza litere napisu.
+ */
+export function komunikatPola(wartosc: unknown): string {
+  if (typeof wartosc === 'string') return wartosc
+  if (Array.isArray(wartosc)) return wartosc.filter((w) => typeof w === 'string').join(' ')
+  return ''
+}
+
+/**
  * Zdanie do pokazania z tresci bledu.
  *
  * DRF zwraca sam napis bledu walidacji jako liste, a `JSON.stringify` robil

@@ -4,7 +4,7 @@ import { FormEvent, useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import Logo from '@/components/layout/Logo'
 import ResendConfirmation from '@/components/auth/ResendConfirmation'
-import { API_URL } from '@/lib/api'
+import { API_URL, komunikatPola } from '@/lib/api'
 
 type Preview = { email: string; company_name: string }
 
@@ -85,7 +85,8 @@ export default function ConfirmEmailPage() {
       const data = await response.json().catch(() => ({}))
       if (!response.ok) {
         if (data.token) setInvalid(true)
-        const detail = data.password?.[0] || data.token?.[0] || data.detail || data.email?.[0]
+        const detail = komunikatPola(data.password) || komunikatPola(data.token)
+          || komunikatPola(data.detail) || komunikatPola(data.email)
         throw new Error(detail || 'Nie udało się potwierdzić konta. Spróbuj ponownie lub sprawdź logowanie.')
       }
       setPaid(data.use_trial === false)

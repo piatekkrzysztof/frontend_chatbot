@@ -59,6 +59,21 @@ describe('password recovery', () => {
     expect(screen.queryByLabelText('Nowe hasło')).not.toBeInTheDocument()
   })
 
+  it('used link: shows the server message, in the shape the backend really sends', async () => {
+    // Backend: ValidationError({"token": INVALID}) -> sam napis, nie lista
+    // (accounts/password_reset.py). Wcześniej panel pokazywał wtedy ogólne
+    // „Nie udało się wykonać operacji. Spróbuj ponownie za chwilę.”
+    vi.mocked(fetch).mockResolvedValue(
+      response(400, { token: 'Link wygasł lub został użyty. Poproś o nowy link.' }),
+    )
+    render(<ResetPasswordPage />)
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'Link wygasł lub został użyty. Poproś o nowy link.',
+    )
+    expect(screen.queryByText(/Nie udało się wykonać operacji/)).not.toBeInTheDocument()
+    expect(screen.getByLabelText('Adres e-mail konta')).toBeInTheDocument()
+  })
+
   it('missing fragment does not send any request', async () => {
     window.history.replaceState({}, '', '/reset-hasla')
     render(<ResetPasswordPage />)
