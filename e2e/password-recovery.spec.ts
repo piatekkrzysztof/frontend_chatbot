@@ -36,7 +36,8 @@ test('reset on mobile: fragment privacy, validation and explicit confirmation', 
 test('expired link provides email recovery and works with an old session marker', async ({ page, context }) => {
   await context.addCookies([{ name: 'sesja_panelu', value: '1', url: 'http://localhost:3100' }])
   await page.route('**/api/accounts/password-reset/preview/', route =>
-    route.fulfill({ status: 400, json: { token: ['Link wygasł lub został użyty.'] } }))
+    // Kształt jak z backendu: sam napis, nie lista (accounts/password_reset.py).
+    route.fulfill({ status: 400, json: { token: 'Link wygasł lub został użyty. Poproś o nowy link.' } }))
   await page.route('**/api/accounts/password-reset/request/', route =>
     route.fulfill({ status: 202, json: { detail: 'OK' } }))
   await page.goto('/reset-hasla#uid=MQ&token=' + token)
