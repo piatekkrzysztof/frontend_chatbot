@@ -1,7 +1,7 @@
 /**
  * Oceny odwiedzających w Konwersacjach.
  *
- * Kategoria ryzyka: OBIETNICA BEZ POKRYCIA. Widget po kciuku w dół mówi
+ * Kategoria ryzyka: OBIETNICA BEZ POKRYCIA. Widget po „Nie” przy „Czy to pomogło?” mówi
  * „Dziękujemy, przekażemy to firmie”, a panel do 10.10.2026 ocen nie pokazywał
  * nigdzie - backend zwracał `is_helpful` i umiał filtrować, ekran to pomijał.
  * Firma nie miała jak znaleźć odpowiedzi, które klientów zawiodły.

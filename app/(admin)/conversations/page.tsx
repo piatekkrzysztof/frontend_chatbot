@@ -40,7 +40,7 @@ export default function ConversationsPage() {
   const [doUsuniecia, setDoUsuniecia] = useState<string | null>(null)
   const [usuwa, setUsuwa] = useState(false)
   const [wynikUsuniecia, setWynikUsuniecia] = useState('')
-  // Oceny z kciuków w widgecie. Widget mówi odwiedzającemu „przekażemy to
+  // Oceny z widgetu („Czy to pomogło? Tak / Nie”). Widget mówi odwiedzającemu „przekażemy to
   // firmie”, a do 10.10.2026 panel ich nigdzie nie pokazywał - backend
   // zwracał ocenę i umiał filtrować, ekran to pomijał.
   const [filtrOceny, setFiltrOceny] = useState<'' | 'true' | 'false'>('')
@@ -276,7 +276,7 @@ export default function ConversationsPage() {
           <option value="true">Oceniona jako pomocna</option>
           <option value="false">Oceniona jako niepomocna</option>
         </select>
-        <p className="hint mt-1.5">Odwiedzający ocenia odpowiedź kciukiem w oknie czatu.</p>
+        <p className="hint mt-1.5">Odwiedzający ocenia odpowiedź w oknie czatu: „Czy to pomogło? Tak / Nie”.</p>
       </div>
 
       <div className="flex flex-col gap-3">
