@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react'
 import { apiFetch } from '@/lib/api'
+import { STRONA_STATUSU } from '@/lib/strona-statusu'
 
 /**
  * Stan zaplecza w panelu.
@@ -171,6 +172,12 @@ export default function StanPage() {
             Część pracy dzieje się poza Twoim widokiem: pobieranie treści z Twojej strony,
             usuwanie starych rozmów i rozliczanie pracy bota. Gdy to przestanie działać,
             nic się nie wywali — po prostu przestanie się dziać. Tutaj to widać.
+          </p>
+          <p className="tekst-drugi">
+            Dostępność czatu i panelu mierzona z zewnątrz, z historią przerw:{' '}
+            <a href={STRONA_STATUSU} target="_blank" rel="noopener noreferrer" className="underline underline-offset-4">
+              strona statusu <span aria-hidden="true">↗</span>
+            </a>
           </p>
         </div>
         <div className="dashboard-heading-actions">

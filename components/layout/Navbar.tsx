@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
 import { apiFetch } from '@/lib/api'
+import { STRONA_STATUSU } from '@/lib/strona-statusu'
 import { wyloguj } from '@/lib/auth'
 import Logo from './Logo'
 import type { Motyw } from '@/lib/motyw'
@@ -84,9 +85,16 @@ export default function Navbar({ onToggleMenu, menuOtwarte, motyw = 'jasny', onZ
       </div>
 
       <div className="admin-navbar-actions">
-        <span className="admin-live-badge hidden md:inline-flex">
-          <span className="status-dot" /> Czat działa
-        </span>
+        {/* Był tu stały napis „Czat działa” z zieloną kropką, którego nic nie
+            sprawdzało (jak w menu). Link prowadzi do stanu mierzonego z zewnątrz. */}
+        <a
+          href={STRONA_STATUSU}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="admin-live-badge hidden md:inline-flex"
+        >
+          Stan usług <span aria-hidden="true">↗</span>
+        </a>
         {onZmienMotyw && (
           <button
             type="button"

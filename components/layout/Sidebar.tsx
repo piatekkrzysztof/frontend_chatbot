@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import Logo from './Logo'
+import { STRONA_STATUSU } from '@/lib/strona-statusu'
 
 const GRUPY = [
   {
@@ -89,10 +90,18 @@ export default function Sidebar() {
           </a>
           <span className="admin-support-email">krzysztof@agencjasm-art.pl</span>
         </div>
-        <div className="admin-system-state">
-          <span className="status-dot" />
-          Wszystkie systemy działają
-        </div>
+        {/* Do 11.10.2026 stał tu stały napis „Wszystkie systemy działają”
+            z zieloną kropką - nic go nie sprawdzało, więc w trakcie awarii
+            panel mówiłby klientowi nieprawdę. Link prowadzi do stanu
+            mierzonego z zewnątrz. */}
+        <a
+          href={STRONA_STATUSU}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="admin-system-state"
+        >
+          Stan usług na żywo <span aria-hidden="true">↗</span>
+        </a>
       </div>
     </aside>
   )
