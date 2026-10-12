@@ -120,6 +120,11 @@ const ODPOWIEDZI: Record<string, unknown> = {
       { id: 1, conversation_session_id: null, prompt: 'Do której jesteście otwarci?', response: 'Do 18:00.', source: 'widget', tokens: 20, created_at: '2026-10-10T09:10:00Z', is_helpful: null },
     ],
   },
+  // Zespół z osobą z MFA - przegląd dostępności obejmuje wtedy przycisk resetu.
+  '/users/': [
+    { id: 1, username: 'wlascicielka@rowerownia.pl', email: 'wlascicielka@rowerownia.pl', role: 'owner', is_active: true, last_login: '2026-10-11T08:00:00Z', mfa_wlaczone: false },
+    { id: 2, username: 'serwis@rowerownia.pl', email: 'serwis@rowerownia.pl', role: 'employee', is_active: true, last_login: '2026-10-10T15:30:00Z', mfa_wlaczone: true },
+  ],
   '/accounts/2fa/': {
     wlaczony: false,
     w_trakcie_konfiguracji: false,
