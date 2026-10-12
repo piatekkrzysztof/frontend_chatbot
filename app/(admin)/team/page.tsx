@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState, FormEvent } from 'react'
 import { apiFetch, BladApi } from '@/lib/api'
 import BrakUprawnien from '@/components/BrakUprawnien'
+import PasswordField from '@/components/auth/PasswordField'
 
 interface TeamMember {
   id: number
@@ -11,6 +12,8 @@ interface TeamMember {
   role: string
   is_active: boolean
   last_login: string | null
+  // Backend podaje tylko właścicielowi; pracownik dostaje null (2.32.0).
+  mfa_wlaczone?: boolean | null
 }
 
 interface Invitation {
@@ -59,6 +62,16 @@ export default function TeamPage() {
   const [doUsuniecia, setDoUsuniecia] = useState<number | null>(null)
   const [usuwany, setUsuwany] = useState<number | null>(null)
   const zegarUsuniecia = useRef<ReturnType<typeof setTimeout> | null>(null)
+  // Reset MFA osoby, która straciła telefon i kody zapasowe (decyzja
+  // właściciela z 11.10.2026). Wcześniej jedyną drogą bez obsługi było
+  // usunięcie i ponowne zaproszenie - nowe konto, historia pod starym.
+  const [mojeId, setMojeId] = useState<number | null>(null)
+  const [resetowana, setResetowana] = useState<TeamMember | null>(null)
+  const [hasloResetu, setHasloResetu] = useState('')
+  const [kodResetu, setKodResetu] = useState('')
+  const [resetuje, setResetuje] = useState(false)
+  const [bladResetu, setBladResetu] = useState('')
+  const [wynikResetu, setWynikResetu] = useState('')
 
   const [email, setEmail] = useState('')
   const [role, setRole] = useState('employee')
@@ -102,7 +115,10 @@ export default function TeamPage() {
 
     apiFetch('/accounts/me/')
       .then((dane) => {
-        if (active) setMojaRola((dane as { role?: string }).role || '')
+        if (!active) return
+        const ja = dane as { role?: string; id?: number }
+        setMojaRola(ja.role || '')
+        setMojeId(typeof ja.id === 'number' ? ja.id : null)
       })
       .catch(() => {
         // Bez tej odpowiedzi zostaje widok do odczytu - mniej możliwości,
@@ -173,6 +189,49 @@ export default function TeamPage() {
     }
   }
 
+  function otworzReset(member: TeamMember) {
+    setResetowana(member)
+    setHasloResetu('')
+    setKodResetu('')
+    setBladResetu('')
+    setWynikResetu('')
+  }
+
+  function zamknijReset() {
+    setResetowana(null)
+    setHasloResetu('')
+    setKodResetu('')
+    setBladResetu('')
+  }
+
+  async function resetujMfa(e: FormEvent) {
+    e.preventDefault()
+    if (!resetowana || resetuje) return
+    setResetuje(true)
+    setBladResetu('')
+    try {
+      const dane = (await apiFetch(`/users/${resetowana.id}/reset-mfa/`, {
+        method: 'POST',
+        body: JSON.stringify({ haslo: hasloResetu, ...(mamMfa ? { kod: kodResetu } : {}) }),
+      })) as { zakonczonych_sesji: number; ostrzezenie_wyslane: boolean }
+      setWynikResetu(
+        `Logowanie dwuetapowe osoby ${resetowana.username} zostało zresetowane. ` +
+          `Zakończone sesje: ${dane.zakonczonych_sesji}. ` +
+          (dane.ostrzezenie_wyslane
+            ? 'Wysłaliśmy jej mail z prośbą o ponowne włączenie MFA.'
+            : 'Mail ostrzegawczy nie wyszedł - powiedz o resecie tej osobie innym kanałem.'),
+      )
+      zamknijReset()
+      const lista = await apiFetch('/users/')
+      setMembers(Array.isArray(lista) ? lista : lista.results || [])
+    } catch (err) {
+      // Backend odmawia po polsku: złe hasło, brak kodu, osoba bez MFA.
+      setBladResetu(err instanceof Error ? err.message : 'Nie udało się zresetować MFA.')
+    } finally {
+      setResetuje(false)
+    }
+  }
+
   async function handleInvite(e: FormEvent) {
     e.preventDefault()
     if (!email.trim()) return
@@ -220,6 +279,9 @@ export default function TeamPage() {
     }
   }
 
+  // Czy sam właściciel ma MFA - wtedy backend chce też jego kodu.
+  const mamMfa = Boolean((members ?? []).find((m) => m.id === mojeId)?.mfa_wlaczone)
+
   if (brakUprawnien) {
     return (
       <div className="max-w-3xl">
@@ -266,14 +328,14 @@ export default function TeamPage() {
             <th className="py-2">E-mail</th>
             <th className="py-2">Rola</th>
             <th className="py-2">Ostatnie logowanie</th>
-            {mojaRola === 'owner' && <th className="py-2">Usuń</th>}
+            {mojaRola === 'owner' && <th className="py-2">Działania</th>}
           </tr>
         </thead>
         <tbody>
           {(members ?? []).map((member) => (
             <tr key={member.id} className="border-b obramowanie">
-              <td className="py-2">{member.username}</td>
-              <td className="py-2 tekst-drugi">{member.email}</td>
+              <td className="py-2 pr-3 [overflow-wrap:anywhere]">{member.username}</td>
+              <td className="py-2 pr-3 tekst-drugi [overflow-wrap:anywhere]">{member.email}</td>
               <td className="py-2">
                 {mojaRola === 'owner' ? (
                   <select
@@ -281,7 +343,7 @@ export default function TeamPage() {
                     onChange={(e) => zmienRole(member, e.target.value)}
                     disabled={zmieniana === member.id}
                     aria-label={`Rola: ${member.username}`}
-                    className="input !py-1 !text-sm"
+                    className="input !py-1 !text-sm min-w-[8.5rem]"
                   >
                     {Object.entries(ROLE_LABELS).map(([kod, etykieta]) => (
                       <option key={kod} value={kod}>
@@ -300,6 +362,17 @@ export default function TeamPage() {
               </td>
               {mojaRola === 'owner' && (
                 <td className="py-2">
+                  <div className="flex flex-col items-start gap-1">
+                  {member.mfa_wlaczone && member.id !== mojeId && (
+                    <button
+                      type="button"
+                      onClick={() => otworzReset(member)}
+                      aria-label={`Resetuj logowanie dwuetapowe: ${member.username}`}
+                      className="text-xs underline underline-offset-2 whitespace-nowrap"
+                    >
+                      Resetuj MFA
+                    </button>
+                  )}
                   <button
                     type="button"
                     onClick={() =>
@@ -319,6 +392,7 @@ export default function TeamPage() {
                         ? 'Na pewno?'
                         : 'Usuń'}
                   </button>
+                  </div>
                 </td>
               )}
             </tr>
@@ -333,6 +407,68 @@ export default function TeamPage() {
         </tbody>
       </table>
       </div>
+
+      {wynikResetu && (
+        <p role="status" className="text-sm mb-6">
+          {wynikResetu}
+        </p>
+      )}
+
+      {resetowana && (
+        <section
+          aria-labelledby="reset-mfa-tytul"
+          className="rounded border obramowanie p-4 mb-12 max-w-xl"
+        >
+          <h2 id="reset-mfa-tytul" className="font-medium mb-1">
+            Reset logowania dwuetapowego: {resetowana.username}
+          </h2>
+          <p id="reset-mfa-opis" className="text-sm tekst-drugi mb-4">
+            Dla osoby, która straciła telefon i kody zapasowe. Jej sesje się zakończą, dostanie
+            mail z prośbą o ponowne włączenie MFA, a reset trafi do dziennika zdarzeń. Potwierdź
+            własnym hasłem{mamMfa ? ' i własnym kodem' : ''}.
+          </p>
+          <form onSubmit={resetujMfa} className="flex flex-col gap-3">
+            <PasswordField
+              id="reset-mfa-haslo"
+              label="Twoje hasło"
+              value={hasloResetu}
+              onChange={setHasloResetu}
+              autoComplete="current-password"
+              describedBy="reset-mfa-opis"
+            />
+            {mamMfa && (
+              <div>
+                <label className="label" htmlFor="reset-mfa-kod">
+                  Twój kod MFA albo kod zapasowy
+                </label>
+                <input
+                  id="reset-mfa-kod"
+                  type="text"
+                  inputMode="numeric"
+                  autoComplete="one-time-code"
+                  className="input"
+                  value={kodResetu}
+                  onChange={(e) => setKodResetu(e.target.value)}
+                  required
+                />
+              </div>
+            )}
+            {bladResetu && (
+              <p role="alert" className="text-sm text-[var(--blad)]">
+                {bladResetu}
+              </p>
+            )}
+            <div className="flex flex-wrap gap-3">
+              <button type="submit" disabled={resetuje} className="btn-primary !py-2 !px-4 !text-sm">
+                {resetuje ? 'Resetuję...' : 'Resetuj logowanie dwuetapowe'}
+              </button>
+              <button type="button" onClick={zamknijReset} disabled={resetuje} className="btn-ghost !py-2 !px-4 !text-sm">
+                Anuluj
+              </button>
+            </div>
+          </form>
+        </section>
+      )}
 
       {/* Zaproszenia tworzy wyłącznie właściciel. Pracownik widział ten
           formularz i dowiadywał się o tym dopiero po wysłaniu, z 403. */}
