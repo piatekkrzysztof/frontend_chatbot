@@ -67,7 +67,7 @@ const ZRODLO_API = (() => {
  * w next.config.js - polityka panelu z `frame-ancestors 'self'`
  * uniemozliwilaby osadzenie go na stronie klienta.
  */
-function politykaTresci(nonce: string) {
+function politykaTresci(nonce: string, lokalnie = false) {
   return [
     "default-src 'self'",
     // Skrypty wylacznie z nonce. `strict-dynamic` przenosi zaufanie z tego
@@ -98,7 +98,13 @@ function politykaTresci(nonce: string) {
     // Formularz logowania nie ma prawa wyslac hasla pod obcy adres
     "form-action 'self'",
     "frame-ancestors 'self'",
-    'upgrade-insecure-requests',
+    // Poza localhost: tam nie ma TLS, wiec "podniesienie" adresu do https
+    // psuje zamiast chronic. Po wylogowaniu panel dociaga w tle chronione
+    // ekrany, middleware odsyla je na http://localhost/login, przegladarka
+    // przepisuje to na https://localhost i przerywa przy tym przejscie na
+    // strone logowania - testy wylogowania padaly lokalnie co drugi raz
+    // (13.10.2026). Produkcja zawsze idzie po https i dyrektywe dostaje.
+    ...(lokalnie ? [] : ['upgrade-insecure-requests']),
   ].join('; ')
 }
 
@@ -179,6 +185,9 @@ export function proxy(zadanie: NextRequest) {
   return zNaglowkami(zadanie)
 }
 
+/** Adresy, pod ktorymi panel dziala bez TLS: serwer deweloperski i testy. */
+const HOSTY_LOKALNE = new Set(['localhost', '127.0.0.1', '[::1]'])
+
 /**
  * Przepuszcza zadanie, dokladajac polityke bezpieczenstwa.
  *
@@ -188,7 +197,7 @@ export function proxy(zadanie: NextRequest) {
  * ma - czyli biala strone.
  */
 function zNaglowkami(zadanie: NextRequest) {
-  const polityka = politykaTresci(nowyNonce())
+  const polityka = politykaTresci(nowyNonce(), HOSTY_LOKALNE.has(zadanie.nextUrl.hostname))
 
   const naglowkiZadania = new Headers(zadanie.headers)
   naglowkiZadania.set('Content-Security-Policy', polityka)
