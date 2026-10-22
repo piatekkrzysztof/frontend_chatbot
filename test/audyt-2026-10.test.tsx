@@ -13,7 +13,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 
-import { apiFetch, pobierzPlik } from '@/lib/api'
+import { pobierzPlik } from '@/lib/api'
 import { ustawToken, zapomnijToken } from '@/lib/auth'
 import LoginPage from '@/app/(auth)/login/page'
 import TestBotaPage from '@/app/(admin)/test-bota/page'
@@ -30,14 +30,6 @@ vi.mock('next/navigation', () => ({
   }),
   usePathname: () => '/',
 }))
-
-const oryginalnaLokalizacja = window.location
-
-function podmienLokalizacje() {
-  const atrapa = { href: '', search: '' } as Location
-  Object.defineProperty(window, 'location', { configurable: true, writable: true, value: atrapa })
-  return atrapa
-}
 
 function json(status: number, cialo: unknown = {}) {
   return new Response(JSON.stringify(cialo), {
@@ -71,27 +63,12 @@ beforeEach(() => {
 
 afterEach(() => {
   zapomnijToken()
-  Object.defineProperty(window, 'location', { configurable: true, writable: true, value: oryginalnaLokalizacja })
   vi.unstubAllGlobals()
 })
 
-describe('sesja', () => {
-  // A-02 nie ma tu testu: poprawka i jej testy są w PR #55
-  // (test/zmiana-konta.test.ts, e2e/zmiana-konta.spec.ts).
-
-  it.fails.each([429, 503])('A-05: chwilowa odmowa odswiezenia (%i) nie konczy sesji', async (status) => {
-    // Odswiezanie dzieli z logowaniem limit 10/min na adres IP (LimitLogowaniaIP).
-    ustawToken('wygasly-token')
-    const lokalizacja = podmienLokalizacje()
-    vi.mocked(fetch)
-      .mockResolvedValueOnce(json(401))
-      .mockResolvedValueOnce(json(status, { detail: 'chwilowo' }))
-
-    await apiFetch('/analytics/').catch(() => null)
-
-    expect(lokalizacja.href).not.toContain('/login')
-  })
-})
+// A-02, A-04 i A-05 nie mają tu testów: są naprawione, a ich testy żyją
+// przy kodzie - test/zmiana-konta.test.ts (PR #55) i
+// test/chwilowe-odmowy.test.tsx (PR #56).
 
 describe('logowanie', () => {
   async function zaloguj() {
@@ -101,14 +78,6 @@ describe('logowanie', () => {
     await uzytkownik.type(screen.getByLabelText('Hasło'), 'poprawne-haslo')
     await uzytkownik.click(screen.getByRole('button', { name: 'Zaloguj się' }))
   }
-
-  it.fails.each([429, 503])('A-04: odmowa %i nie jest pokazywana jako bledne haslo', async (status) => {
-    vi.mocked(fetch).mockResolvedValueOnce(json(status, { detail: 'Za dużo prób.' }))
-
-    await zaloguj()
-
-    expect(await screen.findByRole('alert')).not.toHaveTextContent('Nieprawidłowy e-mail lub hasło.')
-  })
 
   it.fails('A-11: po zalogowaniu wraca pod adres z parametru powrot', async () => {
     // proxy.ts dopisuje ?powrot=<sciezka>, ale ekran logowania go nie czyta

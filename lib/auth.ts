@@ -182,6 +182,11 @@ export function zapomnijToken() {
  * "trzeba sie zalogowac". Rzucanie wyjatkiem w tym miejscu kazaloby kazdemu
  * wywolujacemu opakowywac to w try/catch, a wygasla sesja jest sytuacja
  * normalna, nie awaryjna.
+ *
+ * Rzuca SesjaChwilowoNiedostepna, gdy odmowa jest chwilowa: limit zapytań
+ * (429), awaria serwera, brak sieci, niedostępna blokada. To JEST sytuacja
+ * awaryjna, a sesja może nadal istnieć - do audytu 22.10.2026 (A-05)
+ * kończyła się wtedy wyrzuceniem na „Sesja wygasła”.
  */
 export async function odswiezSesje(): Promise<string | null> {
   if (przeladowanie) return przeladowanie
@@ -210,10 +215,16 @@ export async function odswiezSesje(): Promise<string | null> {
       }
       if (!stillCurrent()) return null
 
-      if (!refreshed.response.ok) {
+      // Sesję kończy tylko odmowa samego ciasteczka: 401, albo 409 po
+      // ponowieniu - przeglądarka trzyma zużyte ciasteczko i kolejne próby
+      // nic nie dadzą. Odświeżanie dzieli z logowaniem limit 10/min na adres,
+      // więc 429 zdarza się przy zupełnie ważnej sesji.
+      const { status } = refreshed.response
+      if (status === 401 || status === 409) {
         tokenDostepu = null
         return null
       }
+      if (!refreshed.response.ok) throw new SesjaChwilowoNiedostepna(status)
 
       const dane = refreshed.data
       if (!stillCurrent()) return null
@@ -229,15 +240,15 @@ export async function odswiezSesje(): Promise<string | null> {
       tokenDostepu = dane.access ?? null
       sesjaKarty ??= nowaSesja
       return tokenDostepu
-    } catch {
-      // Brak sieci to nie to samo co brak sesji, ale z punktu widzenia
-      // wywolujacego oba znacza "nie mam teraz tokenu".
-      if (stillCurrent()) tokenDostepu = null
-      return null
+    } catch (blad) {
+      // Brak sieci to nie to samo co brak sesji. Token zostaje: kolejne
+      // zapytanie dostanie 401 i spróbuje odświeżyć jeszcze raz.
+      if (!stillCurrent()) return null
+      throw blad instanceof SesjaChwilowoNiedostepna ? blad : new SesjaChwilowoNiedostepna(null)
     }
-  }).catch(() => {
-    if (stillCurrent()) tokenDostepu = null
-    return null
+  }).catch((blad) => {
+    // Blokada Web Locks niedostępna albo czekanie na nią przekroczyło limit
+    throw blad instanceof SesjaChwilowoNiedostepna ? blad : new SesjaChwilowoNiedostepna(null)
   }).finally(() => { odswiezanieWToku = null })
     // Przeładowanie dopiero po zwolnieniu blokady: wisząca obietnica w jej
     // środku blokowałaby odświeżanie i logowanie w pozostałych kartach.
@@ -269,5 +280,20 @@ export async function wyloguj(): Promise<void> {
   } finally {
     zapomnijToken()
     loggingOut = false
+  }
+}
+
+/**
+ * Odświeżenie nie wyszło z powodu chwilowego, a sesja może nadal istnieć.
+ *
+ * Komunikat idzie wprost na ekran (apiFetch, pobierzPlik, withAuth), więc mówi
+ * użytkownikowi to, czego najbardziej potrzebuje: że nie musi się logować.
+ */
+export class SesjaChwilowoNiedostepna extends Error {
+  constructor(readonly status: number | null) {
+    super(status === 429
+      ? 'Serwer ogranicza teraz liczbę zapytań. Spróbuj ponownie za chwilę - nadal jesteś zalogowany.'
+      : 'Nie udało się połączyć z serwerem. Spróbuj ponownie za chwilę - nadal jesteś zalogowany.')
+    this.name = 'SesjaChwilowoNiedostepna'
   }
 }

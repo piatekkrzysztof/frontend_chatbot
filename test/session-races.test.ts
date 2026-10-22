@@ -92,7 +92,8 @@ it('login waits for an old refresh before changing the shared cookie', async () 
 
 it('a failed browser lock does not leave refresh permanently pending', async () => {
   vi.stubGlobal('navigator', { locks: { request: vi.fn().mockRejectedValue(new Error('lock unavailable')) } })
-  expect(await odswiezSesje()).toBeNull()
-  expect(await odswiezSesje()).toBeNull()
+  // Temporary, not the end of the session (audit A-05): both calls settle
+  await expect(odswiezSesje()).rejects.toThrow('nadal jesteś zalogowany')
+  await expect(odswiezSesje()).rejects.toThrow('nadal jesteś zalogowany')
   expect(fetch).not.toHaveBeenCalled()
 })
