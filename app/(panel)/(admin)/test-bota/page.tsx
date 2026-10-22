@@ -2,7 +2,8 @@
 
 import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
-import { apiFetch, API_URL, authHeaders } from '@/lib/api'
+import { apiFetch, fetchZSesja } from '@/lib/api'
+import { czytajZdarzenia } from '@/components/widget/sse'
 
 interface Wiadomosc {
   sender: 'user' | 'bot'
@@ -64,10 +65,11 @@ export default function TestBotaPage() {
     activeRequest.current = controller
 
     try {
-      const res = await fetch(`${API_URL}/chat/test/`, {
+      // fetchZSesja, nie surowy fetch: po kwadransie bez innych zapytań token
+      // wygasa i bez odświeżenia każde pytanie kończyło się błędem (A-03).
+      const res = await fetchZSesja('/chat/test/', {
         method: 'POST',
         signal: controller.signal,
-        headers: { 'Content-Type': 'application/json', ...authHeaders() },
         body: JSON.stringify({ message: pytanie }),
       })
       if (controller.signal.aborted) return
@@ -84,8 +86,10 @@ export default function TestBotaPage() {
       const dekoder = new TextDecoder()
       let bufor = ''
 
-      // Ten sam protokół SSE co w widgecie u klienta — celowo, żeby test
-      // nie mógł się rozjechać z tym, co widzi odwiedzający.
+      // Ten sam parser SSE co w widgecie u klienta (components/widget/sse.ts),
+      // żeby test nie mógł się rozjechać z tym, co widzi odwiedzający. Do
+      // audytu 2026-10 (A-13) był tu własny, starszy: wymagał spacji po
+      // „data:” i jedno zepsute zdarzenie przerywało całą odpowiedź.
       while (true) {
         const { done, value } = await czytnik.read()
         if (controller.signal.aborted) {
@@ -95,14 +99,10 @@ export default function TestBotaPage() {
         if (done) break
 
         bufor += dekoder.decode(value, { stream: true })
-        const zdarzenia = bufor.split('\n\n')
-        bufor = zdarzenia.pop() || ''
+        const { zdarzenia, reszta } = czytajZdarzenia(bufor)
+        bufor = reszta
 
-        for (const surowe of zdarzenia) {
-          const linia = surowe.trim()
-          if (!linia.startsWith('data: ')) continue
-          const zdarzenie = JSON.parse(linia.slice(6))
-
+        for (const zdarzenie of zdarzenia) {
           if (zdarzenie.type === 'error') {
             await czytnik.cancel()
             if (zdarzenie.code === 'conversation_deleted') {
@@ -125,7 +125,10 @@ export default function TestBotaPage() {
               n[n.length - 1] = {
                 ...n[n.length - 1],
                 source: zdarzenie.source,
-                zrodla: zdarzenie.sources || [],
+                // Kształtu źródeł parser nie gwarantuje - bierzemy te z nazwą
+                zrodla: (zdarzenie.sources ?? []).filter(
+                  (z): z is { name: string } => typeof (z as { name?: unknown })?.name === 'string',
+                ),
               }
               return n
             })
@@ -169,10 +172,18 @@ export default function TestBotaPage() {
         statystyk ani do raportu pytań bez pokrycia.
       </p>
 
-      {blad && <p className="text-sm text-[var(--blad)] mb-4">{blad}</p>}
+      {blad && <p role="alert" className="text-sm text-[var(--blad)] mb-4">{blad}</p>}
 
       <div className="test-bota">
-        <div className="test-bota-rozmowa">
+        {/* Jak w widgecie: bez aria-live czytnik ekranu nie ogłaszał odpowiedzi
+            bota, więc niewidomy właściciel nie wiedział, że przyszła (A-21). */}
+        <div
+          className="test-bota-rozmowa"
+          role="log"
+          aria-live="polite"
+          aria-relevant="additions text"
+          aria-label="Rozmowa testowa"
+        >
           {wiadomosci.length === 0 ? (
             <div className="test-bota-pusto">
               <p>Zadaj pytanie, które zadałby Twój klient.</p>

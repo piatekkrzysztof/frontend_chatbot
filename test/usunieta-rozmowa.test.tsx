@@ -11,6 +11,8 @@ vi.mock('next/navigation', () => ({
 vi.mock('@/lib/api', () => ({
   API_URL: 'http://localhost/api', authHeaders: () => ({}),
   apiFetch: vi.fn(() => Promise.resolve({ messages: [] })),
+  // Test bota wysyła pytanie przez fetchZSesja; tu bez sesji, prosto do fetch
+  fetchZSesja: (sciezka: string, opcje?: RequestInit) => fetch(`http://localhost/api${sciezka}`, opcje),
 }))
 
 afterEach(() => vi.unstubAllGlobals())
