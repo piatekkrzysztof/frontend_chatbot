@@ -64,6 +64,13 @@ export default function Sidebar() {
                 <Link
                   key={link.href}
                   href={link.href}
+                  // Bez prefetchu (audyt 2026-10, A-17). Ekrany panelu renderują
+                  // się na żądanie, a bez loading.tsx prefetch pobiera tylko
+                  // drzewo trasy i pustą skorupę strony - kliknięcie i tak
+                  // pyta serwer o cały ekran. Menu razem z linkami pulpitu wysyłało
+                  // tak w tle 24 zapytania przy każdym wejściu na pulpit.
+                  // prefetch={false} wyłącza też prefetch przy najechaniu.
+                  prefetch={false}
                   aria-current={aktywny ? 'page' : undefined}
                   className={`admin-nav-link ${aktywny ? 'is-active' : ''}`}
                 >
