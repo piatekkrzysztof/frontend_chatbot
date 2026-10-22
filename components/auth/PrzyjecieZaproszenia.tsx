@@ -1,0 +1,235 @@
+'use client'
+
+import { useEffect, useRef, useState, FormEvent } from 'react'
+import { useRouter } from 'next/navigation'
+import { API_URL } from '@/lib/api'
+import { ustawToken } from '@/lib/auth'
+import { sessionRequest } from '@/lib/session-lock'
+
+// Bez adresu e-mail: od 2.20.0 podgląd go nie podaje. Odpowiada każdemu, kto ma
+// klucz, a wcześniej podsuwał adres, który formularz potem „sprawdzał".
+interface InvitePreview {
+  company: string
+  role: string
+  is_valid: boolean
+  expires_at: string | null
+}
+
+const ROLE_LABELS: Record<string, string> = {
+  owner: 'właściciela',
+  employee: 'pracownika',
+  viewer: 'podglądu',
+}
+
+/**
+ * Przyjęcie zaproszenia: podgląd, a potem założenie konta.
+ *
+ * Klucz przyjęcia zakłada konto w firmie z rolą z zaproszenia, więc jest
+ * hasłem. Od audytu 2026-10 (A-26) link z maila niesie go we fragmencie
+ * (`/invite/accept#token=...`), którego przeglądarka nie wysyła: strona
+ * czyta go raz, czyści adres i podaje klucz do API tylko w treści POST - jak
+ * reset hasła i aktywacja konta.
+ *
+ * `tokenZeSciezki` to stary format linku (`/invite/accept/<klucz>`), z kluczem
+ * w ścieżce strony i podglądu. Zostaje, dopóki mogą istnieć ważne zaproszenia
+ * wysłane przed zmianą linku w backendzie - najwyżej 7 dni.
+ */
+export default function PrzyjecieZaproszenia({ tokenZeSciezki }: { tokenZeSciezki?: string }) {
+  const router = useRouter()
+  // Odczytany raz: po wyczyszczeniu adresu fragmentu już nie ma, a tryb
+  // ścisły uruchamia efekt dwa razy
+  const klucz = useRef<string | null>(null)
+
+  const [preview, setPreview] = useState<InvitePreview | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [loadError, setLoadError] = useState('')
+
+  const [username, setUsername] = useState('')
+  const [password, setPassword] = useState('')
+  const [submitting, setSubmitting] = useState(false)
+  const [error, setError] = useState('')
+
+  // Sprawdzamy ważność zanim pokażemy formularz — inaczej zapraszany wypełnia
+  // dane, żeby dopiero przy zapisie dowiedzieć się, że link wygasł.
+  useEffect(() => {
+    let active = true
+
+    if (klucz.current === null) {
+      if (tokenZeSciezki !== undefined) {
+        klucz.current = tokenZeSciezki
+      } else {
+        klucz.current = new URLSearchParams(window.location.hash.slice(1)).get('token') ?? ''
+        window.history.replaceState(window.history.state, '', window.location.pathname)
+      }
+    }
+
+    async function sprawdz() {
+      try {
+        if (!klucz.current) throw new Error('Ten link zaproszenia jest nieprawidłowy.')
+        const res = tokenZeSciezki !== undefined
+          // Stary link. Klucz z adresu strony zakodowany: `../` nie może
+          // zmienić adresu API (A-22)
+          ? await fetch(`${API_URL}/accounts/invitations/${encodeURIComponent(klucz.current)}/preview/`)
+          : await fetch(`${API_URL}/accounts/invitations/preview/`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ token: klucz.current }),
+          })
+        if (!res.ok) throw new Error('Ten link zaproszenia jest nieprawidłowy.')
+        const data: InvitePreview = await res.json()
+        if (!active) return
+        setPreview(data)
+        setLoading(false)
+      } catch (err) {
+        // nie ustawiamy stanu, jeśli komponent zdążył się odmontować
+        if (!active) return
+        setLoadError(err instanceof Error ? err.message : 'Nie udało się sprawdzić zaproszenia.')
+        setLoading(false)
+      }
+    }
+    void sprawdz()
+
+    return () => {
+      active = false
+    }
+  }, [tokenZeSciezki])
+
+  async function handleSubmit(e: FormEvent) {
+    e.preventDefault()
+    setSubmitting(true)
+    setError('')
+
+    try {
+      const res = await fetch(`${API_URL}/accounts/accept-invite/`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        // Adresu nie wysylamy: backend bierze go z zaproszenia. Klucz z tego
+        // linku przyszedl mailem na ten adres i to on jest dowodem tozsamosci.
+        body: JSON.stringify({ token: klucz.current, username, password }),
+      })
+
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}))
+        const detail =
+          data.non_field_errors?.[0] ||
+          data.detail ||
+          Object.values(data)[0] ||
+          'Nie udało się założyć konta.'
+        throw new Error(String(detail))
+      }
+
+      // Konto założone — logujemy od razu, żeby nie odsyłać na ekran logowania.
+      // Nazwą użytkownika, bo adresu ta strona już nie zna.
+      const loginRes = await sessionRequest(`${API_URL}/accounts/login/`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password }),
+        credentials: 'include',
+      })
+
+      if (loginRes.ok) {
+        const tokens = await loginRes.json()
+        ustawToken(tokens.access)
+        router.push('/dashboard')
+        return
+      }
+
+      router.push('/login')
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Nie udało się założyć konta.')
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-atrament-700">
+        <p className="text-mgla-400">Sprawdzam zaproszenie...</p>
+      </div>
+    )
+  }
+
+  if (loadError || !preview) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-atrament-700 px-4">
+        <div className="w-full max-w-sm rounded-lg bg-atrament-800 p-6 shadow">
+          <h1 className="text-xl font-bold mb-2">Zaproszenie nieaktualne</h1>
+          <p className="text-sm text-mgla-300">
+            {loadError || 'Ten link zaproszenia jest nieprawidłowy.'} Poproś osobę, która
+            Cię zapraszała, o nowy link.
+          </p>
+        </div>
+      </div>
+    )
+  }
+
+  if (!preview.is_valid) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-atrament-700 px-4">
+        <div className="w-full max-w-sm rounded-lg bg-atrament-800 p-6 shadow">
+          <h1 className="text-xl font-bold mb-2">Zaproszenie wygasło</h1>
+          <p className="text-sm text-mgla-300">
+            Link do zespołu {preview.company} stracił ważność albo został już wykorzystany.
+            Poproś o nowy.
+          </p>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-atrament-700 px-4">
+      <div className="w-full max-w-sm rounded-lg bg-atrament-800 p-6 shadow">
+        <h1 className="text-xl font-bold mb-1">Dołącz do zespołu</h1>
+        <p className="text-sm text-mgla-300 mb-5">
+          Zaproszenie do <span className="font-medium">{preview.company}</span> w roli{' '}
+          {ROLE_LABELS[preview.role] || preview.role}.
+        </p>
+
+        <form onSubmit={handleSubmit}>
+          <label className="label" htmlFor="zaproszenie-username">
+            Nazwa użytkownika
+          </label>
+          <input
+            id="zaproszenie-username"
+            type="text"
+            autoComplete="username"
+            maxLength={150}
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+            required
+            className="input mb-4"
+          />
+
+          <p className="hint mb-4">
+            Konto powstanie na adres, na który przyszło to zaproszenie.
+          </p>
+
+          <label className="label" htmlFor="zaproszenie-haslo">Hasło</label>
+          <input
+            id="zaproszenie-haslo"
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+            minLength={8}
+            maxLength={1024}
+            autoComplete="new-password"
+            className="input mb-5"
+          />
+
+          {error && <p role="alert" className="text-sm text-rose-400 mb-4">{error}</p>}
+
+          <button
+            type="submit"
+            disabled={submitting}
+            className="btn-primary w-full !py-2 !text-sm"
+          >
+            {submitting ? 'Zakładanie konta...' : 'Załóż konto'}
+          </button>
+        </form>
+      </div>
+    </div>
+  )
+}

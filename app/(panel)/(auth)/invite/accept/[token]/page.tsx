@@ -1,207 +1,22 @@
 'use client'
 
-import { useEffect, useState, FormEvent, use } from 'react'
-import { useRouter } from 'next/navigation'
-import { API_URL } from '@/lib/api'
-import { ustawToken } from '@/lib/auth'
-import { sessionRequest } from '@/lib/session-lock'
+import { use } from 'react'
+import PrzyjecieZaproszenia from '@/components/auth/PrzyjecieZaproszenia'
 
-// Bez adresu e-mail: od 2.20.0 podgląd go nie podaje. Odpowiada każdemu, kto ma
-// klucz, a wcześniej podsuwał adres, który formularz potem „sprawdzał".
-interface InvitePreview {
-  company: string
-  role: string
-  is_valid: boolean
-  expires_at: string | null
-}
-
-const ROLE_LABELS: Record<string, string> = {
-  owner: 'właściciela',
-  employee: 'pracownika',
-  viewer: 'podglądu',
-}
-
+/**
+ * Stary format linku z maila: klucz przyjęcia w ścieżce (audyt 2026-10, A-26).
+ *
+ * Ścieżka trafia do logów zapytań hostingu, a klucz zakłada konto, więc nowe
+ * maile prowadzą na `/invite/accept#token=...`. Ta strona zostaje dla
+ * zaproszeń wysłanych przed zmianą linku w backendzie. Zaproszenie żyje
+ * najwyżej 7 dni, więc tydzień po tej zmianie strona i podgląd GET
+ * w backendzie są do usunięcia.
+ */
 export default function AcceptInvitePage({
   params,
 }: {
   params: Promise<{ token: string }>
 }) {
   const { token } = use(params)
-  const router = useRouter()
-
-  const [preview, setPreview] = useState<InvitePreview | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [loadError, setLoadError] = useState('')
-
-  const [username, setUsername] = useState('')
-  const [password, setPassword] = useState('')
-  const [submitting, setSubmitting] = useState(false)
-  const [error, setError] = useState('')
-
-  // Sprawdzamy ważność zanim pokażemy formularz — inaczej zapraszany wypełnia
-  // dane, żeby dopiero przy zapisie dowiedzieć się, że link wygasł.
-  useEffect(() => {
-    let active = true
-
-    // Klucz z adresu strony zakodowany: `../` nie może zmienić adresu API (A-22)
-    fetch(`${API_URL}/accounts/invitations/${encodeURIComponent(token)}/preview/`)
-      .then(async (res) => {
-        if (!res.ok) throw new Error('Ten link zaproszenia jest nieprawidłowy.')
-        return res.json()
-      })
-      .then((data: InvitePreview) => {
-        if (!active) return
-        setPreview(data)
-        setLoading(false)
-      })
-      .catch((err) => {
-        if (!active) return
-        setLoadError(err instanceof Error ? err.message : 'Nie udało się sprawdzić zaproszenia.')
-        setLoading(false)
-      })
-
-    // nie ustawiamy stanu, jeśli komponent zdążył się odmontować
-    return () => {
-      active = false
-    }
-  }, [token])
-
-  async function handleSubmit(e: FormEvent) {
-    e.preventDefault()
-    setSubmitting(true)
-    setError('')
-
-    try {
-      const res = await fetch(`${API_URL}/accounts/accept-invite/`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        // Adresu nie wysylamy: backend bierze go z zaproszenia. Klucz z tego
-        // linku przyszedl mailem na ten adres i to on jest dowodem tozsamosci.
-        body: JSON.stringify({ token, username, password }),
-      })
-
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({}))
-        const detail =
-          data.non_field_errors?.[0] ||
-          data.detail ||
-          Object.values(data)[0] ||
-          'Nie udało się założyć konta.'
-        throw new Error(String(detail))
-      }
-
-      // Konto założone — logujemy od razu, żeby nie odsyłać na ekran logowania.
-      // Nazwą użytkownika, bo adresu ta strona już nie zna.
-      const loginRes = await sessionRequest(`${API_URL}/accounts/login/`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, password }),
-        credentials: 'include',
-      })
-
-      if (loginRes.ok) {
-        const tokens = await loginRes.json()
-        ustawToken(tokens.access)
-        router.push('/dashboard')
-        return
-      }
-
-      router.push('/login')
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Nie udało się założyć konta.')
-    } finally {
-      setSubmitting(false)
-    }
-  }
-
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-atrament-700">
-        <p className="text-mgla-400">Sprawdzam zaproszenie...</p>
-      </div>
-    )
-  }
-
-  if (loadError || !preview) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-atrament-700 px-4">
-        <div className="w-full max-w-sm rounded-lg bg-atrament-800 p-6 shadow">
-          <h1 className="text-xl font-bold mb-2">Zaproszenie nieaktualne</h1>
-          <p className="text-sm text-mgla-300">
-            {loadError || 'Ten link zaproszenia jest nieprawidłowy.'} Poproś osobę, która
-            Cię zapraszała, o nowy link.
-          </p>
-        </div>
-      </div>
-    )
-  }
-
-  if (!preview.is_valid) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-atrament-700 px-4">
-        <div className="w-full max-w-sm rounded-lg bg-atrament-800 p-6 shadow">
-          <h1 className="text-xl font-bold mb-2">Zaproszenie wygasło</h1>
-          <p className="text-sm text-mgla-300">
-            Link do zespołu {preview.company} stracił ważność albo został już wykorzystany.
-            Poproś o nowy.
-          </p>
-        </div>
-      </div>
-    )
-  }
-
-  return (
-    <div className="min-h-screen flex items-center justify-center bg-atrament-700 px-4">
-      <div className="w-full max-w-sm rounded-lg bg-atrament-800 p-6 shadow">
-        <h1 className="text-xl font-bold mb-1">Dołącz do zespołu</h1>
-        <p className="text-sm text-mgla-300 mb-5">
-          Zaproszenie do <span className="font-medium">{preview.company}</span> w roli{' '}
-          {ROLE_LABELS[preview.role] || preview.role}.
-        </p>
-
-        <form onSubmit={handleSubmit}>
-          <label className="label" htmlFor="zaproszenie-username">
-            Nazwa użytkownika
-          </label>
-          <input
-            id="zaproszenie-username"
-            type="text"
-            autoComplete="username"
-            maxLength={150}
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-            required
-            className="input mb-4"
-          />
-
-          <p className="hint mb-4">
-            Konto powstanie na adres, na który przyszło to zaproszenie.
-          </p>
-
-          <label className="label" htmlFor="zaproszenie-haslo">Hasło</label>
-          <input
-            id="zaproszenie-haslo"
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-            minLength={8}
-            maxLength={1024}
-            autoComplete="new-password"
-            className="input mb-5"
-          />
-
-          {error && <p role="alert" className="text-sm text-rose-400 mb-4">{error}</p>}
-
-          <button
-            type="submit"
-            disabled={submitting}
-            className="btn-primary w-full !py-2 !text-sm"
-          >
-            {submitting ? 'Zakładanie konta...' : 'Załóż konto'}
-          </button>
-        </form>
-      </div>
-    </div>
-  )
+  return <PrzyjecieZaproszenia tokenZeSciezki={token} />
 }
