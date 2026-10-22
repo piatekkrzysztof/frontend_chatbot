@@ -7,6 +7,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { API_URL } from '@/lib/api'
 import { ustawToken } from '@/lib/auth'
 import { sessionRequest } from '@/lib/session-lock'
+import { celPoZalogowaniu } from '@/lib/trasy'
 
 const BRAK_POLACZENIA = 'Nie udało się połączyć z serwerem. Sprawdź połączenie i spróbuj ponownie.'
 
@@ -49,8 +50,8 @@ async function wyslijLogowanie(adres: string, cialo: object) {
 
 function FormularzLogowania() {
   const router = useRouter()
-  const destination = () => new URLSearchParams(window.location.search).get('dalej') === 'subskrypcja'
-    ? '/subskrypcja' : '/dashboard'
+  // Wraca na ekran, z którego odbił proxy.ts (`?powrot=`), tylko w obrębie panelu
+  const destination = () => celPoZalogowaniu(window.location.search)
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')

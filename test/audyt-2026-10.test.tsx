@@ -14,7 +14,6 @@ import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 
 import { zapomnijToken } from '@/lib/auth'
-import LoginPage from '@/app/(panel)/(auth)/login/page'
 import WidgetSettingsPage from '@/app/(panel)/(admin)/widget-settings/page'
 import WidgetChat from '@/components/widget/WidgetChat'
 
@@ -57,27 +56,8 @@ afterEach(() => {
 
 // Naprawione znaleziska nie mają tu testów - ich testy żyją przy kodzie:
 // A-02 test/zmiana-konta.test.ts, A-04 i A-05 test/chwilowe-odmowy.test.tsx,
-// A-03, A-13 i A-21 test/test-bota.test.tsx, A-09 test/api.test.ts.
-
-describe('logowanie', () => {
-  async function zaloguj() {
-    const uzytkownik = userEvent.setup()
-    render(<LoginPage />)
-    await uzytkownik.type(screen.getByLabelText('E-mail'), 'szef@firma.pl')
-    await uzytkownik.type(screen.getByLabelText('Hasło'), 'poprawne-haslo')
-    await uzytkownik.click(screen.getByRole('button', { name: 'Zaloguj się' }))
-  }
-
-  it.fails('A-11: po zalogowaniu wraca pod adres z parametru powrot', async () => {
-    // proxy.ts dopisuje ?powrot=<sciezka>, ale ekran logowania go nie czyta
-    window.history.replaceState(null, '', '/login?powrot=%2Fleads')
-    vi.mocked(fetch).mockResolvedValueOnce(json(200, { access: 'token' }))
-
-    await zaloguj()
-
-    await waitFor(() => expect(przekierowania).toContain('/leads'))
-  })
-})
+// A-03, A-13 i A-21 test/test-bota.test.tsx, A-09 test/api.test.ts,
+// A-10 i A-11 test/trasy.test.tsx.
 
 describe('ustawienia widgetu', () => {
   it.fails('A-14: podglad logo nie tworzy nowego adresu blob przy kazdym klawiszu', async () => {
