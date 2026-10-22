@@ -9,7 +9,7 @@
 import { afterEach, expect, it, vi } from 'vitest'
 import { render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import DocumentsPage from '@/app/(admin)/documents/page'
+import DocumentsPage from '@/app/(panel)/(admin)/documents/page'
 import * as api from '@/lib/api'
 
 const DOKUMENT = {

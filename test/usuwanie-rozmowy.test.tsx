@@ -11,7 +11,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import WidgetChat from '@/components/widget/WidgetChat'
-import ConversationsPage from '@/app/(admin)/conversations/page'
+import ConversationsPage from '@/app/(panel)/(admin)/conversations/page'
 import * as api from '@/lib/api'
 import { BladApi } from '@/lib/api'
 

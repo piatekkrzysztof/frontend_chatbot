@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import ConfirmEmailPage from '@/app/(auth)/potwierdz-email/page'
+import ConfirmEmailPage from '@/app/(panel)/(auth)/potwierdz-email/page'
 import ResendConfirmation from '@/components/auth/ResendConfirmation'
 
 const TOKEN = 'a'.repeat(43)

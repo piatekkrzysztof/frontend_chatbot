@@ -1,0 +1,57 @@
+/*
+  Arkusz okna czatu - osobny od app/globals.css.
+
+  Nie dla oszczędności samego CSS. Turbopack łączy arkusz wspólny dla dwóch
+  głównych układów z deklaracjami krojów panelu, więc z globals.css widget
+  dostawał też wstępne ładowanie trzech plików Gambetty, której nie używa
+  (audyt 2026-10, A-16). Własny arkusz trzyma go poza tym.
+
+  Kolory okna czatu pochodzą z components/widget/theme.ts. Stąd idzie tylko
+  to, czego widget używał z globals.css: reset Tailwinda, klasy z
+  components/widget, zmienne krojów i reguły dla html, body, zaznaczenia
+  i ogniska klawiatury. Wartości są kopią z globals.css (motyw domyślny) -
+  przy zmianie tamtych trzeba zmienić i te.
+*/
+@import "tailwindcss" source(none);
+@source "../../components/widget";
+@source "./widget";
+
+:root {
+  --font-body: var(--font-switzer), system-ui, sans-serif;
+  --font-mono: var(--font-jetbrains), ui-monospace, monospace;
+  --tlo: #0e1527;
+  --tekst: #f5f2ea;
+  --akcent: #ffa552;
+  --na-akcencie: #16233f;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background: var(--tlo);
+  color: var(--tekst);
+  font-family: var(--font-body);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+::selection {
+  background: var(--akcent);
+  color: var(--na-akcencie);
+}
+
+:focus-visible {
+  outline: 2px solid var(--akcent);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

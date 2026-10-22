@@ -9,7 +9,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import TeamPage from '@/app/(admin)/team/page'
+import TeamPage from '@/app/(panel)/(admin)/team/page'
 import * as api from '@/lib/api'
 
 afterEach(() => vi.restoreAllMocks())

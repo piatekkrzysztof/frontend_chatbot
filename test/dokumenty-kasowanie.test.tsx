@@ -10,7 +10,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import DocumentsPage from '@/app/(admin)/documents/page'
+import DocumentsPage from '@/app/(panel)/(admin)/documents/page'
 import * as api from '@/lib/api'
 import { BladApi } from '@/lib/api'
 

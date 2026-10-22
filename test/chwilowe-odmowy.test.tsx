@@ -18,7 +18,7 @@ import userEvent from '@testing-library/user-event'
 import { apiFetch, pobierzPlik } from '@/lib/api'
 import { ustawToken, zapomnijToken } from '@/lib/auth'
 import { withAuth } from '@/lib/withAuth'
-import LoginPage from '@/app/(auth)/login/page'
+import LoginPage from '@/app/(panel)/(auth)/login/page'
 
 const przekierowania: string[] = []
 

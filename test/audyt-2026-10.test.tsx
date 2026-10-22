@@ -15,9 +15,9 @@ import userEvent from '@testing-library/user-event'
 
 import { pobierzPlik } from '@/lib/api'
 import { ustawToken, zapomnijToken } from '@/lib/auth'
-import LoginPage from '@/app/(auth)/login/page'
-import TestBotaPage from '@/app/(admin)/test-bota/page'
-import WidgetSettingsPage from '@/app/(admin)/widget-settings/page'
+import LoginPage from '@/app/(panel)/(auth)/login/page'
+import TestBotaPage from '@/app/(panel)/(admin)/test-bota/page'
+import WidgetSettingsPage from '@/app/(panel)/(admin)/widget-settings/page'
 import WidgetChat from '@/components/widget/WidgetChat'
 
 const przekierowania: string[] = []

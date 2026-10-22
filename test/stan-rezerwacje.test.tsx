@@ -13,7 +13,7 @@
  */
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { render, screen } from '@testing-library/react'
-import StanPage from '@/app/(admin)/stan/page'
+import StanPage from '@/app/(panel)/(admin)/stan/page'
 import * as api from '@/lib/api'
 
 afterEach(() => {

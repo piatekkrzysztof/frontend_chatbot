@@ -9,8 +9,8 @@
  */
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { render, screen } from '@testing-library/react'
-import TeamPage from '@/app/(admin)/team/page'
-import UstawieniaPage from '@/app/(admin)/ustawienia/page'
+import TeamPage from '@/app/(panel)/(admin)/team/page'
+import UstawieniaPage from '@/app/(panel)/(admin)/ustawienia/page'
 import DaneRozliczeniowe from '@/components/ustawienia/DaneRozliczeniowe'
 import * as api from '@/lib/api'
 import { BladApi } from '@/lib/api'
