@@ -1,18 +1,16 @@
 /**
- * Znaleziska audytu z października 2026, które da się pokazać tylko
- * w prawdziwej przeglądarce (docs/audyt-2026-10.md).
+ * embed.js na prawdziwej stronie klienta, z ramką czatu z innej witryny.
  *
- * Jak w test/audyt-2026-10.test.tsx: `test.fail()` znaczy, że test opisuje
- * zachowanie docelowe i przechodzi, dopóki błąd istnieje. Poprawka zmieni go
- * na czerwony - wtedy zdjąć `test.fail()`.
+ * Kategoria ryzyka: STRONA KLIENTA. Jednostkowo (test/embed.test.ts) skrypt
+ * działa na jednym dokumencie. Tu ramka jest naprawdę osobnym dokumentem,
+ * więc widać to, czego jsdom nie pokaże: zdarzenia klawiatury z ramki nie
+ * docierają do strony. Do audytu 2026-10 (A-12) Escape w polu wiadomości
+ * nie zamykał okna - teraz widget prosi stronę o zamknięcie komunikatem.
  */
 import { createServer, type Server } from 'node:http'
 import type { AddressInfo } from 'node:net'
 import { expect, test } from '@playwright/test'
 import { podstawBackend } from './atrapa'
-
-// A-10 (/dziennik bez sesji) jest naprawione: trasę sprawdza e2e/dostep.spec.ts,
-// a test/trasy.test.tsx pilnuje, że lista obejmuje każdy ekran panelu.
 
 test.describe('embed.js na stronie klienta', () => {
   // Strona klienta na innym adresie niż panel - tak jak w rzeczywistości ramka
@@ -49,8 +47,7 @@ test.describe('embed.js na stronie klienta', () => {
     await expect(ramka).toBeHidden()
   })
 
-  test('A-12: Escape w polu wiadomości (ognisko w ramce) zamyka okno czatu', async ({ page }) => {
-    test.fail()
+  test('Escape w polu wiadomości (ognisko w ramce) zamyka okno czatu', async ({ page }) => {
     await podstawBackend(page)
     await page.goto(stronaKlienta)
     await page.getByRole('button', { name: 'Otwórz czat' }).click()

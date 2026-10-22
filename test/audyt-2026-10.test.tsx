@@ -15,7 +15,6 @@ import userEvent from '@testing-library/user-event'
 
 import { zapomnijToken } from '@/lib/auth'
 import WidgetSettingsPage from '@/app/(panel)/(admin)/widget-settings/page'
-import WidgetChat from '@/components/widget/WidgetChat'
 
 const przekierowania: string[] = []
 
@@ -57,7 +56,8 @@ afterEach(() => {
 // Naprawione znaleziska nie mają tu testów - ich testy żyją przy kodzie:
 // A-02 test/zmiana-konta.test.ts, A-04 i A-05 test/chwilowe-odmowy.test.tsx,
 // A-03, A-13 i A-21 test/test-bota.test.tsx, A-09 test/api.test.ts,
-// A-10 i A-11 test/trasy.test.tsx.
+// A-10 i A-11 test/trasy.test.tsx, A-12 i A-15 test/widget-klawiatura-kontakt.test.tsx
+// i e2e/embed.spec.ts.
 
 describe('ustawienia widgetu', () => {
   it.fails('A-14: podglad logo nie tworzy nowego adresu blob przy kazdym klawiszu', async () => {
@@ -87,27 +87,5 @@ describe('ustawienia widgetu', () => {
     } finally {
       Object.assign(URL, { createObjectURL: poprzednie.utworz, revokeObjectURL: poprzednie.zwolnij })
     }
-  })
-})
-
-describe('widget', () => {
-  it.fails('A-15: dwuklik w „Wyślij” formularza kontaktu wysyla jedno zapytanie', async () => {
-    let zakoncz!: (odpowiedz: Response) => void
-    vi.mocked(fetch).mockImplementation((adres) => {
-      const url = String(adres)
-      if (url.includes('/widget-settings/')) return Promise.resolve(json(200, USTAWIENIA_WIDGETU))
-      if (url.includes('/widget/contact/')) return new Promise((resolve) => { zakoncz = resolve })
-      return Promise.resolve(json(200))
-    })
-    const uzytkownik = userEvent.setup()
-    render(<WidgetChat />)
-
-    await uzytkownik.click(await screen.findByRole('button', { name: 'Zostaw kontakt' }))
-    await uzytkownik.type(screen.getByLabelText('Twój e-mail lub telefon'), 'jan@firma.pl')
-    await uzytkownik.dblClick(screen.getByRole('button', { name: 'Wyślij' }))
-    zakoncz?.(json(201))
-
-    const kontakty = vi.mocked(fetch).mock.calls.filter(([adres]) => String(adres).includes('/widget/contact/'))
-    expect(kontakty).toHaveLength(1)
   })
 })
