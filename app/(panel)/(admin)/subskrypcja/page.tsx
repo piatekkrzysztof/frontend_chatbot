@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { apiFetch } from '@/lib/api'
 
 interface Plan {
@@ -62,6 +62,24 @@ export default function SubskrypcjaPage() {
   const [limitDomen, setLimitDomen] = useState<number | null>(null)
   const [bladDomen, setBladDomen] = useState(false)
   const [otwieram, setOtwieram] = useState('')
+  // Usunięcie witryny wyłącza czat na tej stronie klienta, więc pytamy
+  // w miejscu, jak przy dokumentach. Do audytu 2026-10 (A-19) wystarczał klik.
+  const [domenaDoUsuniecia, setDomenaDoUsuniecia] = useState<number | null>(null)
+  const [usuwanaDomena, setUsuwanaDomena] = useState<number | null>(null)
+  const zegarDomeny = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  function uzbrojUsuniecieDomeny(id: number) {
+    if (zegarDomeny.current) clearTimeout(zegarDomeny.current)
+    setDomenaDoUsuniecia(id)
+    zegarDomeny.current = setTimeout(() => setDomenaDoUsuniecia(null), 5000)
+  }
+
+  useEffect(
+    () => () => {
+      if (zegarDomeny.current) clearTimeout(zegarDomeny.current)
+    },
+    [],
+  )
 
   useEffect(() => {
     let active = true
@@ -167,11 +185,15 @@ export default function SubskrypcjaPage() {
   }
 
   async function usunDomene(id: number) {
+    setUsuwanaDomena(id)
     try {
       await apiFetch(`/widget-domains/${id}/`, { method: 'DELETE' })
+      setDomenaDoUsuniecia(null)
       setDomeny((poprzednie) => (poprzednie || []).filter((d) => d.id !== id))
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Nie udało się usunąć witryny.')
+    } finally {
+      setUsuwanaDomena(null)
     }
   }
 
@@ -339,10 +361,18 @@ export default function SubskrypcjaPage() {
                   {/* Odstep zamiast samego tekstu: napis "Usuń" mial 28x16 px, ponizej
                       minimum 24 px celu wskaznika (WCAG 2.2, 2.5.8) */}
                   <button
-                    onClick={() => usunDomene(domena.id)}
-                    className="-mr-2 px-2 py-1 text-xs tekst-slaby hover:text-[var(--blad)]"
+                    onClick={() =>
+                      domenaDoUsuniecia === domena.id ? usunDomene(domena.id) : uzbrojUsuniecieDomeny(domena.id)
+                    }
+                    disabled={usuwanaDomena === domena.id}
+                    aria-label={
+                      domenaDoUsuniecia === domena.id
+                        ? `Potwierdź usunięcie witryny ${domena.host}`
+                        : `Usuń witrynę ${domena.host}`
+                    }
+                    className="-mr-2 px-2 py-1 text-xs tekst-slaby hover:text-[var(--blad)] disabled:opacity-50"
                   >
-                    Usuń
+                    {usuwanaDomena === domena.id ? 'Usuwam...' : domenaDoUsuniecia === domena.id ? 'Na pewno?' : 'Usuń'}
                   </button>
                 </li>
               ))}

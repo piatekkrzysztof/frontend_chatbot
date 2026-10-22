@@ -94,3 +94,14 @@ test('skrypty w tresci strony nie sa juz dozwolone hurtem', async ({ page }) => 
   expect(skrypty).toContain("'strict-dynamic'")
   expect(skrypty).toMatch(/'nonce-[^']+'/)
 })
+
+test('panel i widget wyłączają kamerę, mikrofon, położenie i płatności', async ({ request }) => {
+  // Audyt 2026-10, A-25: żaden ekran ich nie używa, a bez nagłówka mógłby
+  // po nie sięgnąć każdy skrypt, który kiedyś by się tu znalazł.
+  for (const adres of ['/', '/login', '/widget?key=klucz-testowy']) {
+    const polityka = (await request.get(adres)).headers()['permissions-policy'] ?? ''
+    for (const funkcja of ['camera=()', 'microphone=()', 'geolocation=()', 'payment=()']) {
+      expect(polityka, `${adres}: ${funkcja}`).toContain(funkcja)
+    }
+  }
+})

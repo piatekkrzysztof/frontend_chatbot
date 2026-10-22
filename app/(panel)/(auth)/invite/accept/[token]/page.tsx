@@ -43,7 +43,8 @@ export default function AcceptInvitePage({
   useEffect(() => {
     let active = true
 
-    fetch(`${API_URL}/accounts/invitations/${token}/preview/`)
+    // Klucz z adresu strony zakodowany: `../` nie może zmienić adresu API (A-22)
+    fetch(`${API_URL}/accounts/invitations/${encodeURIComponent(token)}/preview/`)
       .then(async (res) => {
         if (!res.ok) throw new Error('Ten link zaproszenia jest nieprawidłowy.')
         return res.json()

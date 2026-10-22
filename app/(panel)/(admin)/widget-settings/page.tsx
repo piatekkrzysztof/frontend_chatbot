@@ -1,10 +1,11 @@
 'use client'
 
-import { useEffect, useState, FormEvent } from 'react'
+import { useEffect, useMemo, useState, FormEvent } from 'react'
 import { apiFetch } from '@/lib/api'
 import { uploadError } from '@/lib/uploads'
 import UploadField from '@/components/UploadField'
 import WidgetPreview from '@/components/widget/WidgetPreview'
+import { useJa } from '@/lib/ja'
 
 // Lista musi odpowiadać WIDGET_LANGUAGES w accounts/models.py — backend
 // odrzuca kody spoza swojego słownika i cicho wraca do domyślnego.
@@ -16,6 +17,21 @@ const JEZYKI = [
   { kod: 'ru', nazwa: 'Rosyjski' },
   { kod: 'cs', nazwa: 'Czeski' },
 ]
+
+/**
+ * Adres blob: podglądu wybranego pliku - jeden na plik.
+ *
+ * Do audytu 2026-10 (A-14) adres powstawał w każdym renderze i nie był
+ * zwalniany: każdy klawisz w formularzu z wybranym logo dawał nowy adres,
+ * przeładowany obrazek podglądu i plik trzymany do zamknięcia karty.
+ */
+function usePodgladPliku(plik: File | null): string | null {
+  const adres = useMemo(() => (plik ? URL.createObjectURL(plik) : null), [plik])
+  useEffect(() => () => {
+    if (adres) URL.revokeObjectURL(adres)
+  }, [adres])
+  return adres
+}
 
 export default function WidgetSettingsPage() {
   const [brandingMode, setBrandingMode] = useState<'smart' | 'white_label'>('smart')
@@ -40,9 +56,10 @@ export default function WidgetSettingsPage() {
   const [avatarFile, setAvatarFile] = useState<File | null>(null)
   const [logoUrl, setLogoUrl] = useState<string | null>(null)
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null)
-  const [apiKey, setApiKey] = useState('')
-  // Cichy błąd ukrywał cały blok bez słowa wyjaśnienia
-  const [kluczBlad, setKluczBlad] = useState(false)
+  // Klucz z /accounts/me/ (JaProvider, ten sam odczyt co pasek górny).
+  // Cichy błąd ukrywał cały blok bez słowa wyjaśnienia - stąd kluczBlad.
+  const { ja, blad: kluczBlad } = useJa()
+  const apiKey = ja?.tenant_api_key || ''
   const [skopiowano, setSkopiowano] = useState(false)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
@@ -79,10 +96,6 @@ export default function WidgetSettingsPage() {
       .catch((err) =>
         setBladOdczytu(err instanceof Error ? err.message : 'Nie udało się wczytać ustawień widgetu.'),
       )
-
-    apiFetch('/accounts/me/')
-      .then((data) => setApiKey(data.tenant_api_key || ''))
-      .catch(() => setKluczBlad(true))
 
     // Poziom brandingu bierzemy z cennika, a nie z osobnej kopii w panelu —
     // inaczej rozjechałby się z tym, co naprawdę egzekwuje backend
@@ -158,8 +171,8 @@ export default function WidgetSettingsPage() {
     : ''
 
   // Podgląd rysujemy z niezapisanych plików, żeby efekt było widać od razu
-  const previewLogo = logoFile ? URL.createObjectURL(logoFile) : logoUrl
-  const previewAvatar = avatarFile ? URL.createObjectURL(avatarFile) : avatarUrl
+  const previewLogo = usePodgladPliku(logoFile) ?? logoUrl
+  const previewAvatar = usePodgladPliku(avatarFile) ?? avatarUrl
 
   return (
     <div>

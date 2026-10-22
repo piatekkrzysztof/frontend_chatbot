@@ -84,7 +84,8 @@ export default function PrivacyPage() {
     setEraseResult('')
 
     try {
-      const data = await apiFetch(`/privacy/conversations/${id}/`, { method: 'DELETE' })
+      // Wklejony identyfikator zakodowany: `../` w polu nie może zmienić adresu (A-22)
+      const data = await apiFetch(`/privacy/conversations/${encodeURIComponent(id)}/`, { method: 'DELETE' })
       const total = Object.values(data.deleted as Record<string, number>).reduce(
         (sum, n) => sum + n,
         0,

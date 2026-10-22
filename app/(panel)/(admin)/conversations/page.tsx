@@ -5,6 +5,7 @@ import { apiFetch, BladApi, pobierzPlik } from '@/lib/api'
 import Stronicowanie, { naStrone, type StronaListy } from '@/components/Stronicowanie'
 import UploadField from '@/components/UploadField'
 import { uploadError } from '@/lib/uploads'
+import { useJa } from '@/lib/ja'
 
 interface PromptLogItem {
   id: number
@@ -29,7 +30,9 @@ export default function ConversationsPage() {
   // Import tworzy dane i nie ma ochrony przed powtórką: ten sam plik wgrany
   // dwa razy dopisze historię dwa razy. Stąd potwierdzenie przed wysłaniem
   // i sekcja widoczna tylko dla ról, które backend przepuści.
-  const [mojaRola, setMojaRola] = useState('')
+  // Rola z JaProvider (ten sam odczyt /accounts/me/ co pasek górny). Decyduje
+  // tylko o tym, czy pokazać import; zapisu i tak pilnuje backend (podgląd: 403).
+  const mojaRola = useJa().ja?.role || ''
   const [plikCsv, setPlikCsv] = useState<File | null>(null)
   const [wgrywa, setWgrywa] = useState(false)
   const [potwierdzaImport, setPotwierdzaImport] = useState(false)
@@ -70,24 +73,6 @@ export default function ConversationsPage() {
       active = false
     }
   }, [numer, wersja, filtrOceny])
-
-  useEffect(() => {
-    let active = true
-
-    // Rola decyduje tylko o tym, czy pokazać sekcję importu. Zapisu i tak
-    // pilnuje backend: rola podglądu dostaje 403.
-    apiFetch('/accounts/me/')
-      .then((dane) => {
-        if (active) setMojaRola((dane as { role?: string }).role || '')
-      })
-      .catch(() => {
-        // Bez odpowiedzi zostaje sam odczyt historii - nic mylącego.
-      })
-
-    return () => {
-      active = false
-    }
-  }, [])
 
   async function eksportuj() {
     setEksportuje(true)
@@ -130,7 +115,9 @@ export default function ConversationsPage() {
     setError('')
     setWynikUsuniecia('')
     try {
-      const dane = await apiFetch(`/privacy/conversations/${sesja}/`, { method: 'DELETE' })
+      // Zakodowany jak każdy segment z danych: identyfikator z `../` trafiłby
+      // z tokenem właściciela pod inny adres API (audyt 2026-10, A-22).
+      const dane = await apiFetch(`/privacy/conversations/${encodeURIComponent(sesja)}/`, { method: 'DELETE' })
       const lacznie = Object.values((dane.deleted ?? {}) as Record<string, number>).reduce(
         (suma, n) => suma + n,
         0,

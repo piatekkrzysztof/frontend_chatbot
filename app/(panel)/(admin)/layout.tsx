@@ -6,12 +6,14 @@ import Sidebar from '@/components/layout/Sidebar'
 import Navbar from '@/components/layout/Navbar'
 import { withAuth } from '@/lib/withAuth'
 import { useMotyw } from '@/lib/motyw'
+import { JaProvider } from '@/lib/ja'
 
 function AdminLayout({ children }: { children: ReactNode }) {
   const [menuOtwarte, setMenuOtwarte] = useState(false)
   const { motyw, przelacz } = useMotyw()
 
   return (
+    <JaProvider>
     <div className={`${motyw === 'ciemny' ? 'motyw-ciemny' : 'motyw-jasny'} admin-shell`}>
       <div className="admin-sidebar-desktop">
         <Sidebar />
@@ -40,6 +42,7 @@ function AdminLayout({ children }: { children: ReactNode }) {
         <main className="admin-main">{children}</main>
       </div>
     </div>
+    </JaProvider>
   )
 }
 
