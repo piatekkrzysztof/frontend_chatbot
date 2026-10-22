@@ -15,8 +15,8 @@
  */
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { render, screen, waitFor } from '@testing-library/react'
-import PlatnoscSukcesPage from '@/app/(admin)/platnosc/sukces/page'
-import PlatnoscAnulowanoPage from '@/app/(admin)/platnosc/anulowano/page'
+import PlatnoscSukcesPage from '@/app/(panel)/(admin)/platnosc/sukces/page'
+import PlatnoscAnulowanoPage from '@/app/(panel)/(admin)/platnosc/anulowano/page'
 import * as api from '@/lib/api'
 import { BladApi } from '@/lib/api'
 

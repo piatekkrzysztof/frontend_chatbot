@@ -8,7 +8,7 @@
  */
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { render, screen, within } from '@testing-library/react'
-import DashboardPage from '@/app/(admin)/dashboard/page'
+import DashboardPage from '@/app/(panel)/(admin)/dashboard/page'
 import * as api from '@/lib/api'
 
 afterEach(() => {

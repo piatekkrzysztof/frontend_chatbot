@@ -14,7 +14,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import FAQPage from '@/app/(admin)/faq/page'
+import FAQPage from '@/app/(panel)/(admin)/faq/page'
 import * as api from '@/lib/api'
 
 const WPISY = [

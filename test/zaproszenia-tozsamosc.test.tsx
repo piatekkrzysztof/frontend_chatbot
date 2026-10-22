@@ -13,8 +13,8 @@ import { Suspense } from 'react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import PrzyjmijZaproszeniePage from '@/app/(auth)/invite/accept/[token]/page'
-import WyslijZaproszeniePage from '@/app/(auth)/invite/wyslij/[token]/page'
+import PrzyjmijZaproszeniePage from '@/app/(panel)/(auth)/invite/accept/[token]/page'
+import WyslijZaproszeniePage from '@/app/(panel)/(auth)/invite/wyslij/[token]/page'
 
 const przekierowania: string[] = []
 const logowania: unknown[] = []

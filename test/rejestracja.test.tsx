@@ -13,7 +13,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import RejestracjaPage from '@/app/(auth)/rejestracja/page'
+import RejestracjaPage from '@/app/(panel)/(auth)/rejestracja/page'
 
 const przekierowania: string[] = []
 

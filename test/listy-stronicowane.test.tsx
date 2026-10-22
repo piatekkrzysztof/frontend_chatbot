@@ -8,8 +8,8 @@
  */
 import { describe, expect, it, vi } from 'vitest'
 import { fireEvent, render, screen, waitFor } from '@testing-library/react'
-import ConversationsPage from '@/app/(admin)/conversations/page'
-import LeadsPage from '@/app/(admin)/leads/page'
+import ConversationsPage from '@/app/(panel)/(admin)/conversations/page'
+import LeadsPage from '@/app/(panel)/(admin)/leads/page'
 import * as api from '@/lib/api'
 
 function wpis(id: number) {

@@ -1,41 +1,23 @@
-import './globals.css'
+import '../globals.css'
 import { ReactNode } from 'react'
 import type { Metadata } from 'next'
 import { headers } from 'next/headers'
 import localFont from 'next/font/local'
-import { JetBrains_Mono } from 'next/font/google'
+import { jetbrains, switzer } from '../fonts/interfejs'
 
 /**
  * Kroje z witryny agencji (system „Przypis”): Gambetta w nagłówkach i dużych
- * liczbach, Switzer w interfejsie, JetBrains Mono w danych i etykietach.
- * Gambetta i Switzer pochodzą z Fontshare, którego nie ma w next/font/google,
- * więc pliki leżą w app/fonts. CSP panelu ma font-src 'self', zewnętrzny
- * arkusz Fontshare i tak zostałby zablokowany.
+ * liczbach, Switzer i JetBrains Mono wspólne z widgetem (app/fonts/interfejs.ts).
+ * Gambetta pochodzi z Fontshare, którego nie ma w next/font/google, więc pliki
+ * leżą w app/fonts.
  */
 const gambetta = localFont({
   src: [
-    { path: './fonts/Gambetta-Regular.woff2', weight: '400', style: 'normal' },
-    { path: './fonts/Gambetta-Italic.woff2', weight: '400', style: 'italic' },
-    { path: './fonts/Gambetta-Medium.woff2', weight: '500', style: 'normal' },
+    { path: '../fonts/Gambetta-Regular.woff2', weight: '400', style: 'normal' },
+    { path: '../fonts/Gambetta-Italic.woff2', weight: '400', style: 'italic' },
+    { path: '../fonts/Gambetta-Medium.woff2', weight: '500', style: 'normal' },
   ],
   variable: '--font-gambetta',
-  display: 'swap',
-})
-
-const switzer = localFont({
-  src: [
-    { path: './fonts/Switzer-Regular.woff2', weight: '400', style: 'normal' },
-    { path: './fonts/Switzer-Medium.woff2', weight: '500', style: 'normal' },
-    { path: './fonts/Switzer-Semibold.woff2', weight: '600', style: 'normal' },
-  ],
-  variable: '--font-switzer',
-  display: 'swap',
-})
-
-const jetbrains = JetBrains_Mono({
-  subsets: ['latin-ext'],
-  weight: ['400', '500'],
-  variable: '--font-jetbrains',
   display: 'swap',
 })
 
@@ -82,9 +64,12 @@ export const metadata: Metadata = {
  * i panel by nie wstał. Dokładnie tak skończyła się pierwsza próba.
  *
  * Koszt jest mały: wszystkie ekrany panelu to komponenty klienta pobierające
- * dane po zamontowaniu, więc prerenderowana była pusta powłoka. Widget, gdzie
- * czas pierwszego rysowania ma znaczenie, jest poza zasięgiem middleware
- * i zachowuje własne nagłówki z next.config.js.
+ * dane po zamontowaniu, więc prerenderowana była pusta powłoka.
+ *
+ * Ten układ obejmuje tylko panel (grupa `(panel)`: strona główna, logowanie,
+ * ekrany). Widget ma własny główny układ w `app/(widget)` bez tego odczytu,
+ * więc jest statyczny - do audytu 2026-10 (A-08) leżał pod tym układem i każde
+ * otwarcie czatu na stronie klienta renderowało się na serwerze.
  */
 export default async function RootLayout({ children }: { children: ReactNode }) {
   await headers()

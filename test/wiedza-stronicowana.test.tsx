@@ -8,8 +8,8 @@
  */
 import { describe, expect, it, vi } from 'vitest'
 import { fireEvent, render, screen, waitFor } from '@testing-library/react'
-import FAQPage from '@/app/(admin)/faq/page'
-import DocumentsPage from '@/app/(admin)/documents/page'
+import FAQPage from '@/app/(panel)/(admin)/faq/page'
+import DocumentsPage from '@/app/(panel)/(admin)/documents/page'
 import * as api from '@/lib/api'
 
 function faq(id: number) {

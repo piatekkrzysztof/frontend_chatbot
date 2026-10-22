@@ -264,10 +264,12 @@ reconnect handling in the widget stream, and i18n if a non-Polish customer appea
 ## Repository layout
 
 ```
-app/(auth)/        login, registration, invitation acceptance
-app/(admin)/       panel: dashboard, knowledge base, FAQ, bot test, widget settings,
+app/(panel)/       root layout of the panel: per-request rendering (CSP nonce), all fonts
+app/(panel)/(auth)/  login, registration, invitation acceptance
+app/(panel)/(admin)/ panel: dashboard, knowledge base, FAQ, bot test, widget settings,
                    conversations, leads, team, subscription, privacy, system health
-app/widget/        the public chat window loaded in an iframe
+app/(widget)/      separate root layout of the chat window: static, own CSS and CSP
+app/(widget)/widget/ the public chat window loaded in an iframe
 components/widget/ WidgetChat (conversation), chrome (frame, header, footer), preview
 lib/api.ts         fetch wrapper: token, 401 handling, error unwrapping
 public/embed.js    the script the customer pastes into their site

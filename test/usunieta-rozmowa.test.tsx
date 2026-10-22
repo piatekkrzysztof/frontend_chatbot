@@ -2,7 +2,7 @@ import { afterEach, expect, it, vi } from 'vitest'
 import { act, render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import WidgetChat from '@/components/widget/WidgetChat'
-import TestBotaPage from '@/app/(admin)/test-bota/page'
+import TestBotaPage from '@/app/(panel)/(admin)/test-bota/page'
 import { apiFetch } from '@/lib/api'
 
 vi.mock('next/navigation', () => ({

@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import ResetPasswordPage from '@/app/(auth)/reset-hasla/page'
+import ResetPasswordPage from '@/app/(panel)/(auth)/reset-hasla/page'
 import PasswordResetRequest from '@/components/auth/PasswordResetRequest'
 import { recoveryRequest } from '@/lib/password-recovery'
 

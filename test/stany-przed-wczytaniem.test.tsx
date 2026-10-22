@@ -15,10 +15,10 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import PrivacyPage from '@/app/(admin)/privacy/page'
-import WidgetSettingsPage from '@/app/(admin)/widget-settings/page'
-import TeamPage from '@/app/(admin)/team/page'
-import SubskrypcjaPage from '@/app/(admin)/subskrypcja/page'
+import PrivacyPage from '@/app/(panel)/(admin)/privacy/page'
+import WidgetSettingsPage from '@/app/(panel)/(admin)/widget-settings/page'
+import TeamPage from '@/app/(panel)/(admin)/team/page'
+import SubskrypcjaPage from '@/app/(panel)/(admin)/subskrypcja/page'
 import * as api from '@/lib/api'
 
 afterEach(() => {

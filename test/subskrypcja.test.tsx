@@ -8,7 +8,7 @@
  */
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { fireEvent, render, screen, waitFor } from '@testing-library/react'
-import SubskrypcjaPage from '@/app/(admin)/subskrypcja/page'
+import SubskrypcjaPage from '@/app/(panel)/(admin)/subskrypcja/page'
 import * as api from '@/lib/api'
 import { BladApi } from '@/lib/api'
 
