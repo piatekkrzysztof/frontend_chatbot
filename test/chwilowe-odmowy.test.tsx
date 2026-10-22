@@ -22,12 +22,17 @@ import LoginPage from '@/app/(panel)/(auth)/login/page'
 
 const przekierowania: string[] = []
 
+// Jeden obiekt, jak w Next. Nowy przy każdym renderze zmieniał zależność
+// efektu withAuth: po pokazaniu komunikatu efekt ruszał drugi raz, drugie
+// odświeżenie się udawało i komunikat znikał, zanim test znalazł przycisk.
+const router = {
+  push: (adres: string) => przekierowania.push(adres),
+  replace: (adres: string) => przekierowania.push(adres),
+}
+
 vi.mock('next/navigation', () => ({
   useSearchParams: () => new URLSearchParams(),
-  useRouter: () => ({
-    push: (adres: string) => przekierowania.push(adres),
-    replace: (adres: string) => przekierowania.push(adres),
-  }),
+  useRouter: () => router,
 }))
 
 function json(status: number, cialo: unknown = {}, naglowki: Record<string, string> = {}) {
