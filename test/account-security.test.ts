@@ -34,13 +34,20 @@ describe('account security transport and revocation', () => {
     expect(pobierzToken()).toBe(token)
   })
 
-  it('refuses to mutate a different login returned by refresh', async () => {
+  it('refuses to mutate a different login returned by refresh and reloads instead (A-02)', async () => {
     ustawToken(jwt(identity()))
-    const other = jwt(identity())
-    vi.mocked(fetch).mockResolvedValueOnce(response({ access: other }))
-    await expect(securityMutation('/accounts/password-change/', {})).rejects.toThrow('Sesja zmieniła')
-    expect(fetch).toHaveBeenCalledTimes(1)
-    expect(pobierzToken()).toBe(other)
+    const reload = vi.fn()
+    const original = window.location
+    Object.defineProperty(window, 'location', { configurable: true, writable: true, value: { reload } })
+    try {
+      vi.mocked(fetch).mockResolvedValueOnce(response({ access: jwt(identity()) }))
+      void securityMutation('/accounts/password-change/', {})
+      await vi.waitFor(() => expect(reload).toHaveBeenCalledTimes(1))
+      expect(fetch).toHaveBeenCalledTimes(1)
+      expect(pobierzToken()).toBeNull()
+    } finally {
+      Object.defineProperty(window, 'location', { configurable: true, writable: true, value: original })
+    }
   })
 
   it('a late successful response cannot clear a newer login', async () => {
@@ -92,13 +99,14 @@ describe('account security transport and revocation', () => {
 
   it('a stalled preflight refresh body releases the session lock without sending a mutation', async () => {
     vi.useFakeTimers()
-    const token = jwt(identity()); ustawToken(token)
+    const sid = identity(); ustawToken(jwt(sid))
     vi.mocked(fetch).mockImplementationOnce(async (_url, options) => ({ ok: true, status: 200, json: () => new Promise((_resolve, reject) => options?.signal?.addEventListener('abort', () => reject(new Error('timeout')))) }) as Response)
     const pending = expect(securityMutation('/accounts/password-change/', {})).rejects.toThrow('Sesja zmieniła')
     await vi.advanceTimersByTimeAsync(20_001)
     await pending
     expect(fetch).toHaveBeenCalledTimes(1)
-    const fresh = jwt(identity())
+    // Same login as before the stall; a different one would reload the page (A-02)
+    const fresh = jwt(sid)
     vi.mocked(fetch).mockResolvedValueOnce(response({ access: fresh }))
     expect(await odswiezSesje()).toBe(fresh)
   })

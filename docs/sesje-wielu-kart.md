@@ -22,6 +22,30 @@ retry, kolejność login/refresh, awaria blokady; dodatkowo dwie karty Chrome
 z prawdziwym Web Locks i atrapą API. Odbiór po wdrożeniu wymaga sprawdzenia
 tych przepływów z rzeczywistym backendem.
 
+## Logowanie w innej karcie — 22.10.2026
+
+Ciasteczko odświeżania jest jedno na przeglądarkę. Logowanie albo przyjęcie
+zaproszenia w jednej karcie oddaje je nowemu logowaniu, a pozostałe karty wciąż
+pokazują dane poprzedniego. Do tej zmiany karta po wygaśnięciu tokenu odświeżała
+się na nowe logowanie i powtarzała zapytanie ekranu, więc formularz firmy A
+zapisywał się w firmie B (audyt 2026-10, znalezisko A-02).
+
+Karta pamięta `sid` logowania, z którym wczytała dane. Backend zakłada nowy `sid`
+przy każdym logowaniu i przenosi go bez zmian przez rotację, więc inny `sid`
+po odświeżeniu znaczy inne logowanie, także przy tym samym koncie. Karta nie
+przyjmuje wtedy tokenu i nie powtarza zapytania, tylko przeładowuje stronę:
+panel wstaje na nowym logowaniu, bez niczego w pamięci komponentów. Nie idzie
+na ekran logowania, bo ciasteczko jest ważne.
+
+Logowanie i przyjęcie zaproszenia zostawiają w localStorage losowy znacznik
+(`sm-art-session-login`), jak wylogowanie. Karty z panelem przeładowują się od
+razu, zanim ktoś zacznie w nich edytować formularz; ekran logowania i strony
+publiczne zostają, jak są. Wyłączony storage zostawia samo sprawdzenie `sid`
+przy odświeżeniu.
+
+Testy: `test/zmiana-konta.test.ts` i `e2e/zmiana-konta.spec.ts` (dwie karty
+Chrome: logowanie w drugiej karcie oraz zapis po wygaśnięciu tokenu).
+
 ## Zależności
 
 Skan przed poprawką zgłosił 4 podatne pakiety: Next.js (critical), sharp i
