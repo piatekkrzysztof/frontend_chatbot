@@ -30,7 +30,8 @@ export default function WyslijZaproszeniePage({
     setStan('wysylanie')
     setKomunikat('')
     try {
-      const res = await fetch(`${API_URL}/accounts/invitations/wyslij/${token}/`, {
+      // Klucz z adresu strony zakodowany: `../` nie może zmienić adresu API (A-22)
+      const res = await fetch(`${API_URL}/accounts/invitations/wyslij/${encodeURIComponent(token)}/`, {
         method: 'POST',
       })
       const dane = await res.json().catch(() => ({}))
