@@ -39,12 +39,6 @@ function podmienLokalizacje() {
   return atrapa
 }
 
-/** Token w ksztalcie JWT z identyfikatorem sesji - tyle czyta sessionIdentity. */
-function tokenSesji(sid: string) {
-  const ladunek = btoa(JSON.stringify({ sid })).replace(/=+$/, '').replace(/\+/g, '-').replace(/\//g, '_')
-  return `eyJhbGciOiJub25lIn0.${ladunek}.x`
-}
-
 function json(status: number, cialo: unknown = {}) {
   return new Response(JSON.stringify(cialo), {
     status,
@@ -82,23 +76,8 @@ afterEach(() => {
 })
 
 describe('sesja', () => {
-  it.fails('A-02: odswiezenie, ktore przynioslo sesje INNEGO logowania, nie powtarza zapytania ekranu', async () => {
-    // Karta 1 zalogowana na konto firmy A. W karcie 2 ta sama osoba przyjmuje
-    // zaproszenie do firmy B (albo loguje sie przez /login?wygasla=1) - ciasteczko
-    // odswiezania nalezy juz do B. Karta 1 nic o tym nie wie: po wygasnieciu
-    // tokenu odswieza sie na konto B i powtarza zapytanie ekranu firmy A.
-    ustawToken(tokenSesji('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa'))
-    podmienLokalizacje()
-    vi.mocked(fetch)
-      .mockResolvedValueOnce(json(401))
-      .mockResolvedValueOnce(json(200, { access: tokenSesji('bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb') }))
-      .mockResolvedValueOnce(json(200, { dane: 'firmy B' }))
-
-    await apiFetch('/widget-settings/mine/', { method: 'PATCH', body: '{"widget_title":"Firma A"}' }).catch(() => null)
-
-    // Zapis formularza firmy A nie moze poleciec na konto firmy B
-    expect(vi.mocked(fetch)).toHaveBeenCalledTimes(2)
-  })
+  // A-02 nie ma tu testu: poprawka i jej testy są w PR #55
+  // (test/zmiana-konta.test.ts, e2e/zmiana-konta.spec.ts).
 
   it.fails.each([429, 503])('A-05: chwilowa odmowa odswiezenia (%i) nie konczy sesji', async (status) => {
     // Odswiezanie dzieli z logowaniem limit 10/min na adres IP (LimitLogowaniaIP).
