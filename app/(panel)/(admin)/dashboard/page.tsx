@@ -4,6 +4,10 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { apiFetch } from '@/lib/api'
 
+// Linki pulpitu, jak menu, bez prefetchu: ekran panelu jest dynamiczny, więc
+// prefetch nie przyspiesza przejścia, a kosztuje render na serwerze
+// (audyt 2026-10, A-17; szczegóły w components/layout/Sidebar.tsx).
+
 interface Knowledge {
   has_description: boolean
   documents: number
@@ -111,7 +115,7 @@ function KnowledgeNotice({ knowledge }: { knowledge: Knowledge }) {
             : 'Dokumenty są już dostępne, ale krótki opis firmy poprawi odpowiedzi na ogólne pytania klientów.'}
         </p>
       </div>
-      <Link href="/documents" className="notice-action">Uzupełnij bazę <span aria-hidden="true">↗</span></Link>
+      <Link href="/documents" prefetch={false} className="notice-action">Uzupełnij bazę <span aria-hidden="true">↗</span></Link>
     </aside>
   )
 }
@@ -181,7 +185,7 @@ function PierwszeKrokiLista({ kroki }: { kroki?: PierwszeKroki }) {
                 {zrobiony ? (
                   <p className="pierwsze-kroki-tytul">{krok.tytul}</p>
                 ) : (
-                  <Link href={krok.href} className="pierwsze-kroki-tytul">
+                  <Link href={krok.href} prefetch={false} className="pierwsze-kroki-tytul">
                     {krok.tytul} <span aria-hidden="true">↗</span>
                   </Link>
                 )}
@@ -311,8 +315,8 @@ export default function DashboardPage() {
           <p>Najważniejsze sygnały z obsługi klienta — bez szumu, w jednym miejscu.</p>
         </div>
         <div className="dashboard-heading-actions">
-          <Link href="/widget-settings" className="btn-ghost">Ustawienia widgetu</Link>
-          <Link href="/documents" className="btn-primary">Rozwiń bazę wiedzy <span aria-hidden="true">↗</span></Link>
+          <Link href="/widget-settings" prefetch={false} className="btn-ghost">Ustawienia widgetu</Link>
+          <Link href="/documents" prefetch={false} className="btn-primary">Rozwiń bazę wiedzy <span aria-hidden="true">↗</span></Link>
         </div>
       </section>
 
@@ -424,7 +428,7 @@ export default function DashboardPage() {
                 <span className={data.knowledge.faqs > 0 ? 'is-complete' : ''}>{data.knowledge.faqs} wpisów FAQ</span>
                 <span className={data.knowledge.websites > 0 ? 'is-complete' : ''}>{data.knowledge.websites} stron WWW</span>
               </div>
-              <Link href="/documents" className="panel-link">Zarządzaj wiedzą <span aria-hidden="true">↗</span></Link>
+              <Link href="/documents" prefetch={false} className="panel-link">Zarządzaj wiedzą <span aria-hidden="true">↗</span></Link>
             </article>
           </section>
 
@@ -435,7 +439,7 @@ export default function DashboardPage() {
                 <h2>Pytania bez pokrycia</h2>
                 <p>Dodaj odpowiedzi do bazy, aby kolejna rozmowa zakończyła się konkretem.</p>
               </div>
-              <Link href="/faq" className="panel-link">Przejdź do FAQ <span aria-hidden="true">↗</span></Link>
+              <Link href="/faq" prefetch={false} className="panel-link">Przejdź do FAQ <span aria-hidden="true">↗</span></Link>
             </div>
 
             {data.unanswered.length === 0 ? (
