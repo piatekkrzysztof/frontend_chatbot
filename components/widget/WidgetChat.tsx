@@ -65,15 +65,52 @@ interface Branding {
   widget_suggested_questions: string[]
 }
 
+/**
+ * Pamięć przeglądarki, która może nie istnieć.
+ *
+ * Ramka czatu stoi na cudzej stronie, więc dla przeglądarki to pamięć strony
+ * trzeciej. Chrome z ustawieniem „Blokuj pliki cookie innych firm” rzuca
+ * SecurityError już przy samym odczycie `localStorage` - widget padał wtedy
+ * w całości, zanim odwiedzający cokolwiek napisał (audyt 22.10.2026). Bez
+ * pamięci czat działa dalej, tylko rozmowa nie przeżywa odświeżenia strony.
+ */
+function czytajPamiec(klucz: string): string | null {
+  try {
+    return localStorage.getItem(klucz)
+  } catch {
+    return null
+  }
+}
+
+function zapiszPamiec(klucz: string, wartosc: string): boolean {
+  try {
+    localStorage.setItem(klucz, wartosc)
+    return true
+  } catch {
+    return false
+  }
+}
+
+function usunZPamieci(klucz: string) {
+  try {
+    localStorage.removeItem(klucz)
+  } catch {
+    // brak pamięci - nie ma czego usuwać
+  }
+}
+
+/** Sesje rozmów tam, gdzie localStorage odmówił zapisu. Żyją do zamknięcia ramki. */
+const sesjeBezPamieci = new Map<string, string>()
+
 // localStorage, nie sessionStorage: widget siedzi w iframe, więc każde odświeżenie
 // strony klienta zaczynało rozmowę od zera i bot tracił kontekst w połowie wątku.
 function getSessionId(apiKey: string) {
   const storageKey = `widget_session_${apiKey}`
-  let sessionId = localStorage.getItem(storageKey)
-  if (!sessionId) {
-    sessionId = crypto.randomUUID()
-    localStorage.setItem(storageKey, sessionId)
-  }
+  const zapisana = czytajPamiec(storageKey) ?? sesjeBezPamieci.get(storageKey)
+  if (zapisana) return zapisana
+  const sessionId = crypto.randomUUID()
+  // Bez tego każde pytanie zaczynałoby nową rozmowę i bot gubiłby kontekst
+  if (!zapiszPamiec(storageKey, sessionId)) sesjeBezPamieci.set(storageKey, sessionId)
   return sessionId
 }
 
@@ -85,8 +122,9 @@ const KOMUNIKAT_ROZMOWA_USUNIETA =
   'Rozmowa została usunięta. Napisz nową wiadomość, aby rozpocząć kolejną.'
 
 function wyczyscZapisanaRozmowe(apiKey: string) {
-  localStorage.removeItem(`widget_session_${apiKey}`)
-  localStorage.removeItem(historyKey(apiKey))
+  sesjeBezPamieci.delete(`widget_session_${apiKey}`)
+  usunZPamieci(`widget_session_${apiKey}`)
+  usunZPamieci(historyKey(apiKey))
 }
 
 /**
@@ -121,7 +159,7 @@ const MAX_STORED_MESSAGES = 50
 
 function loadHistory(apiKey: string): Message[] {
   try {
-    const raw = localStorage.getItem(historyKey(apiKey))
+    const raw = czytajPamiec(historyKey(apiKey))
     const parsed = raw ? JSON.parse(raw) : null
     if (!Array.isArray(parsed)) return []
     // Zapisane wcześniej rozmowy mogą mieć źródła w starym kształcie
@@ -136,14 +174,8 @@ function loadHistory(apiKey: string): Message[] {
 }
 
 function saveHistory(apiKey: string, messages: Message[]) {
-  try {
-    localStorage.setItem(
-      historyKey(apiKey),
-      JSON.stringify(messages.slice(-MAX_STORED_MESSAGES)),
-    )
-  } catch {
-    // brak miejsca albo zablokowany storage — rozmowa działa dalej, tylko bez zapisu
-  }
+  // brak miejsca albo zablokowany storage — rozmowa działa dalej, tylko bez zapisu
+  zapiszPamiec(historyKey(apiKey), JSON.stringify(messages.slice(-MAX_STORED_MESSAGES)))
 }
 
 /**
@@ -262,7 +294,7 @@ export default function WidgetChat() {
       })
 
     const zapisana = loadHistory(apiKey)
-    const sesja = localStorage.getItem(`widget_session_${apiKey}`)
+    const sesja = czytajPamiec(`widget_session_${apiKey}`)
     if (!zapisana.length || !sesja) {
       setMessages(zapisana)
       setHistoryLoaded(true)
