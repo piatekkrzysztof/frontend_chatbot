@@ -8,6 +8,45 @@ import { API_URL } from '@/lib/api'
 import { ustawToken } from '@/lib/auth'
 import { sessionRequest } from '@/lib/session-lock'
 
+const BRAK_POLACZENIA = 'Nie udało się połączyć z serwerem. Sprawdź połączenie i spróbuj ponownie.'
+
+/**
+ * Zdanie dla odmowy, która nie jest złym hasłem ani złym kodem.
+ *
+ * Do audytu 22.10.2026 (A-04) każda odmowa logowania była „złym hasłem”.
+ * Backend ogranicza logowanie do 10 prób na minutę z adresu i 5 na konto,
+ * więc biuro za jednym NAT-em albo ktoś po kilku pomyłkach czytał, że
+ * poprawne hasło jest złe, i resetował je bez potrzeby. `Retry-After` jest
+ * wystawiony przez CORS backendu, więc da się powiedzieć, ile poczekać.
+ */
+function komunikatChwilowejOdmowy(odpowiedz: Response): string | null {
+  if (odpowiedz.status === 429) {
+    const sekundy = Number(odpowiedz.headers.get('Retry-After'))
+    return Number.isFinite(sekundy) && sekundy > 0
+      ? `Za dużo prób logowania. Spróbuj ponownie za ${Math.ceil(sekundy / 60)} min.`
+      : 'Za dużo prób logowania. Spróbuj ponownie za kilka minut.'
+  }
+  if (odpowiedz.status >= 500) return 'Serwer chwilowo nie odpowiada. Spróbuj ponownie za chwilę.'
+  return null
+}
+
+/** Zapytanie logowania; brak sieci po polsku, a nie jako „Failed to fetch”. */
+async function wyslijLogowanie(adres: string, cialo: object) {
+  try {
+    return await sessionRequest(adres, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(cialo),
+      // Bez tego przegladarka odrzuci ciasteczko z tokenem odswiezania,
+      // ktore backend odsyla w tej odpowiedzi -- logowanie "uda sie",
+      // a pierwsze odswiezenie za kwadrans wyrzuci uzytkownika.
+      credentials: 'include',
+    })
+  } catch {
+    throw new Error(BRAK_POLACZENIA)
+  }
+}
+
 function FormularzLogowania() {
   const router = useRouter()
   const destination = () => new URLSearchParams(window.location.search).get('dalej') === 'subskrypcja'
@@ -28,18 +67,10 @@ function FormularzLogowania() {
     setLoading(true)
 
     try {
-      const res = await sessionRequest(`${API_URL}/accounts/login/`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username: email, password }),
-        // Bez tego przegladarka odrzuci ciasteczko z tokenem odswiezania,
-        // ktore backend odsyla w tej odpowiedzi -- logowanie "uda sie",
-        // a pierwsze odswiezenie za kwadrans wyrzuci uzytkownika.
-        credentials: 'include',
-      })
+      const res = await wyslijLogowanie(`${API_URL}/accounts/login/`, { username: email, password })
 
       if (!res.ok) {
-        throw new Error('Nieprawidłowy e-mail lub hasło.')
+        throw new Error(komunikatChwilowejOdmowy(res) ?? 'Nieprawidłowy e-mail lub hasło.')
       }
 
       const data = await res.json()
@@ -70,15 +101,12 @@ function FormularzLogowania() {
     setLoading(true)
 
     try {
-      const res = await sessionRequest(`${API_URL}/accounts/login/2fa/`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ bilet, kod }),
-        credentials: 'include',
-      })
+      const res = await wyslijLogowanie(`${API_URL}/accounts/login/2fa/`, { bilet, kod })
 
       if (!res.ok) {
         const dane = await res.json().catch(() => null)
+        const chwilowa = komunikatChwilowejOdmowy(res)
+        if (chwilowa) throw new Error(chwilowa)
         if (res.status === 401) {
           // Bilet zyje piec minut. Po tym czasie nie ma czego poprawiac -
           // trzeba zaczac od hasla, wiec wracamy na pierwszy krok zamiast

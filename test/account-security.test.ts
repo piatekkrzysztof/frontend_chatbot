@@ -94,7 +94,8 @@ describe('account security transport and revocation', () => {
     vi.useFakeTimers()
     const token = jwt(identity()); ustawToken(token)
     vi.mocked(fetch).mockImplementationOnce(async (_url, options) => ({ ok: true, status: 200, json: () => new Promise((_resolve, reject) => options?.signal?.addEventListener('abort', () => reject(new Error('timeout')))) }) as Response)
-    const pending = expect(securityMutation('/accounts/password-change/', {})).rejects.toThrow('Sesja zmieniła')
+    // A stalled refresh is temporary, not a changed session (audit A-05)
+    const pending = expect(securityMutation('/accounts/password-change/', {})).rejects.toThrow('nadal jesteś zalogowany')
     await vi.advanceTimersByTimeAsync(20_001)
     await pending
     expect(fetch).toHaveBeenCalledTimes(1)

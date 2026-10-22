@@ -26,6 +26,8 @@ export function withAuth<T extends object>(Component: React.ComponentType<T>) {
   return function ProtectedComponent(props: T) {
     const router = useRouter()
     const [gotowe, setGotowe] = useState(() => pobierzToken() !== null)
+    const [blad, setBlad] = useState('')
+    const [proba, setProba] = useState(0)
 
     useEffect(() => {
       if (pobierzToken()) return
@@ -41,17 +43,44 @@ export function withAuth<T extends object>(Component: React.ComponentType<T>) {
         // Ciasteczko wygaslo albo zostalo uniewaznione. Middleware
         // przepuscilo, bo znacznik sesji jeszcze lezal w przegladarce.
         router.replace('/login?wygasla=1')
+      }, (powod) => {
+        // Chwilowa odmowa (limit zapytan, awaria, siec): sesja moze nadal
+        // istniec, wiec zamiast ekranu logowania - ponowienie (audyt A-05).
+        if (aktualne) setBlad(powod instanceof Error ? powod.message : 'Nie udało się połączyć z serwerem.')
       })
 
       return () => {
         aktualne = false
       }
-    }, [router])
+    }, [router, proba])
 
     if (!gotowe) {
       return (
-        <div className="admin-shell motyw-jasny grid min-h-dvh place-items-center">
-          <p className="tekst-drugi">Wczytywanie panelu...</p>
+        // Styl w linii, bo .admin-shell (poza warstwami Tailwinda) wygrywa
+        // z klasami: na komputerze ma siatke z kolumna na menu (17,5rem), na
+        // telefonie display: block - napis ladowal w waskiej kolumnie po lewej
+        // albo przyklejony do gornej krawedzi.
+        <div
+          className="admin-shell motyw-jasny min-h-dvh place-items-center"
+          style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr)' }}
+        >
+          {blad ? (
+            <div className="grid justify-items-center gap-4 px-5 text-center">
+              <p role="alert" className="tekst-drugi max-w-md">{blad}</p>
+              <button
+                type="button"
+                className="btn-primary min-h-11"
+                onClick={() => {
+                  setBlad('')
+                  setProba((poprzednia) => poprzednia + 1)
+                }}
+              >
+                Spróbuj ponownie
+              </button>
+            </div>
+          ) : (
+            <p className="tekst-drugi">Wczytywanie panelu...</p>
+          )}
         </div>
       )
     }
