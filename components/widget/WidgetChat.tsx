@@ -265,6 +265,8 @@ export default function WidgetChat() {
   const [contactValue, setContactValue] = useState('')
   const [contactSent, setContactSent] = useState(false)
   const [notice, setNotice] = useState('')
+  const [wysylaKontakt, setWysylaKontakt] = useState(false)
+  const wysylaKontaktRef = useRef(false)
   const generation = useRef(0)
   const activeRequest = useRef<AbortController | null>(null)
 
@@ -334,6 +336,19 @@ export default function WidgetChat() {
   useEffect(() => {
     if (contactOpen) bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [contactOpen])
+
+  // Escape zamyka okno na stronie klienta. embed.js słucha na dokumencie
+  // strony, a gdy ktoś tu pisze, zdarzenia klawiatury zostają w ramce - więc
+  // prosimy stronę o zamknięcie komunikatem (audyt 2026-10, A-12). Bez danych
+  // w treści, stąd '*': nie znamy adresu strony klienta i nie musimy.
+  useEffect(() => {
+    if (window.parent === window) return
+    function naEscape(zdarzenie: KeyboardEvent) {
+      if (zdarzenie.key === 'Escape') window.parent.postMessage({ zrodlo: 'sm-art-widget', typ: 'zamknij' }, '*')
+    }
+    document.addEventListener('keydown', naEscape)
+    return () => document.removeEventListener('keydown', naEscape)
+  }, [])
 
   async function handleSend(presetText?: string) {
     const text = (presetText ?? input).trim()
@@ -510,7 +525,12 @@ export default function WidgetChat() {
 
   async function handleContactSubmit() {
     const value = contactValue.trim()
-    if (!value || !apiKey) return
+    // Ref, nie sam stan: drugi klik dwukliku przychodzi, zanim React
+    // przerysuje przycisk jako wyłączony. Do audytu 2026-10 (A-15) dwuklik
+    // dawał dwa zapytania w panelu i dwa maile do firmy.
+    if (!value || !apiKey || wysylaKontaktRef.current) return
+    wysylaKontaktRef.current = true
+    setWysylaKontakt(true)
     const requestGeneration = generation.current
     setNotice('')
 
@@ -538,6 +558,9 @@ export default function WidgetChat() {
       if (requestGeneration === generation.current) {
         setNotice('Nie udało się wysłać kontaktu. Spróbuj ponownie.')
       }
+    } finally {
+      wysylaKontaktRef.current = false
+      setWysylaKontakt(false)
     }
   }
 
@@ -750,7 +773,7 @@ export default function WidgetChat() {
                 <div className="flex items-center gap-3">
                   <button
                     onClick={handleContactSubmit}
-                    disabled={!contactValue.trim()}
+                    disabled={!contactValue.trim() || wysylaKontakt}
                     style={{
                       background: theme.accent,
                       color: theme.onAccent,

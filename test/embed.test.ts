@@ -122,6 +122,41 @@ describe('otwieranie i zamykanie', () => {
     expect(ramka()!.style.display).toBe('none')
     expect(document.activeElement).toBe(przycisk())
   })
+
+  // Ognisko jest w ramce, gdy ktoś pisze w czacie, a zdarzenia klawiatury z ramki
+  // nie docierają do dokumentu strony. Escape łapie więc widget i prosi stronę
+  // o zamknięcie (audyt 2026-10, A-12).
+  function prosbaOZamkniecie(zmiany: Partial<MessageEventInit> = {}) {
+    return new MessageEvent('message', {
+      data: { zrodlo: 'sm-art-widget', typ: 'zamknij' },
+      origin: NASZ_ORIGIN,
+      source: ramka()!.contentWindow,
+      ...zmiany,
+    })
+  }
+
+  it('prośba o zamknięcie od własnej ramki zamyka okno i oddaje ognisko przyciskowi', () => {
+    osadz({ 'data-key': 'k' })
+    przycisk()!.click()
+
+    window.dispatchEvent(prosbaOZamkniecie())
+
+    expect(ramka()!.style.display).toBe('none')
+    expect(przycisk()!.getAttribute('aria-expanded')).toBe('false')
+    expect(document.activeElement).toBe(przycisk())
+  })
+
+  it('prośba z obcego adresu albo spoza ramki nie robi nic', () => {
+    // Inne skrypty na stronie klienta też mogą wysyłać komunikaty
+    osadz({ 'data-key': 'k' })
+    przycisk()!.click()
+
+    window.dispatchEvent(prosbaOZamkniecie({ origin: 'https://obca.example' }))
+    window.dispatchEvent(prosbaOZamkniecie({ source: window }))
+    window.dispatchEvent(prosbaOZamkniecie({ data: { typ: 'zamknij' } }))
+
+    expect(ramka()!.style.display).toBe('block')
+  })
 })
 
 describe('dostepnosc', () => {

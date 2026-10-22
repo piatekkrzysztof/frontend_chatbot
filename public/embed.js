@@ -311,6 +311,22 @@
     }
   });
 
+  // Gdy ktoś pisze w czacie, ognisko jest w ramce, a zdarzenia klawiatury
+  // z ramki nie docierają do tej strony - Escape wyżej nic wtedy nie robił
+  // (audyt 2026-10, A-12). Widget łapie Escape u siebie i prosi o zamknięcie.
+  // Przyjmujemy tylko prośbę z naszego adresu i od naszej ramki: inne skrypty
+  // na stronie klienta też wysyłają komunikaty.
+  window.addEventListener('message', function (zdarzenie) {
+    if (zdarzenie.origin !== origin) return;
+    if (!iframe || zdarzenie.source !== iframe.contentWindow) return;
+    var dane = zdarzenie.data;
+    if (!dane || dane.zrodlo !== 'sm-art-widget' || dane.typ !== 'zamknij') return;
+    if (isOpen) {
+      ustawStan(false);
+      button.focus();
+    }
+  });
+
   function mount() {
     document.body.appendChild(button);
     SYGNALY.forEach(function (nazwa) {
