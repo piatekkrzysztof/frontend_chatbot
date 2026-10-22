@@ -350,6 +350,42 @@ describe('pobieranie pliku', () => {
     expect(pobrane.nazwa).toBe('rozmowy-2026-09.csv')
   })
 
+  // Django (content_disposition_header) wysyla nazwy ASCII doslownie, a reszte
+  // zakodowane w filename*. Audyt 2026-10, A-09: procent w nazwie konczyl
+  // pobieranie bledem „URI malformed”.
+  it('nazwe z procentem w filename= bierze doslownie', async () => {
+    vi.mocked(fetch).mockResolvedValueOnce(
+      odpowiedzZPlikiem(200, 'attachment; filename="Cennik 100% rabat.pdf"'),
+    )
+    const pobrane = przechwycPobranie()
+
+    await pobierzPlik('/documents/7/download/', 'dokument.pdf')
+
+    expect(pobrane.nazwa).toBe('Cennik 100% rabat.pdf')
+  })
+
+  it('dekoduje polskie znaki z filename*', async () => {
+    vi.mocked(fetch).mockResolvedValueOnce(
+      odpowiedzZPlikiem(200, "attachment; filename*=utf-8''Cennik%20%C5%BC%C3%B3%C5%82w.pdf"),
+    )
+    const pobrane = przechwycPobranie()
+
+    await pobierzPlik('/documents/7/download/', 'dokument.pdf')
+
+    expect(pobrane.nazwa).toBe('Cennik żółw.pdf')
+  })
+
+  it('zepsuta sekwencja w filename* nie przerywa pobrania', async () => {
+    vi.mocked(fetch).mockResolvedValueOnce(
+      odpowiedzZPlikiem(200, "attachment; filename*=utf-8''zle%E0%A4%A.pdf"),
+    )
+    const pobrane = przechwycPobranie()
+
+    await pobierzPlik('/documents/7/download/', 'dokument.pdf')
+
+    expect(pobrane.nazwa).toBe('dokument.pdf')
+  })
+
   it('bez naglowka uzywa nazwy domyslnej', async () => {
     vi.mocked(fetch).mockResolvedValueOnce(odpowiedzZPlikiem(200))
     const pobrane = przechwycPobranie()

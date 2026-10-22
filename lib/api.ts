@@ -154,11 +154,27 @@ async function odczytaj(response: Response) {
   return response.json()
 }
 
-/** Nazwa pliku z naglowka odpowiedzi; bez niej zapisujemy pod nazwa domyslna. */
+/**
+ * Nazwa pliku z naglowka odpowiedzi; bez niej zapisujemy pod nazwa domyslna.
+ *
+ * Django (content_disposition_header) wysyla nazwy ASCII doslownie,
+ * `filename="Cennik 100% rabat.pdf"`, a pozostale zakodowane,
+ * `filename*=utf-8''Cennik%20%C5%BC.pdf`. Dekodowac wolno tylko drugi
+ * wariant. Do audytu 2026-10 (A-09) dekodowany byl kazdy, wiec procent
+ * w nazwie konczyl pobieranie bledem „URI malformed”.
+ */
 function nazwaZOdpowiedzi(naglowek: string | null): string {
   if (!naglowek) return ''
-  const dopasowanie = /filename\*?=(?:UTF-8'')?"?([^";]+)"?/i.exec(naglowek)
-  return dopasowanie ? decodeURIComponent(dopasowanie[1]) : ''
+  const zakodowana = /filename\*\s*=\s*UTF-8''([^;\s]+)/i.exec(naglowek)
+  if (zakodowana) {
+    try {
+      return decodeURIComponent(zakodowana[1])
+    } catch {
+      // zepsuta sekwencja - zostaje zwykla nazwa albo domyslna
+    }
+  }
+  const zwykla = /filename\s*=\s*(?:"([^"]*)"|([^;]+))/i.exec(naglowek)
+  return (zwykla?.[1] ?? zwykla?.[2] ?? '').trim()
 }
 
 /**

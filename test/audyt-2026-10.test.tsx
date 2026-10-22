@@ -13,7 +13,6 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 
-import { pobierzPlik } from '@/lib/api'
 import { zapomnijToken } from '@/lib/auth'
 import LoginPage from '@/app/(panel)/(auth)/login/page'
 import WidgetSettingsPage from '@/app/(panel)/(admin)/widget-settings/page'
@@ -58,7 +57,7 @@ afterEach(() => {
 
 // Naprawione znaleziska nie mają tu testów - ich testy żyją przy kodzie:
 // A-02 test/zmiana-konta.test.ts, A-04 i A-05 test/chwilowe-odmowy.test.tsx,
-// A-03, A-13 i A-21 test/test-bota.test.tsx.
+// A-03, A-13 i A-21 test/test-bota.test.tsx, A-09 test/api.test.ts.
 
 describe('logowanie', () => {
   async function zaloguj() {
@@ -77,28 +76,6 @@ describe('logowanie', () => {
     await zaloguj()
 
     await waitFor(() => expect(przekierowania).toContain('/leads'))
-  })
-})
-
-describe('pobieranie plikow', () => {
-  it.fails('A-09: nazwa z procentem z naglowka Django nie przerywa pobrania', async () => {
-    // Django: content_disposition_header(True, 'Cennik 100% rabat.pdf')
-    //   -> attachment; filename="Cennik 100% rabat.pdf"
-    vi.stubGlobal('URL', { createObjectURL: vi.fn(() => 'blob:test'), revokeObjectURL: vi.fn() })
-    const zapisane = { nazwa: '' }
-    vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(function (this: HTMLAnchorElement) {
-      zapisane.nazwa = this.download
-    })
-    vi.mocked(fetch).mockResolvedValueOnce({
-      status: 200,
-      ok: true,
-      headers: new Headers({ 'Content-Disposition': 'attachment; filename="Cennik 100% rabat.pdf"' }),
-      blob: () => Promise.resolve(new Blob(['%PDF'])),
-    } as unknown as Response)
-
-    await pobierzPlik('/documents/7/download/', 'dokument.pdf')
-
-    expect(zapisane.nazwa).toBe('Cennik 100% rabat.pdf')
   })
 })
 
