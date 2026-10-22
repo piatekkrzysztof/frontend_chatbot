@@ -11,13 +11,8 @@ import type { AddressInfo } from 'node:net'
 import { expect, test } from '@playwright/test'
 import { podstawBackend } from './atrapa'
 
-test('A-10: /dziennik bez sesji odsyła na logowanie, jak każdy inny ekran panelu', async ({ request }) => {
-  test.fail()
-  const odpowiedz = await request.get('/dziennik', { maxRedirects: 0 })
-
-  expect(odpowiedz.status()).toBe(307)
-  expect(odpowiedz.headers().location).toContain('/login?powrot=%2Fdziennik')
-})
+// A-10 (/dziennik bez sesji) jest naprawione: trasę sprawdza e2e/dostep.spec.ts,
+// a test/trasy.test.tsx pilnuje, że lista obejmuje każdy ekran panelu.
 
 test.describe('embed.js na stronie klienta', () => {
   // Strona klienta na innym adresie niż panel - tak jak w rzeczywistości ramka

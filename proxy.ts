@@ -21,6 +21,7 @@
  * z ktorego dalo by sie go wykrasc.
  */
 import { NextResponse, type NextRequest } from 'next/server'
+import { czyChroniona } from '@/lib/trasy'
 
 /**
  * Adres API musi byc wymieniony w connect-src, inaczej CSP zablokuje
@@ -122,30 +123,6 @@ function nowyNonce() {
 /** Ta sama nazwa co NAZWA_CIASTECZKA_SESJI po stronie Django. */
 const ZNACZNIK_SESJI = 'sesja_panelu'
 
-/**
- * Trasy panelu -- wymagaja sesji.
- *
- * Eksportowane, zeby test przegladarkowy mogl przejsc po tej samej liscie,
- * z ktorej korzysta middleware. Wlasna kopia listy w tescie znaczylaby, ze
- * nowy ekran dopisany tutaj nie zostaje sprawdzony - a wlasnie tak przez
- * dlugi czas `/widget-settings` byl wymieniony jako chroniony i nie byl.
- */
-export const CHRONIONE = [
-  '/dashboard',
-  '/conversations',
-  '/documents',
-  '/faq',
-  '/leads',
-  '/platnosc',
-  '/privacy',
-  '/stan',
-  '/subskrypcja',
-  '/team',
-  '/test-bota',
-  '/ustawienia',
-  '/widget-settings',
-]
-
 /** Ekrany, ktorych zalogowany nie ma po co ogladac. */
 const TYLKO_DLA_NIEZALOGOWANYCH = ['/login', '/rejestracja']
 
@@ -153,9 +130,7 @@ export function proxy(zadanie: NextRequest) {
   const sciezka = zadanie.nextUrl.pathname
   const maSesje = zadanie.cookies.has(ZNACZNIK_SESJI)
 
-  const chroniona = CHRONIONE.some(
-    (trasa) => sciezka === trasa || sciezka.startsWith(`${trasa}/`),
-  )
+  const chroniona = czyChroniona(sciezka)
 
   if (chroniona && !maSesje) {
     const cel = new URL('/login', zadanie.url)

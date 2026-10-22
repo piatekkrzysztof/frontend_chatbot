@@ -8,7 +8,7 @@
  */
 import { expect, test } from '@playwright/test'
 import { podstawBackend, TOKEN_DOSTEPU, ZNACZNIK_SESJI, zalogowany } from './atrapa'
-import { CHRONIONE } from '../proxy'
+import { CHRONIONE } from '../lib/trasy'
 
 test('poprawne dane logowania prowadza do panelu', async ({ page }) => {
   await podstawBackend(page)
@@ -19,6 +19,20 @@ test('poprawne dane logowania prowadza do panelu', async ({ page }) => {
   await page.getByRole('button', { name: /Zaloguj/i }).click()
 
   await expect(page).toHaveURL(/\/dashboard/)
+})
+
+test('link do ekranu panelu prowadzi na ten ekran po zalogowaniu', async ({ page }) => {
+  // Audyt 2026-10, A-11: proxy dopisywal ?powrot=, a logowanie zawsze konczylo
+  // sie na pulpicie - link do Zapytan wyslany zespolowi trzeba bylo szukac.
+  await podstawBackend(page)
+  await page.goto('/leads')
+  await expect(page).toHaveURL(/\/login\?powrot=%2Fleads$/)
+
+  await page.getByLabel('E-mail').fill('wlascicielka@rowerownia.pl')
+  await page.getByLabel('Hasło').fill('tajne-haslo')
+  await page.getByRole('button', { name: /Zaloguj/i }).click()
+
+  await expect(page).toHaveURL(/\/leads$/)
 })
 
 test('logowanie nie zostawia tokenu w localStorage', async ({ page }) => {
@@ -132,7 +146,7 @@ test('wylogowanie pyta backend, a nie tylko przekierowuje', async ({ page, conte
  * Kazda trasa z listy CHRONIONE naprawde przechodzi przez middleware.
  *
  * Test sterowany ta sama lista, z ktorej korzysta middleware - wlasna kopia
- * znaczylaby, ze nowy ekran dopisany do proxy.ts nie zostaje sprawdzony.
+ * znaczylaby, ze nowy ekran dopisany do lib/trasy.ts nie zostaje sprawdzony.
  *
  * Powod, dla ktorego ten test istnieje: `/widget-settings` byl wymieniony
  * w CHRONIONE i NIE BYL chroniony. Wykluczenie `widget` w matcherze
