@@ -47,7 +47,21 @@ let generation = 0
 let loggingOut = false
 const LOGOUT_EVENT = 'sm-art-session-logout'
 const REVOCATION_EVENT = 'sm-art-session-revoked'
+const LOGIN_EVENT = 'sm-art-session-login'
 const revokedSessions = new Set<string>()
+
+/**
+ * Logowanie (`sid`), z którym ta karta wczytała dane.
+ *
+ * Ciasteczko odświeżania jest jedno na przeglądarkę. Gdy w innej karcie ktoś
+ * się zaloguje albo przyjmie zaproszenie, należy ono już do nowego logowania,
+ * a ta karta wciąż pokazuje dane poprzedniego. Do audytu 22.10.2026 (A-02)
+ * odświeżała się wtedy na nowe logowanie i powtarzała zapytanie ekranu:
+ * formularz firmy A zapisywał się w firmie B. Backend zakłada nowy `sid` przy
+ * każdym logowaniu i nie zmienia go przy rotacji, więc inny `sid` po
+ * odświeżeniu znaczy "to nie to logowanie" - nawet przy tym samym koncie.
+ */
+let sesjaKarty: string | null = null
 
 /** UI coordination only. The server independently validates the signed JWT. */
 export function sessionIdentity(token: string | null): string | null {
@@ -75,8 +89,35 @@ function logoutRevision() {
   try { return localStorage.getItem(LOGOUT_EVENT) } catch { return null }
 }
 
+/**
+ * Pełne przeładowanie, gdy ciasteczko należy już do innego logowania.
+ *
+ * Przeładowanie, a nie ekran logowania: ciasteczko jest ważne, tylko nie to,
+ * z którym ekran wczytał dane. Po przeładowaniu panel wstaje na nowym
+ * logowaniu, bez niczego w pamięci komponentów.
+ *
+ * Zwraca obietnicę, która się nie spełnia - także każdemu, kto zapyta
+ * o odświeżenie później, aż strona zniknie. Token kazałby wywołującemu
+ * powtórzyć zapytanie ekranu na cudzym logowaniu, a null - odesłać na ekran
+ * logowania i przerwać przeładowanie.
+ */
+function przeladujPoZmianieKonta(): Promise<never> {
+  zapomnijToken()
+  przeladowanie = new Promise<never>(() => {})
+  window.location.reload()
+  return przeladowanie
+}
+
+/** Przeładowanie po zmianie konta w toku. Kasuje je tylko zapomnijToken. */
+let przeladowanie: Promise<never> | null = null
+
 if (typeof window !== 'undefined') {
   window.addEventListener('storage', event => {
+    if (event.key === LOGIN_EVENT && event.newValue) {
+      // Ekran logowania i strony publiczne nie mają czego przeładowywać
+      if (sesjaKarty || tokenDostepu) void przeladujPoZmianieKonta()
+      return
+    }
     if (event.key === REVOCATION_EVENT && event.newValue) {
       try {
         const { sid } = JSON.parse(event.newValue)
@@ -104,18 +145,34 @@ if (typeof window !== 'undefined') {
  */
 let odswiezanieWToku: Promise<string | null> | null = null
 
+/** Wynik odświeżenia, które przyniosło inne logowanie niż to, z którym karta wczytała dane. */
+const ZMIANA_KONTA = Symbol('zmiana-konta')
+
 export function pobierzToken(): string | null {
   return tokenDostepu
 }
 
+/** Po udanym logowaniu: hasłem, drugim krokiem albo z zaproszenia. */
 export function ustawToken(token: string | null) {
   generation += 1
   tokenDostepu = revokedSessions.has(sessionIdentity(token) || '') ? null : token
+  sesjaKarty = sessionIdentity(tokenDostepu)
+  if (!tokenDostepu) return
+  // Inne karty z panelem wczytały dane w poprzednim logowaniu. Sam losowy
+  // znacznik, jak przy wylogowaniu - bez tokenu i bez danych konta.
+  try { localStorage.setItem(LOGIN_EVENT, crypto.randomUUID()) } catch { /* storage may be disabled */ }
 }
 
+/**
+ * Karta zapomina swoje logowanie. Wołają to ścieżki, które zaraz potem same
+ * nawigują (wylogowanie, odwołana sesja, wygaśnięcie), więc zdjęcie
+ * `przeladowanie` niczego nie odblokowuje w trakcie przeładowania.
+ */
 export function zapomnijToken() {
   generation += 1
   tokenDostepu = null
+  sesjaKarty = null
+  przeladowanie = null
 }
 
 /**
@@ -127,13 +184,14 @@ export function zapomnijToken() {
  * normalna, nie awaryjna.
  */
 export async function odswiezSesje(): Promise<string | null> {
+  if (przeladowanie) return przeladowanie
   if (loggingOut) return null
   if (odswiezanieWToku) return odswiezanieWToku
 
   const expectedGeneration = generation
   const expectedLogout = logoutRevision()
   const stillCurrent = () => generation === expectedGeneration && logoutRevision() === expectedLogout
-  odswiezanieWToku = withSessionLock(async () => {
+  odswiezanieWToku = withSessionLock(async (): Promise<string | null | typeof ZMIANA_KONTA> => {
     try {
       if (!stillCurrent()) return null
       let refreshed = await fetchSessionJson(`${API_URL}/accounts/token/refresh/`, {
@@ -163,7 +221,13 @@ export async function odswiezSesje(): Promise<string | null> {
         tokenDostepu = null
         return null
       }
+      const nowaSesja = sessionIdentity(dane.access)
+      if (sesjaKarty && nowaSesja && nowaSesja !== sesjaKarty) {
+        tokenDostepu = null
+        return ZMIANA_KONTA
+      }
       tokenDostepu = dane.access ?? null
+      sesjaKarty ??= nowaSesja
       return tokenDostepu
     } catch {
       // Brak sieci to nie to samo co brak sesji, ale z punktu widzenia
@@ -175,6 +239,9 @@ export async function odswiezSesje(): Promise<string | null> {
     if (stillCurrent()) tokenDostepu = null
     return null
   }).finally(() => { odswiezanieWToku = null })
+    // Przeładowanie dopiero po zwolnieniu blokady: wisząca obietnica w jej
+    // środku blokowałaby odświeżanie i logowanie w pozostałych kartach.
+    .then((wynik) => (wynik === ZMIANA_KONTA ? przeladujPoZmianieKonta() : wynik))
 
   return odswiezanieWToku
 }
