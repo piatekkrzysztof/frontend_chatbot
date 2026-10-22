@@ -4,6 +4,7 @@ import { useEffect, useRef, useState, FormEvent } from 'react'
 import { apiFetch, BladApi } from '@/lib/api'
 import BrakUprawnien from '@/components/BrakUprawnien'
 import PasswordField from '@/components/auth/PasswordField'
+import { useJa } from '@/lib/ja'
 
 interface TeamMember {
   id: number
@@ -52,9 +53,11 @@ export default function TeamPage() {
   // a 403 na liście zaproszeń - "nie właściciel".
   const [brakUprawnien, setBrakUprawnien] = useState(false)
   const [mozeZapraszac, setMozeZapraszac] = useState(true)
-  // Rolę zalogowanej osoby bierzemy z /accounts/me/, żeby nie pokazywać list
-  // wyboru komuś, kogo backend i tak odbije. Sam zapis pilnuje backend.
-  const [mojaRola, setMojaRola] = useState('')
+  // Rolę zalogowanej osoby bierzemy z /accounts/me/ (JaProvider), żeby nie
+  // pokazywać list wyboru komuś, kogo backend i tak odbije. Zapisu pilnuje backend.
+  const { ja } = useJa()
+  const mojaRola = ja?.role || ''
+  const mojeId = typeof ja?.id === 'number' ? ja.id : null
   const [zmieniana, setZmieniana] = useState<number | null>(null)
   const [bladZespolu, setBladZespolu] = useState('')
   // Usunięcie konta odbiera dostęp do panelu i nie da się go cofnąć, więc
@@ -65,7 +68,6 @@ export default function TeamPage() {
   // Reset MFA osoby, która straciła telefon i kody zapasowe (decyzja
   // właściciela z 11.10.2026). Wcześniej jedyną drogą bez obsługi było
   // usunięcie i ponowne zaproszenie - nowe konto, historia pod starym.
-  const [mojeId, setMojeId] = useState<number | null>(null)
   const [resetowana, setResetowana] = useState<TeamMember | null>(null)
   const [hasloResetu, setHasloResetu] = useState('')
   const [kodResetu, setKodResetu] = useState('')
@@ -111,18 +113,6 @@ export default function TeamPage() {
         // cichu i zostawał z formularzem zaproszenia, który przy wysłaniu
         // odbijał go kolejnym 403 - teraz po prostu go nie widzi.
         if (active && err instanceof BladApi && err.status === 403) setMozeZapraszac(false)
-      })
-
-    apiFetch('/accounts/me/')
-      .then((dane) => {
-        if (!active) return
-        const ja = dane as { role?: string; id?: number }
-        setMojaRola(ja.role || '')
-        setMojeId(typeof ja.id === 'number' ? ja.id : null)
-      })
-      .catch(() => {
-        // Bez tej odpowiedzi zostaje widok do odczytu - mniej możliwości,
-        // ale nic mylącego.
       })
 
     // nie ustawiamy stanu, jeśli komponent zdążył się odmontować
