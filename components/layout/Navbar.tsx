@@ -1,8 +1,7 @@
 'use client'
 
-import { useEffect, useState } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
-import { apiFetch } from '@/lib/api'
+import { useJa } from '@/lib/ja'
 import { STRONA_STATUSU } from '@/lib/strona-statusu'
 import { wyloguj } from '@/lib/auth'
 import Logo from './Logo'
@@ -40,20 +39,13 @@ const PAGE_NAMES: Record<string, string> = {
 export default function Navbar({ onToggleMenu, menuOtwarte, motyw = 'jasny', onZmienMotyw }: Props) {
   const router = useRouter()
   const pathname = usePathname()
-  const [tenantName, setTenantName] = useState('')
-  const [rola, setRola] = useState('')
+  // Z JaProvider w układzie panelu - to samo zapytanie co na ekranach
+  const { ja } = useJa()
+  const tenantName = ja?.tenant_name || ''
+  const rola = ja?.role || ''
 
   const currentPage = Object.entries(PAGE_NAMES).find(([path]) => pathname?.startsWith(path))?.[1] || 'Panel'
   const initials = (tenantName || 'SM').slice(0, 2).toUpperCase()
-
-  useEffect(() => {
-    apiFetch('/accounts/me/')
-      .then((data) => {
-        setTenantName(data.tenant_name || '')
-        setRola(data.role || '')
-      })
-      .catch(() => {})
-  }, [])
 
   async function handleLogout() {
     // Czekamy na backend, zanim przekierujemy: to on uniewaznia token
