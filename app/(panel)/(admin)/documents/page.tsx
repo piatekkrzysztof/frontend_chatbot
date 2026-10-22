@@ -76,6 +76,11 @@ export default function DocumentsPage() {
   const [addingSource, setAddingSource] = useState(false)
   const [sourceError, setSourceError] = useState('')
   const [odswiezane, setOdswiezane] = useState<number | null>(null)
+  // Źródło WWW jak dokument: pierwszy klik pyta, drugi usuwa. Do audytu
+  // 2026-10 (A-19) usuwał je jeden klik tuż obok „Odśwież”.
+  const [zrodloDoUsuniecia, setZrodloDoUsuniecia] = useState<number | null>(null)
+  const [usuwaneZrodlo, setUsuwaneZrodlo] = useState<number | null>(null)
+  const zegarZrodla = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   // Pytanie samo wygasa, żeby uzbrojony przycisk nie został na ekranie.
   function uzbrojDoKasacji(id: number) {
@@ -84,9 +89,16 @@ export default function DocumentsPage() {
     zegarKasacji.current = setTimeout(() => setDoKasacji(null), 5000)
   }
 
+  function uzbrojUsuniecieZrodla(id: number) {
+    if (zegarZrodla.current) clearTimeout(zegarZrodla.current)
+    setZrodloDoUsuniecia(id)
+    zegarZrodla.current = setTimeout(() => setZrodloDoUsuniecia(null), 5000)
+  }
+
   useEffect(
     () => () => {
       if (zegarKasacji.current) clearTimeout(zegarKasacji.current)
+      if (zegarZrodla.current) clearTimeout(zegarZrodla.current)
     },
     [],
   )
@@ -314,11 +326,15 @@ export default function DocumentsPage() {
   }
 
   async function handleRemoveSource(id: number) {
+    setUsuwaneZrodlo(id)
     try {
       await apiFetch(`/website-sources/${id}/`, { method: 'DELETE' })
+      setZrodloDoUsuniecia(null)
       await loadSources()
     } catch (err) {
       setSourceError(err instanceof Error ? err.message : 'Nie udało się usunąć strony.')
+    } finally {
+      setUsuwaneZrodlo(null)
     }
   }
 
@@ -608,10 +624,18 @@ export default function DocumentsPage() {
                   {odswiezane === source.id ? 'Odświeżam...' : 'Odśwież'}
                 </button>
                 <button
-                  onClick={() => handleRemoveSource(source.id)}
-                  className="text-[var(--blad)] hover:underline"
+                  onClick={() =>
+                    zrodloDoUsuniecia === source.id ? handleRemoveSource(source.id) : uzbrojUsuniecieZrodla(source.id)
+                  }
+                  disabled={usuwaneZrodlo === source.id}
+                  aria-label={
+                    zrodloDoUsuniecia === source.id
+                      ? `Potwierdź usunięcie strony: ${source.url}`
+                      : `Usuń stronę: ${source.url}`
+                  }
+                  className="text-[var(--blad)] hover:underline disabled:opacity-50"
                 >
-                  Usuń
+                  {usuwaneZrodlo === source.id ? 'Usuwam...' : zrodloDoUsuniecia === source.id ? 'Na pewno?' : 'Usuń'}
                 </button>
               </td>
             </tr>
