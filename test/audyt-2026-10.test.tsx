@@ -14,9 +14,8 @@ import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 
 import { pobierzPlik } from '@/lib/api'
-import { ustawToken, zapomnijToken } from '@/lib/auth'
+import { zapomnijToken } from '@/lib/auth'
 import LoginPage from '@/app/(panel)/(auth)/login/page'
-import TestBotaPage from '@/app/(panel)/(admin)/test-bota/page'
 import WidgetSettingsPage from '@/app/(panel)/(admin)/widget-settings/page'
 import WidgetChat from '@/components/widget/WidgetChat'
 
@@ -38,15 +37,6 @@ function json(status: number, cialo: unknown = {}) {
   })
 }
 
-function strumien(...zdarzenia: string[]) {
-  return new Response(new ReadableStream({
-    start(kontroler) {
-      for (const z of zdarzenia) kontroler.enqueue(new TextEncoder().encode(z))
-      kontroler.close()
-    },
-  }), { status: 200 })
-}
-
 const USTAWIENIA_WIDGETU = {
   widget_title: 'Zapytaj nas',
   widget_color: '#F97316',
@@ -66,9 +56,9 @@ afterEach(() => {
   vi.unstubAllGlobals()
 })
 
-// A-02, A-04 i A-05 nie mają tu testów: są naprawione, a ich testy żyją
-// przy kodzie - test/zmiana-konta.test.ts (PR #55) i
-// test/chwilowe-odmowy.test.tsx (PR #56).
+// Naprawione znaleziska nie mają tu testów - ich testy żyją przy kodzie:
+// A-02 test/zmiana-konta.test.ts, A-04 i A-05 test/chwilowe-odmowy.test.tsx,
+// A-03, A-13 i A-21 test/test-bota.test.tsx.
 
 describe('logowanie', () => {
   async function zaloguj() {
@@ -87,43 +77,6 @@ describe('logowanie', () => {
     await zaloguj()
 
     await waitFor(() => expect(przekierowania).toContain('/leads'))
-  })
-})
-
-describe('test bota', () => {
-  async function zapytaj(pytanie: string) {
-    const uzytkownik = userEvent.setup()
-    render(<TestBotaPage />)
-    await uzytkownik.type(screen.getByLabelText('Pytanie do bota'), pytanie)
-    await uzytkownik.keyboard('{Enter}')
-  }
-
-  it.fails('A-03: wygasly token jest odswiezany, a pytanie ponawiane', async () => {
-    ustawToken('wygasly-token')
-    vi.mocked(fetch).mockImplementation(async (adres, opcje) => {
-      const url = String(adres)
-      const naglowki = new Headers(opcje?.headers)
-      if (url.includes('/token/refresh/')) return json(200, { access: 'swiezy-token' })
-      if (url.endsWith('/chat/test/') && (opcje?.method ?? 'GET') === 'GET') return json(200, { messages: [] })
-      if (naglowki.get('Authorization') === 'Bearer wygasly-token') return json(401)
-      return strumien('data: {"type":"delta","content":"Otwieramy o 9."}\n\n', 'data: {"type":"done","source":"faq"}\n\n')
-    })
-
-    await zapytaj('Kiedy otwieracie?')
-
-    expect(await screen.findByText('Otwieramy o 9.')).toBeInTheDocument()
-  })
-
-  it.fails('A-13: zdarzenie `data:` bez spacji nie ginie (ten sam parser co widget)', async () => {
-    ustawToken('token')
-    vi.mocked(fetch).mockImplementation(async (adres, opcje) => {
-      if ((opcje?.method ?? 'GET') === 'GET') return json(200, { messages: [] })
-      return strumien('data:{"type":"delta","content":"Bez spacji."}\n\n', 'data:{"type":"done","source":"faq"}\n\n')
-    })
-
-    await zapytaj('Test')
-
-    expect(await screen.findByText('Bez spacji.')).toBeInTheDocument()
   })
 })
 

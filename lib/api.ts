@@ -162,20 +162,19 @@ function nazwaZOdpowiedzi(naglowek: string | null): string {
 }
 
 /**
- * Pobiera plik z API i zapisuje go na dysku uzytkownika.
+ * Surowa odpowiedź API z tą samą obsługą wygasłego tokenu co apiFetch.
  *
- * Zwykly link nie wystarczy: te koncowki wymagaja naglowka z tokenem, a
- * przegladarka nie doklei go do <a href>. Token w adresie odpada - trafilby
- * do historii przegladarki i do logow serwera.
- *
- * Odswiezanie sesji jak w apiFetch: token zyje 15 minut, wiec eksport
- * kliknięty po dluzszej przerwie musi sie udac za drugim podejsciem.
+ * Dla wywołań, które potrzebują Response, a nie JSON: strumienia SSE testu
+ * bota i pobierania plików. Token żyje 15 minut, więc 401 najpierw wymienia
+ * ciasteczko i ponawia zapytanie raz; dopiero drugie 401 kończy sesję.
+ * Do audytu 2026-10 (A-03) test bota szedł surowym fetch i po kwadransie
+ * bez innych zapytań każde pytanie kończyło się błędem aż do przeładowania.
  */
-export async function pobierzPlik(path: string, nazwaDomyslna: string): Promise<void> {
-  let odpowiedz = await wyslij(path, {})
+export async function fetchZSesja(path: string, options: RequestInit = {}): Promise<Response> {
+  let odpowiedz = await wyslij(path, options)
 
   if (odpowiedz.status === 401 && (await odswiezSesje())) {
-    odpowiedz = await wyslij(path, {})
+    odpowiedz = await wyslij(path, options)
   }
 
   if (odpowiedz.status === 401) {
@@ -183,6 +182,19 @@ export async function pobierzPlik(path: string, nazwaDomyslna: string): Promise<
     naEkranLogowania()
     throw new Error('Sesja wygasła. Zaloguj się ponownie.')
   }
+
+  return odpowiedz
+}
+
+/**
+ * Pobiera plik z API i zapisuje go na dysku uzytkownika.
+ *
+ * Zwykly link nie wystarczy: te koncowki wymagaja naglowka z tokenem, a
+ * przegladarka nie doklei go do <a href>. Token w adresie odpada - trafilby
+ * do historii przegladarki i do logow serwera.
+ */
+export async function pobierzPlik(path: string, nazwaDomyslna: string): Promise<void> {
+  const odpowiedz = await fetchZSesja(path)
 
   if (!odpowiedz.ok) {
     let komunikat = odpowiedz.statusText
