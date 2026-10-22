@@ -72,6 +72,16 @@ const nextConfig = {
           { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
         ],
       },
+      {
+        // Panel i widget nie używają kamery, mikrofonu, położenia, USB ani
+        // płatności w przeglądarce (płatność to przejście na stronę Stripe).
+        // Wyłączone, żeby nie mógł ich użyć żaden skrypt, który kiedyś by się
+        // tu znalazł (audyt 2026-10, A-25).
+        source: '/:path*',
+        headers: [
+          { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=(), payment=(), usb=()' },
+        ],
+      },
     ]
   },
 };

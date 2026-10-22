@@ -115,7 +115,9 @@ export default function ConversationsPage() {
     setError('')
     setWynikUsuniecia('')
     try {
-      const dane = await apiFetch(`/privacy/conversations/${sesja}/`, { method: 'DELETE' })
+      // Zakodowany jak każdy segment z danych: identyfikator z `../` trafiłby
+      // z tokenem właściciela pod inny adres API (audyt 2026-10, A-22).
+      const dane = await apiFetch(`/privacy/conversations/${encodeURIComponent(sesja)}/`, { method: 'DELETE' })
       const lacznie = Object.values((dane.deleted ?? {}) as Record<string, number>).reduce(
         (suma, n) => suma + n,
         0,
