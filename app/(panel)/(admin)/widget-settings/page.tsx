@@ -87,7 +87,13 @@ export default function WidgetSettingsPage() {
         setLanguageMode(data.widget_language_mode === 'fixed' ? 'fixed' : 'auto')
         setDefaultLanguage(data.widget_default_language || 'pl')
         setProactiveEnabled(Boolean(data.widget_proactive_enabled))
-        setProactiveDelay(Number(data.widget_proactive_delay_seconds) || 30)
+        // Zero to poprawna wartość („od razu"): `|| 30` zamieniało ją przy
+        // odczycie na 30, a następny zapis utrwalał tę zamianę.
+        setProactiveDelay(
+          Number.isFinite(Number(data.widget_proactive_delay_seconds ?? NaN))
+            ? Number(data.widget_proactive_delay_seconds)
+            : 30,
+        )
         setProactiveTexts(data.widget_proactive_texts || {})
         setLogoUrl(data.widget_logo)
         setAvatarUrl(data.widget_avatar)

@@ -76,14 +76,41 @@ export async function apiFetch(path: string, options: RequestInit = {}) {
   return odczytaj(response)
 }
 
-function wyslij(path: string, opcje: RequestInit) {
-  return fetch(`${API_URL}${path}`, {
-    ...opcje,
-    headers: zbudujNaglowki(opcje),
-    // Ciasteczko odswiezania nie doklei sie samo do zapytania miedzy
-    // panel.* a api.* -- to sa rozne adresy pochodzenia, mimo wspolnej domeny.
-    credentials: 'include',
-  })
+export const BRAK_POLACZENIA = 'Brak połączenia z serwerem. Sprawdź internet i spróbuj ponownie.'
+
+async function wyslij(path: string, opcje: RequestInit) {
+  try {
+    return await fetch(`${API_URL}${path}`, {
+      ...opcje,
+      headers: zbudujNaglowki(opcje),
+      // Ciasteczko odswiezania nie doklei sie samo do zapytania miedzy
+      // panel.* a api.* -- to sa rozne adresy pochodzenia, mimo wspolnej domeny.
+      credentials: 'include',
+    })
+  } catch (blad) {
+    // Przerwanie przez ekran (AbortController) to nie awaria sieci.
+    if (blad instanceof DOMException && blad.name === 'AbortError') throw blad
+    // Przegladarka zglasza brak sieci po angielsku ("Failed to fetch",
+    // "Load failed") i taki napis ekrany pokazywaly wprost (przeglad 2026-11).
+    throw new Error(BRAK_POLACZENIA)
+  }
+}
+
+/**
+ * Komunikat dla odpowiedzi bledu, ktora nie niesie zdania do pokazania.
+ *
+ * Blad 500 Django i 502/503 bramki to HTML, nie JSON. Zapasem byl wtedy
+ * `statusText`, a ten w HTTP/2 i HTTP/3 jest PUSTY: ekran dostawal blad bez
+ * tresci, `setError('')` niczego nie pokazywalo i w trakcie wdrozenia panel
+ * wygladal na wczytujacy sie bez konca, a "Zapisz" wracalo bez slowa.
+ * Przez HTTP/1.1 ten sam blad pokazywal angielskie "Internal Server Error".
+ */
+export function komunikatBezTresci(status: number): string {
+  if (status === 429) return 'Zbyt wiele zapytań naraz. Odczekaj chwilę i spróbuj ponownie.'
+  if (status >= 500) return 'Serwer chwilowo nie odpowiada. Spróbuj ponownie za chwilę.'
+  if (status === 403) return 'Brak uprawnień do tej operacji.'
+  if (status === 404) return 'Nie znaleziono.'
+  return `Nie udało się wykonać operacji (kod ${status}).`
 }
 
 /**
@@ -140,7 +167,7 @@ function tekstBledu(data: unknown): string {
 
 async function odczytaj(response: Response) {
   if (!response.ok) {
-    let detail = response.statusText
+    let detail = komunikatBezTresci(response.status)
     try {
       const data = await response.json()
       detail = tekstBledu(data) || detail
@@ -213,7 +240,7 @@ export async function pobierzPlik(path: string, nazwaDomyslna: string): Promise<
   const odpowiedz = await fetchZSesja(path)
 
   if (!odpowiedz.ok) {
-    let komunikat = odpowiedz.statusText
+    let komunikat = komunikatBezTresci(odpowiedz.status)
     try {
       komunikat = tekstBledu(await odpowiedz.json()) || komunikat
     } catch {

@@ -8,6 +8,14 @@
     return;
   }
 
+  // Jeden widget na stronę. Skrypt bywa wklejony dwa razy (motyw i wtyczka)
+  // albo wstawiany ponownie przy każdej zmianie widoku w aplikacji SPA. Bez
+  // tej blokady każde wykonanie dokładało kolejny przycisk w tym samym
+  // miejscu, kolejną ramkę, nasłuchy i zaczepkę - i nic ich nie zdejmowało.
+  // Po sprawdzeniu klucza, żeby błędny pierwszy tag nie blokował poprawnego.
+  if (window.__smArtChatZaladowany) return;
+  window.__smArtChatZaladowany = true;
+
   var position = scriptTag.getAttribute('data-position') === 'left' ? 'left' : 'right';
   var origin = new URL(scriptTag.src).origin;
 
