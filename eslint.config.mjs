@@ -8,7 +8,9 @@ const eslintConfig = [
   ...coreWebVitals,
   ...typescript,
   {
-    ignores: [".next/**", "node_modules/**", "next-env.d.ts"],
+    // `.claude/**`: lokalne kopie robocze z własnym `.next` - bez tego
+    // `npm run lint` zgłaszał tysiące błędów w wygenerowanych plikach.
+    ignores: [".next/**", "node_modules/**", "next-env.d.ts", ".claude/**"],
   },
   {
     rules: {

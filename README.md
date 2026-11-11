@@ -169,7 +169,7 @@ npm run zrzuty     # regenerate README screenshots (needs --token, see script he
 | Type check | clean |
 | Build | passing; panel rendered per request (CSP nonce), `/widget` static |
 | `npm audit --omit=dev` | **0 vulnerabilities**; CI fails on anything moderate or above, with narrow, dated exceptions allowed only for dev tooling (`scripts/audyt-zaleznosci.mjs`) |
-| Unit tests | **330** (Vitest + React Testing Library) |
+| Unit tests | **335** (Vitest + React Testing Library) |
 | E2E tests | **123** (Playwright, system Chrome, API mocked in `e2e/atrapa.ts`) |
 | Audit | October 2026, findings and fixes in [`docs/audyt-2026-10.md`](docs/audyt-2026-10.md) |
 

@@ -39,6 +39,9 @@ function ramka() {
 beforeEach(() => {
   document.head.innerHTML = ''
   document.body.innerHTML = ''
+  // Każdy test to nowa strona klienta: blokada podwójnego wczytania nie
+  // może przechodzić między nimi.
+  delete (window as unknown as { __smArtChatZaladowany?: boolean }).__smArtChatZaladowany
   vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: true, json: async () => ({}) }))
 })
 
@@ -47,6 +50,26 @@ afterEach(() => {
 })
 
 describe('warunki wstepne', () => {
+  it('wklejony dwa razy daje jeden przycisk i jedną ramkę', () => {
+    // Motyw i wtyczka z tym samym kodem albo SPA wstawiające skrypt przy
+    // każdej zmianie widoku: wcześniej przyciski układały się jeden na drugim.
+    osadz({ 'data-key': 'k' })
+    osadz({ 'data-key': 'k' })
+
+    expect(document.querySelectorAll('body > button').length).toBe(1)
+    document.querySelector<HTMLButtonElement>('body > button')!.click()
+    expect(document.querySelectorAll('iframe').length).toBe(1)
+  })
+
+  it('tag bez klucza nie blokuje poprawnego tagu wklejonego po nim', () => {
+    const blad = vi.spyOn(console, 'error').mockImplementation(() => {})
+    osadz()
+    osadz({ 'data-key': 'k' })
+
+    expect(document.querySelectorAll('body > button').length).toBe(1)
+    blad.mockRestore()
+  })
+
   it('bez data-key nie wstrzykuje niczego', () => {
     // Zle wklejony snippet ma nie zrobic nic. Martwy przycisk czatu, ktory
     // nie otwiera rozmowy, jest dla klienta gorszy niz brak czatu.

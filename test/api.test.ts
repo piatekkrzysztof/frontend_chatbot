@@ -261,7 +261,32 @@ describe('zadanie', () => {
     // uzytkownik dostaje "Unexpected token <" zamiast informacji o awarii.
     vi.mocked(fetch).mockResolvedValue(odpowiedz(502, null, { pusta: true }))
 
-    await expect(apiFetch('/analytics/')).rejects.toThrow('HTTP 502')
+    // Komunikat po polsku i nigdy pusty: `statusText` w HTTP/2 jest pusty,
+    // a po HTTP/1.1 angielski - ekran pokazywał wtedy nic albo "Bad Gateway".
+    await expect(apiFetch('/analytics/')).rejects.toThrow('Serwer chwilowo nie odpowiada')
+  })
+
+  it('blad bez tresci i z pustym statusText nadal ma komunikat', async () => {
+    vi.mocked(fetch).mockResolvedValue({
+      ...odpowiedz(500, null, { pusta: true }),
+      statusText: '',
+    } as Response)
+
+    const blad = await apiFetch('/analytics/').catch((b: Error) => b)
+
+    expect((blad as Error).message).toBe('Serwer chwilowo nie odpowiada. Spróbuj ponownie za chwilę.')
+  })
+
+  it('brak sieci po polsku, a nie "Failed to fetch"', async () => {
+    vi.mocked(fetch).mockRejectedValue(new TypeError('Failed to fetch'))
+
+    await expect(apiFetch('/analytics/')).rejects.toThrow('Brak połączenia z serwerem')
+  })
+
+  it('przerwanie zapytania przez ekran nie udaje awarii sieci', async () => {
+    vi.mocked(fetch).mockRejectedValue(new DOMException('przerwane', 'AbortError'))
+
+    await expect(apiFetch('/analytics/')).rejects.toMatchObject({ name: 'AbortError' })
   })
 })
 

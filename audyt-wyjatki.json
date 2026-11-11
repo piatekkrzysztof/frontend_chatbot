@@ -2,10 +2,10 @@
   "_opis": "Wyjątki bramki audytu zależności. Zasady: scripts/audyt-logika.mjs. Każdy wyjątek dotyczy jednego zgłoszenia, ma powód i datę przeglądu, nie może dotyczyć pakietu trafiającego do produkcji. Po dacie przeglądu albo gdy zgłoszenie zniknie, CI znów jest czerwone.",
   "wyjatki": [
     {
-      "ghsa": "GHSA-vfj7-8cjw-p6xm",
-      "pakiet": "braces",
-      "powod": "Wyczerpanie stosu przy głęboko zagnieżdżonych wzorcach. Zgłoszenie obejmuje wszystkie wydane wersje (<= 3.0.3, a 3.0.3 jest ostatnią) - nie ma czego podbić. Wchodzi wyłącznie przez eslint-config-next -> @next/eslint-plugin-next -> fast-glob -> micromatch, czyli narzędzia lintowania; npm ls --omit=dev nie zawiera braces. Wyzwolenie wymaga złośliwego wzorca w plikach naszego własnego repozytorium.",
-      "przeglad_do": "2026-11-03"
+      "ghsa": "GHSA-g3hv-75wg-m249",
+      "pakiet": "minimatch",
+      "powod": "Spowolnienie przy spreparowanym wzorcu glob. Poprawka jest dopiero w minimatch 11.0.1, a @typescript-eslint/typescript-estree (najnowsze 8.72.2) wymaga ^10.2.2 - w linii 10 nie ma poprawionej wersji, więc nie ma czego podbić bez wymuszania niezgodnej wersji głównej. Wchodzi wyłącznie przez eslint-config-next -> typescript-eslint -> typescript-estree, czyli narzędzia lintowania; npm ls --omit=dev nie zawiera minimatch. Wyzwolenie wymaga złośliwego wzorca w plikach naszego własnego repozytorium.",
+      "przeglad_do": "2026-11-25"
     }
   ]
 }
