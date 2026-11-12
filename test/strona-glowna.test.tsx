@@ -53,3 +53,41 @@ describe('cennik', () => {
     expect(fetch).toHaveBeenCalledTimes(2)
   })
 })
+
+describe('oferta mówi to, co da się kupić (przegląd 2026-11, R06)', () => {
+  function cennikZSerwera() {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(
+      new Response(JSON.stringify(CENNIK), { status: 200, headers: { 'Content-Type': 'application/json' } }),
+    ))
+  }
+
+  it('nie pokazuje ceny rocznej, której checkout nie sprzedaje', async () => {
+    cennikZSerwera()
+    render(await StronaGlownaPage())
+
+    expect(screen.queryByRole('button', { name: /Rocznie/ })).not.toBeInTheDocument()
+    expect(screen.queryByText(/Płatne rocznie/)).not.toBeInTheDocument()
+    expect(screen.queryByText('119')).not.toBeInTheDocument()
+    expect(screen.getByText('149')).toBeInTheDocument()
+  })
+
+  it('limit nazywa wiadomościami, tak jak go liczy backend', async () => {
+    cennikZSerwera()
+    const { container } = render(await StronaGlownaPage())
+
+    expect(container).not.toHaveTextContent(/rozmów miesięcznie/)
+    expect(screen.getAllByText(/wiadomości miesięcznie/)).toHaveLength(2)
+    expect(container).not.toHaveTextContent(/Płacisz za rozmowy/)
+  })
+
+  it('polityka prywatności jest publiczna, nie za logowaniem panelu', async () => {
+    cennikZSerwera()
+    render(await StronaGlownaPage())
+
+    expect(screen.getByRole('link', { name: 'Polityka prywatności' })).toHaveAttribute(
+      'href',
+      'https://agencjasm-art.pl/polityka-prywatnosci',
+    )
+    expect(document.querySelector('a[href="/privacy"]')).toBeNull()
+  })
+})

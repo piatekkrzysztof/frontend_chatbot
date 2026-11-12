@@ -91,7 +91,6 @@ const KROKI = [
  */
 export default function StronaGlowna({ planyZSerwera }: { planyZSerwera: Plan[] }) {
   const [plany, setPlany] = useState<Plan[]>(planyZSerwera)
-  const [rocznie, setRocznie] = useState(false)
 
   useEffect(() => {
     if (planyZSerwera.length) return
@@ -191,29 +190,13 @@ export default function StronaGlowna({ planyZSerwera }: { planyZSerwera: Plan[] 
           <div className="flex flex-wrap items-end justify-between gap-6">
             {/* Bez nadnagłówka "Cennik" — samo zdanie mówi, o czym jest sekcja,
                 a każdy zaoszczędzony wiersz podnosi ceny bliżej pierwszego ekranu */}
-            <h2 className="text-[clamp(1.4rem,2.6vw,2rem)] text-balance">Płacisz za rozmowy, nie za obietnice</h2>
+            {/* „Odpowiedzi", nie „rozmowy": limit liczy wiadomości odwiedzających,
+                a jedna rozmowa to zwykle kilka wiadomości (przegląd 2026-11, R06). */}
+            <h2 className="text-[clamp(1.4rem,2.6vw,2rem)] text-balance">Płacisz za odpowiedzi, nie za obietnice</h2>
 
-            {/* Przełącznik okresu. Rabat roczny podany wprost, bo to
-                najczęstsze pytanie przy wyborze planu. */}
-            <div className="flex items-center gap-1 rounded-full p-1"
-                 style={{ background: 'var(--color-atrament-700)' }}>
-              <button
-                onClick={() => setRocznie(false)}
-                className={`rounded-full px-4 py-2 text-sm font-semibold transition-all ${
-                  !rocznie ? 'bg-zakreslacz-500 text-atrament-800' : 'text-mgla-300'
-                }`}
-              >
-                Miesięcznie
-              </button>
-              <button
-                onClick={() => setRocznie(true)}
-                className={`rounded-full px-4 py-2 text-sm font-semibold transition-all ${
-                  rocznie ? 'bg-zakreslacz-500 text-atrament-800' : 'text-mgla-300'
-                }`}
-              >
-                Rocznie −20%
-              </button>
-            </div>
+            {/* Bez przełącznika „Rocznie −20%" (R06): zakup zawsze szedł
+                miesięcznie, więc klient widział cenę, której nie dało się
+                kupić. Wróci razem z rozliczeniem rocznym w checkoucie. */}
           </div>
 
           {plany.length === 0 ? (
@@ -222,7 +205,7 @@ export default function StronaGlowna({ planyZSerwera }: { planyZSerwera: Plan[] 
             <div className="mt-8 grid gap-5 md:grid-cols-3">
               {plany.map((plan, i) => {
                 const wyrozniony = i === 1
-                const cena = rocznie ? plan.price_pln_yearly : plan.price_pln
+                const cena = plan.price_pln
                 return (
                   <div
                     key={plan.code}
@@ -246,7 +229,7 @@ export default function StronaGlowna({ planyZSerwera }: { planyZSerwera: Plan[] 
                       <span className="text-base font-normal text-mgla-400"> zł/mies.</span>
                     </p>
                     <p className="mt-1 text-xs text-mgla-400">
-                      {rocznie ? `Płatne rocznie: ${cena * 12} zł netto` : 'netto, bez zobowiązania'}
+                      netto, bez zobowiązania
                     </p>
 
                     <ul className="mt-6 mb-7 flex flex-col gap-2.5 text-sm text-mgla-300">
@@ -254,7 +237,7 @@ export default function StronaGlowna({ planyZSerwera }: { planyZSerwera: Plan[] 
                         <span className="text-zakreslacz-500">→</span>
                         <span><strong className="text-papier">
                           {plan.message_limit.toLocaleString('pl-PL')}
-                        </strong> rozmów miesięcznie</span>
+                        </strong> wiadomości miesięcznie</span>
                       </li>
                       <li className="flex gap-2.5">
                         <span className="text-zakreslacz-500">→</span>
@@ -289,6 +272,8 @@ export default function StronaGlowna({ planyZSerwera }: { planyZSerwera: Plan[] 
           <p className="mt-8 text-sm text-mgla-400">
             Wszystkie plany zawierają rozpoznawanie języka pytania, cytowanie źródeł
             odpowiedzi, zbieranie kontaktów i zgodność z RODO oraz EU AI Act.
+            Limit liczy wiadomości wysłane przez odwiedzających - jedna rozmowa to
+            zwykle kilka wiadomości.
           </p>
         </div>
       </section>
@@ -365,9 +350,14 @@ export default function StronaGlowna({ planyZSerwera }: { planyZSerwera: Plan[] 
             <a href="https://agencjasm-art.pl" className="hover:text-papier transition-colors">
               agencjasm-art.pl
             </a>
-            <Link href="/privacy" className="hover:text-papier transition-colors">
-              Prywatność
-            </Link>
+            {/* Do R06 link prowadził do /privacy, czyli ekranu panelu za
+                logowaniem - odwiedzający lądował na formularzu logowania. */}
+            <a
+              href="https://agencjasm-art.pl/polityka-prywatnosci"
+              className="hover:text-papier transition-colors"
+            >
+              Polityka prywatności
+            </a>
           </div>
         </div>
       </footer>
