@@ -111,3 +111,14 @@ describe('strona przyjęcia z kluczem we fragmencie', () => {
     expect(screen.queryByLabelText('Nazwa użytkownika')).toBeNull()
   })
 })
+
+describe('stary link z kluczem w ścieżce (przegląd 2026-11, R08)', () => {
+  it('nie ma już strony /invite/accept/[token]', async () => {
+    const { existsSync } = await import('node:fs')
+    const { join } = await import('node:path')
+
+    // Został na tydzień dla zaproszeń sprzed A-26. Bez niej taki adres trafia
+    // na stronę „nie znaleziono", a klucz nie jedzie dalej do API.
+    expect(existsSync(join(process.cwd(), 'app/(panel)/(auth)/invite/accept/[token]'))).toBe(false)
+  })
+})

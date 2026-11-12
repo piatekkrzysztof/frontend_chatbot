@@ -13,7 +13,7 @@ import { Suspense } from 'react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import PrzyjmijZaproszeniePage from '@/app/(panel)/(auth)/invite/accept/[token]/page'
+import PrzyjmijZaproszeniePage from '@/app/(panel)/(auth)/invite/accept/page'
 import WyslijZaproszeniePage from '@/app/(panel)/(auth)/invite/wyslij/[token]/page'
 
 const przekierowania: string[] = []
@@ -58,12 +58,18 @@ function spelniona<T>(wartosc: T): Promise<T> {
   return obietnica
 }
 
-function wyrenderuj(Strona: typeof PrzyjmijZaproszeniePage, token = 'klucz-123') {
+function wyrenderuj(Strona: typeof WyslijZaproszeniePage, token = 'klucz-123') {
   return render(
     <Suspense fallback={null}>
       <Strona params={spelniona({ token })} />
     </Suspense>,
   )
+}
+
+/** Link z maila: klucz we fragmencie (A-26), nie w ścieżce. */
+function wyrenderujPrzyjecie(token = 'klucz-123') {
+  window.history.replaceState(null, '', `/invite/accept#token=${token}`)
+  return render(<PrzyjmijZaproszeniePage />)
 }
 
 beforeEach(() => {
@@ -74,6 +80,7 @@ beforeEach(() => {
 
 afterEach(() => {
   vi.unstubAllGlobals()
+  window.history.replaceState(null, '', '/')
 })
 
 describe('strona przyjecia (link z maila)', () => {
@@ -89,7 +96,7 @@ describe('strona przyjecia (link z maila)', () => {
     // wiec "sprawdzenie adresu" porownywalo wartosc serwera z nia sama.
     vi.mocked(fetch).mockResolvedValueOnce(odpowiedz(200, PODGLAD))
 
-    wyrenderuj(PrzyjmijZaproszeniePage)
+    wyrenderujPrzyjecie()
 
     expect(await screen.findByText('Dołącz do zespołu')).toBeVisible()
     expect(screen.queryByLabelText('E-mail')).toBeNull()
@@ -101,7 +108,7 @@ describe('strona przyjecia (link z maila)', () => {
       .mockResolvedValueOnce(odpowiedz(200, PODGLAD))
       .mockResolvedValueOnce(odpowiedz(201, { message: 'ok' }))
     const uzytkownik = userEvent.setup()
-    wyrenderuj(PrzyjmijZaproszeniePage)
+    wyrenderujPrzyjecie()
 
     await uzytkownik.type(await screen.findByLabelText('Nazwa użytkownika'), 'ania')
     await uzytkownik.type(screen.getByLabelText('Hasło'), 'Bardzo-Dlugie-Haslo-2026!')

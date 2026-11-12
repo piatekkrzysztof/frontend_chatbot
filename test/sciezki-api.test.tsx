@@ -16,7 +16,6 @@ import userEvent from '@testing-library/user-event'
 import * as api from '@/lib/api'
 import PrivacyPage from '@/app/(panel)/(admin)/privacy/page'
 import ConversationsPage from '@/app/(panel)/(admin)/conversations/page'
-import PrzyjmijZaproszeniePage from '@/app/(panel)/(auth)/invite/accept/[token]/page'
 import WyslijZaproszeniePage from '@/app/(panel)/(auth)/invite/wyslij/[token]/page'
 
 vi.mock('next/navigation', () => ({
@@ -82,15 +81,9 @@ describe('identyfikator rozmowy', () => {
   })
 })
 
+// Podgląd zaproszenia z kluczem w ścieżce zniknął w przeglądzie 2026-11 (R08):
+// klucz jedzie teraz w treści POST, więc nie ma czego kodować w adresie.
 describe('klucz zaproszenia z adresu strony', () => {
-  it('podgląd zaproszenia pyta o zakodowany klucz', async () => {
-    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response('{}', { status: 404 })))
-    render(<Suspense fallback={null}><PrzyjmijZaproszeniePage params={spelniona({ token: PODEJRZANY })} /></Suspense>)
-
-    await vi.waitFor(() => expect(fetch).toHaveBeenCalled())
-    expect(String(vi.mocked(fetch).mock.calls[0][0])).toContain(`/accounts/invitations/${ZAKODOWANY}/preview/`)
-  })
-
   it('„Wyślij mi zaproszenie” wysyła zakodowany klucz', async () => {
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response('{}', { status: 202 })))
     const uzytkownik = userEvent.setup()

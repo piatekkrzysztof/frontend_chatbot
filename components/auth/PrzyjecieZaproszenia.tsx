@@ -30,11 +30,11 @@ const ROLE_LABELS: Record<string, string> = {
  * czyta go raz, czyści adres i podaje klucz do API tylko w treści POST - jak
  * reset hasła i aktywacja konta.
  *
- * `tokenZeSciezki` to stary format linku (`/invite/accept/<klucz>`), z kluczem
- * w ścieżce strony i podglądu. Zostaje, dopóki mogą istnieć ważne zaproszenia
- * wysłane przed zmianą linku w backendzie - najwyżej 7 dni.
+ * Stary format linku (`/invite/accept/<klucz>`, klucz w ścieżce strony
+ * i podglądu) został na tydzień dla zaproszeń sprzed zmiany i zniknął
+ * w przeglądzie 2026-11 (R08).
  */
-export default function PrzyjecieZaproszenia({ tokenZeSciezki }: { tokenZeSciezki?: string }) {
+export default function PrzyjecieZaproszenia() {
   const router = useRouter()
   // Odczytany raz: po wyczyszczeniu adresu fragmentu już nie ma, a tryb
   // ścisły uruchamia efekt dwa razy
@@ -55,26 +55,18 @@ export default function PrzyjecieZaproszenia({ tokenZeSciezki }: { tokenZeSciezk
     let active = true
 
     if (klucz.current === null) {
-      if (tokenZeSciezki !== undefined) {
-        klucz.current = tokenZeSciezki
-      } else {
-        klucz.current = new URLSearchParams(window.location.hash.slice(1)).get('token') ?? ''
-        window.history.replaceState(window.history.state, '', window.location.pathname)
-      }
+      klucz.current = new URLSearchParams(window.location.hash.slice(1)).get('token') ?? ''
+      window.history.replaceState(window.history.state, '', window.location.pathname)
     }
 
     async function sprawdz() {
       try {
         if (!klucz.current) throw new Error('Ten link zaproszenia jest nieprawidłowy.')
-        const res = tokenZeSciezki !== undefined
-          // Stary link. Klucz z adresu strony zakodowany: `../` nie może
-          // zmienić adresu API (A-22)
-          ? await fetch(`${API_URL}/accounts/invitations/${encodeURIComponent(klucz.current)}/preview/`)
-          : await fetch(`${API_URL}/accounts/invitations/preview/`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ token: klucz.current }),
-          })
+        const res = await fetch(`${API_URL}/accounts/invitations/preview/`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ token: klucz.current }),
+        })
         if (!res.ok) throw new Error('Ten link zaproszenia jest nieprawidłowy.')
         const data: InvitePreview = await res.json()
         if (!active) return
@@ -92,7 +84,7 @@ export default function PrzyjecieZaproszenia({ tokenZeSciezki }: { tokenZeSciezk
     return () => {
       active = false
     }
-  }, [tokenZeSciezki])
+  }, [])
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault()
