@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { apiFetch } from '@/lib/api'
+import { dataPl } from '@/lib/daty'
 
 // Linki pulpitu, jak menu, bez prefetchu: ekran panelu jest dynamiczny, więc
 // prefetch nie przyspiesza przejścia, a kosztuje render na serwerze
@@ -38,7 +39,16 @@ interface Analytics {
     daily?: { date: string; count: number }[]
   }
   answer_sources: { document: number; faq: number; gpt: number }
-  usage: { used: number; limit: number | null; plan: string | null }
+  usage: {
+    used: number
+    limit: number | null
+    plan: string | null
+    // Opcjonalne jak `pierwsze_kroki`: backend sprzed 2.32.23 ich nie ma,
+    // a pulpit pokazuje wtedy stan jak dotąd.
+    has_access?: boolean
+    is_trial?: boolean
+    ends_at?: string | null
+  }
   // Pozycje są sklejone po treści pytania, więc nie mają id pojedynczego
   // wpisu — kluczem jest sama treść, a `count` mówi, ile razy padło.
   unanswered: { question: string; count: number; asked_at: string }[]
@@ -286,6 +296,8 @@ export default function DashboardPage() {
     }
   }
 
+  // Tylko jawne `false`: bez pola (starszy backend) pulpit nie zgaduje.
+  const wylaczony = data?.usage.has_access === false
   const sources = data?.answer_sources
   const answeredFromContent = sources ? sources.document + sources.faq : 0
   const totalAnswers = sources ? answeredFromContent + sources.gpt : 0
@@ -332,12 +344,39 @@ export default function DashboardPage() {
           <section className="command-card wejscie" style={{ animationDelay: '70ms' }}>
             <div className="command-grid" aria-hidden="true" />
             <div className="command-copy">
-              <span className="command-status"><span className="status-dot" /> Asystent aktywny</span>
-              <h2>Twój cyfrowy konsultant pracuje <span>24/7.</span></h2>
-              <p>
-                W ostatnich 7 dniach obsłużył <strong>{data.conversations.last_7d}</strong> rozmów
-                i przejął <strong>{data.questions.last_7d}</strong> pytań od Twojego zespołu.
-              </p>
+              {/* Do R05 napis był stały: po końcu okresu próbnego pulpit nadal
+                  mówił „Asystent aktywny", a widget odmawiał każdemu. */}
+              {wylaczony ? (
+                <>
+                  <span className="command-status">
+                    <span className="status-dot is-off" /> Asystent wyłączony
+                  </span>
+                  <h2>Twój chatbot nie odpowiada odwiedzającym.</h2>
+                  <p>
+                    {data.usage.is_trial
+                      ? `Okres próbny trwał do ${dataPl(data.usage.ends_at)}.`
+                      : 'Subskrypcja nie jest aktywna.'}{' '}
+                    Wybierz plan, żeby widget znów odpowiadał na Twojej stronie.
+                  </p>
+                  <Link href="/subskrypcja" prefetch={false} className="notice-action command-action">
+                    Przejdź do subskrypcji <span aria-hidden="true">↗</span>
+                  </Link>
+                </>
+              ) : (
+                <>
+                  <span className="command-status">
+                    <span className="status-dot" /> Asystent aktywny
+                    {data.usage.is_trial && data.usage.ends_at
+                      ? ` · okres próbny do ${dataPl(data.usage.ends_at)}`
+                      : ''}
+                  </span>
+                  <h2>Twój cyfrowy konsultant pracuje <span>24/7.</span></h2>
+                  <p>
+                    W ostatnich 7 dniach obsłużył <strong>{data.conversations.last_7d}</strong> rozmów
+                    i przejął <strong>{data.questions.last_7d}</strong> pytań od Twojego zespołu.
+                  </p>
+                </>
+              )}
             </div>
             <div className="command-visual">
               {dailyQuestions ? (

@@ -87,7 +87,7 @@ const ODPOWIEDZI: Record<string, unknown> = {
     conversations: { total: 57, last_7d: 9, last_30d: 57 },
     questions: { total: 114, last_7d: 18, daily: [] },
     answer_sources: { document: 61, faq: 40, gpt: 13 },
-    usage: { used: 114, limit: 1000, plan: 'pro' },
+    usage: { used: 114, limit: 1000, plan: 'pro', has_access: true, is_trial: false, ends_at: '2026-10-17' },
     unanswered: [],
   },
   '/widget-settings/mine/': {
@@ -143,6 +143,10 @@ const ODPOWIEDZI: Record<string, unknown> = {
       name: 'Grow',
       in_catalogue: true,
       is_active: true,
+      is_trial: false,
+      trial_ends_at: null,
+      has_access: true,
+      expired: false,
       used: 6480,
       limit: 8000,
       renews_at: '2026-10-17',
@@ -225,6 +229,49 @@ function stronaDziennika(numer: number) {
 }
 
 type Nadpisanie = { status: number; body?: unknown }
+
+/**
+ * Okres próbny po końcu (R05, backend 2.32.23): `is_active` nadal prawdziwe,
+ * ale widget już nie odpowiada. Kształty jak w ODPOWIEDZI, zmienione tylko pola
+ * stanu - do `podstawBackend(page, OKRES_PROBNY_PO_KONCU)`.
+ */
+export const OKRES_PROBNY_PO_KONCU: Record<string, Nadpisanie> = {
+  '/analytics/': {
+    status: 200,
+    body: {
+      ...(ODPOWIEDZI['/analytics/'] as object),
+      usage: { used: 37, limit: 2000, plan: 'start', has_access: false, is_trial: true, ends_at: '2026-11-10' },
+    },
+  },
+  '/billing/plans/': {
+    status: 200,
+    body: {
+      ...(ODPOWIEDZI['/billing/plans/'] as object),
+      current: {
+        plan: 'start',
+        name: 'Start',
+        in_catalogue: true,
+        is_active: true,
+        is_trial: true,
+        trial_ends_at: '2026-11-10',
+        has_access: false,
+        expired: true,
+        used: 37,
+        limit: 2000,
+        renews_at: '2026-11-10',
+        stripe_status: '',
+        access_until: '2026-11-10',
+        has_stripe_subscription: false,
+        portal_available: false,
+        can_manage: true,
+        cancel_at: null,
+        scheduled_plan: null,
+        scheduled_plan_name: null,
+        scheduled_plan_from: null,
+      },
+    },
+  },
+}
 
 /**
  * Podstawia backend.
