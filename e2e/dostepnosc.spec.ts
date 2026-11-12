@@ -19,7 +19,7 @@
  */
 import AxeBuilder from '@axe-core/playwright'
 import { expect, test, type Page, type Request } from '@playwright/test'
-import { podstawBackend, zalogowany } from './atrapa'
+import { OKRES_PROBNY_PO_KONCU, podstawBackend, zalogowany } from './atrapa'
 
 const EKRANY_PANELU = [
   '/dashboard', '/documents', '/faq', '/conversations', '/leads', '/team', '/privacy',
@@ -87,6 +87,31 @@ for (const motyw of ['light', 'dark'] as const) {
       )
       expect(naruszenia, `naruszenia dostepnosci na ${ekran} (${motyw})`).toEqual([])
       // Kontrola, ze bylo co sprawdzac: axe zawsze przechodzi kilkanascie regul.
+      expect(wynik.passes.length).toBeGreaterThan(10)
+    })
+  }
+}
+// Stan po końcu okresu próbnego (R05): czerwona kropka, komunikat i link na
+// pulpicie, alert na ekranie subskrypcji. Atrapa domyślnie oddaje opłacony
+// plan, więc bez tej pętli axe nigdy by tych elementów nie zobaczył.
+for (const motyw of ['light', 'dark'] as const) {
+  for (const ekran of ['/dashboard', '/subskrypcja']) {
+    test(`${ekran} po koncu okresu probnego (${motyw}): bez naruszen WCAG 2.1 AA`, async ({ page, context }) => {
+      await page.emulateMedia({ colorScheme: motyw, reducedMotion: 'reduce' })
+      await zalogowany(context)
+      await podstawBackend(page, OKRES_PROBNY_PO_KONCU)
+      const wczytane = await poWczytaniuDanych(page)
+      await page.goto(ekran)
+      await page.waitForLoadState('load')
+      await page.getByText(/Okres próbny trwał do 10\.11\.2026/).waitFor({ state: 'visible' })
+      await wczytane()
+
+      const wynik = await new AxeBuilder({ page }).withTags(REGULY).analyze()
+
+      const naruszenia = wynik.violations.map(
+        (v) => `${v.impact} ${v.id}: ${v.help} (${v.nodes.map((n) => n.target.join(' ')).join(', ')})`,
+      )
+      expect(naruszenia, `naruszenia dostepnosci na ${ekran} (${motyw})`).toEqual([])
       expect(wynik.passes.length).toBeGreaterThan(10)
     })
   }

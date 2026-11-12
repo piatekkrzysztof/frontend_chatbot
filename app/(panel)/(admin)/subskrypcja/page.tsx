@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { apiFetch } from '@/lib/api'
+import { dataPl } from '@/lib/daty'
 
 interface Plan {
   code: string
@@ -18,6 +19,12 @@ interface Current {
   name: string | null
   in_catalogue: boolean
   is_active: boolean
+  // Opcjonalne: panel i backend wdrażają się osobno. Bez tych pól (backend
+  // sprzed 2.32.23) ekran działa jak dotąd, tylko bez stanu okresu próbnego.
+  is_trial?: boolean
+  trial_ends_at?: string | null
+  has_access?: boolean
+  expired?: boolean
   used: number
   limit: number
   renews_at: string | null
@@ -41,13 +48,6 @@ interface Domena {
   id: number
   host: string
   last_seen: string
-}
-
-/** Data z API (RRRR-MM-DD) po polsku. Bez `new Date`, ktore przesuwa dzien o strefe czasowa. */
-function dataPl(data: string | null) {
-  if (!data) return ''
-  const [rok, miesiac, dzien] = data.split('-')
-  return `${dzien}.${miesiac}.${rok}`
 }
 
 // Po powrocie z portalu Stripe zdarzenie o zmianie planu potrafi dojsc do
@@ -204,6 +204,11 @@ export default function SubskrypcjaPage() {
   // + 3 dni. Bez tej informacji wlasciciel dowiadywal sie o problemie
   // dopiero wtedy, gdy chatbot zamilkl.
   const nieudanaPlatnosc = !!current?.is_active && current.stripe_status === 'past_due'
+  // Okres próbny to plan Start bez Stripe. Do R05 wyglądał tu jak opłacony
+  // Start, bez daty końca, a po jego końcu nadal jak działający - `is_active`
+  // zostaje prawdą, a widget sprawdza daty przy każdej wiadomości.
+  const probny = !!current?.is_trial
+  const wygasl = !!current?.is_active && !!current.expired
 
   return (
     <div className="max-w-4xl">
@@ -247,8 +252,11 @@ export default function SubskrypcjaPage() {
           <div className="flex items-baseline justify-between mb-2">
             <p className="font-medium">
               Twój plan: {current.name || 'brak'}
-              {!current.is_active && (
+              {probny && <span className="ml-2 text-sm tekst-drugi font-normal">okres próbny</span>}
+              {!current.is_active ? (
                 <span className="ml-2 text-sm text-[var(--blad)] font-normal">nieaktywny</span>
+              ) : (
+                wygasl && <span className="ml-2 text-sm text-[var(--blad)] font-normal">wygasł</span>
               )}
             </p>
             <p className="text-sm tekst-slaby">
@@ -286,6 +294,27 @@ export default function SubskrypcjaPage() {
               Zużyto {wykorzystanie}% limitu. Na razie wszystko działa normalnie.
             </p>
           ) : null}
+
+          {probny && !wygasl && current.trial_ends_at && (
+            <p className="text-sm tekst-drugi mt-3">
+              Okres próbny trwa do {dataPl(current.trial_ends_at)} włącznie. Potem chatbot przestanie
+              odpowiadać odwiedzającym.
+              {current.can_manage
+                ? ' Wybierz plan poniżej, żeby działał dalej.'
+                : ' Plan wybiera właściciel konta.'}
+            </p>
+          )}
+          {wygasl && (
+            <p role="alert" className="text-sm text-[var(--blad)] mt-3">
+              {probny
+                ? `Okres próbny trwał do ${dataPl(current.trial_ends_at ?? current.renews_at)}.`
+                : `Subskrypcja działała do ${dataPl(current.renews_at)}.`}{' '}
+              Chatbot nie odpowiada odwiedzającym.
+              {current.can_manage
+                ? ' Wybierz plan poniżej, żeby znów działał.'
+                : ' Plan wybiera właściciel konta.'}
+            </p>
+          )}
 
           {current.plan && !current.in_catalogue && (
             <p className="text-sm tekst-slaby mt-2">

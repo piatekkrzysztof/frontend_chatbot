@@ -553,6 +553,13 @@ h1, h2, h3, h4 {
   box-shadow: 0 0 0 4px rgba(111, 207, 158, 0.08), 0 0 12px rgba(111, 207, 158, 0.4);
 }
 
+/* Widget nie odpowiada (koniec okresu próbnego, wygasła subskrypcja). Sam
+   kolor nie niesie informacji - obok zawsze stoi napis. */
+.status-dot.is-off {
+  background: var(--blad);
+  box-shadow: none;
+}
+
 .admin-workspace {
   min-width: 0;
 }
@@ -1183,6 +1190,10 @@ a.pierwsze-kroki-tytul:hover {
 
 .command-copy p strong {
   color: var(--na-ink);
+}
+
+.command-copy .command-action {
+  margin-top: 1.4rem;
 }
 
 .command-visual {
