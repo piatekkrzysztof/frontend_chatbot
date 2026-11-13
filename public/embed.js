@@ -16,7 +16,15 @@
   if (window.__smArtChatZaladowany) return;
   window.__smArtChatZaladowany = true;
 
-  var position = scriptTag.getAttribute('data-position') === 'left' ? 'left' : 'right';
+  // Pozycję ustawia się w panelu („Pozycja" w ustawieniach widgetu) i przychodzi
+  // razem z resztą ustawień. Atrybut data-position zostaje dla stron, które
+  // wpisały go u siebie same - i wtedy ma pierwszeństwo: to, co stoi w kodzie
+  // strony klienta, jest świadomą decyzją dla tej konkretnej strony.
+  // Do tej poprawki skrypt czytał wyłącznie atrybut, a kod do wklejenia
+  // z panelu go nie zawierał, więc ustawienie w panelu nie robiło nic.
+  var pozycjaZTagu = scriptTag.getAttribute('data-position');
+  var pozycjaNarzucona = pozycjaZTagu === 'left' || pozycjaZTagu === 'right';
+  var position = pozycjaZTagu === 'left' ? 'left' : 'right';
   var origin = new URL(scriptTag.src).origin;
 
   var isOpen = false;
@@ -262,6 +270,27 @@
     if (rysunek) rysunek.setAttribute('stroke', naWypelnieniu(kolor));
   }
 
+  /**
+   * Przenosi przycisk, ramkę i zaczepkę na stronę wybraną w panelu.
+   *
+   * Ustawienia przychodzą chwilę po wczytaniu strony, więc przycisk zaczyna
+   * po prawej (wartość domyślna) i dopiero wtedy się przesuwa. Elementy
+   * tworzone później czytają już zmienną `position`.
+   */
+  function zastosujPozycje(dane) {
+    if (pozycjaNarzucona || !dane) return;
+    var nowa = dane.widget_position;
+    if ((nowa !== 'left' && nowa !== 'right') || nowa === position) return;
+
+    var stara = position;
+    position = nowa;
+    [button, iframe, dymek].forEach(function (element) {
+      if (!element) return;
+      element.style[stara] = '';
+      element.style[nowa] = '20px';
+    });
+  }
+
   function zaplanujZaczepke() {
     if (!apiUrl) return;
 
@@ -274,6 +303,7 @@
       })
       .then(function (dane) {
         zastosujMarke(dane);
+        zastosujPozycje(dane);
         if (zaczepkaOdrzucona()) return;
         if (!dane || !dane.widget_proactive_enabled) return;
         var tekst = dane.widget_proactive_text;

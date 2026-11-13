@@ -191,3 +191,84 @@ describe('dostepnosc', () => {
     expect(ramka()!.getAttribute('title')).toBeTruthy()
   })
 })
+
+describe('pozycja z ustawień panelu (R15)', () => {
+  // Do tej poprawki skrypt czytał pozycję wyłącznie z atrybutu data-position,
+  // którego kod do wklejenia z panelu nigdy nie zawierał. Wybór „Lewy dolny
+  // róg" w panelu zapisywał się i nie zmieniał niczego.
+  const API = 'https://api.example/api'
+
+  function ustawienia(dane: Record<string, unknown>) {
+    vi.mocked(fetch).mockResolvedValue({ ok: true, json: async () => dane } as Response)
+  }
+  async function poUstawieniach() {
+    for (let i = 0; i < 5; i += 1) await Promise.resolve()
+  }
+
+  it('przycisk przechodzi na lewą stronę, gdy panel tak ustawił', async () => {
+    ustawienia({ widget_position: 'left' })
+    osadz({ 'data-key': 'k', 'data-api': API })
+    await poUstawieniach()
+
+    expect(przycisk()!.style.left).toBe('20px')
+    expect(przycisk()!.style.right).toBe('')
+  })
+
+  it('ramka otwarta po odczycie ustawień też jest po lewej', async () => {
+    ustawienia({ widget_position: 'left' })
+    osadz({ 'data-key': 'k', 'data-api': API })
+    await poUstawieniach()
+    przycisk()!.click()
+
+    expect(ramka()!.style.left).toBe('20px')
+    expect(ramka()!.style.right).toBe('')
+  })
+
+  it('ramka utworzona przed odczytem ustawień przenosi się razem z przyciskiem', async () => {
+    ustawienia({ widget_position: 'left' })
+    osadz({ 'data-key': 'k', 'data-api': API })
+    przycisk()!.click()
+    await poUstawieniach()
+
+    expect(ramka()!.style.left).toBe('20px')
+    expect(ramka()!.style.right).toBe('')
+  })
+
+  it('zaczepka pokazuje się po tej samej stronie co przycisk', async () => {
+    vi.useFakeTimers()
+    try {
+      ustawienia({
+        widget_position: 'left',
+        widget_proactive_enabled: true,
+        widget_proactive_text: 'Pomóc?',
+        widget_proactive_delay_seconds: 1,
+      })
+      osadz({ 'data-key': 'k', 'data-api': API })
+      await poUstawieniach()
+      vi.advanceTimersByTime(1500)
+
+      const dymek = document.querySelector<HTMLElement>('[role="status"]')!
+      expect(dymek.style.left).toBe('20px')
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
+  it('atrybut data-position na stronie klienta ma pierwszeństwo', async () => {
+    // Kto wpisał pozycję we własnym kodzie strony, ten dalej o niej decyduje.
+    ustawienia({ widget_position: 'left' })
+    osadz({ 'data-key': 'k', 'data-api': API, 'data-position': 'right' })
+    await poUstawieniach()
+
+    expect(przycisk()!.style.right).toBe('20px')
+    expect(przycisk()!.style.left).toBe('')
+  })
+
+  it('nieznana wartość z API zostawia przycisk po prawej', async () => {
+    ustawienia({ widget_position: 'srodek' })
+    osadz({ 'data-key': 'k', 'data-api': API })
+    await poUstawieniach()
+
+    expect(przycisk()!.style.right).toBe('20px')
+  })
+})
