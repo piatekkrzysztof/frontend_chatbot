@@ -82,6 +82,21 @@ function czytajPamiec(klucz: string): string | null {
   }
 }
 
+/** Odstępy przed kolejnymi próbami odczytu ustawień, w milisekundach. */
+const ODSTEPY_PONOWIEN_MARKI = [2000, 6000]
+
+/** Ustawienia zapamiętane po ostatnim udanym odczycie albo null. */
+function czytajZapamietanaMarke(klucz: string): Branding | null {
+  const surowe = czytajPamiec(klucz)
+  if (!surowe) return null
+  try {
+    const dane = JSON.parse(surowe)
+    return dane && typeof dane === 'object' && !Array.isArray(dane) ? (dane as Branding) : null
+  } catch {
+    return null
+  }
+}
+
 function zapiszPamiec(klucz: string, wartosc: string): boolean {
   try {
     localStorage.setItem(klucz, wartosc)
@@ -286,14 +301,31 @@ export default function WidgetChat() {
     if (!apiKey) return
     let active = true
 
-    fetch(`${API_URL}/widget-settings/`, { headers: { 'X-API-Key': apiKey } })
-      .then((res) => (res.ok ? res.json() : null))
-      .then((data) => {
-        if (active) setBranding(data)
-      })
-      .catch(() => {
-        if (active) setBranding(null)
-      })
+    // Ustawienia z ostatniego udanego odczytu stoją od razu i zostają, gdy
+    // ten odczyt się nie uda. Do tej poprawki jeden błąd (sieć, 503 w trakcie
+    // wdrożenia) zerował ustawienia i widget firmy z własną marką pokazywał
+    // „SM-art" do końca odsłony (przegląd 2026-11, R16).
+    const kluczMarki = `widget_branding_${apiKey}`
+    const zapamietana = czytajZapamietanaMarke(kluczMarki)
+    if (zapamietana) setBranding(zapamietana)
+
+    let ponowienie: ReturnType<typeof setTimeout> | undefined
+    const wczytajMarke = (proba: number) => {
+      fetch(`${API_URL}/widget-settings/`, { headers: { 'X-API-Key': apiKey } })
+        .then((res) => (res.ok ? res.json() : Promise.reject(new Error(String(res.status)))))
+        .then((data) => {
+          if (!active) return
+          setBranding(data)
+          zapiszPamiec(kluczMarki, JSON.stringify(data))
+        })
+        .catch(() => {
+          // Dwa ponowienia i koniec: widget na cudzej stronie nie może
+          // odpytywać API w kółko przez całą odsłonę.
+          if (!active || proba >= ODSTEPY_PONOWIEN_MARKI.length) return
+          ponowienie = setTimeout(() => wczytajMarke(proba + 1), ODSTEPY_PONOWIEN_MARKI[proba])
+        })
+    }
+    wczytajMarke(0)
 
     const zapisana = loadHistory(apiKey)
     const sesja = czytajPamiec(`widget_session_${apiKey}`)
@@ -318,6 +350,7 @@ export default function WidgetChat() {
 
     return () => {
       active = false
+      if (ponowienie) clearTimeout(ponowienie)
     }
   }, [apiKey])
 

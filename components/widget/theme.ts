@@ -101,6 +101,11 @@ export interface ThemeInput {
 }
 
 export function resolveTheme(branding: ThemeInput | null | undefined) {
+  /* Bez ustawień nie wiemy, czyja to marka: firma mogła zapłacić za własną.
+     Do czasu odczytu (i po nieudanym odczycie) okno jest więc bez podpisu -
+     „Czat" i żadnej stopki - zamiast przedstawiać się jako SM-art u klienta
+     z białą etykietą (przegląd 2026-11, R16). */
+  const nieznana = !branding
   const isWhiteLabel = branding?.branding_mode === 'white_label'
   const accent = isWhiteLabel ? branding?.widget_color || '#111827' : SMART_THEME.akcent
 
@@ -111,7 +116,7 @@ export function resolveTheme(branding: ThemeInput | null | undefined) {
 
   return {
     isWhiteLabel,
-    name: isWhiteLabel ? branding?.widget_title || 'Chatbot' : 'SM-art',
+    name: nieznana ? 'Czat' : isWhiteLabel ? branding?.widget_title || 'Chatbot' : 'SM-art',
 
     /* Wypełnienia i linie — tu kolor klienta zostaje nietknięty */
     accent,
@@ -145,11 +150,13 @@ export function resolveTheme(branding: ThemeInput | null | undefined) {
     // W trybie smart stopka reklamuje nas — chyba że klient ma plan pozwalający
     // ją ukryć. To środkowy próg cennika: Grow kupuje się właśnie po to, żeby
     // widget nie odsyłał odwiedzających do cudzej firmy.
-    footerLabel: isWhiteLabel
-      ? branding?.widget_footer_text || ''
-      : branding?.widget_hide_branding
-        ? ''
-        : 'SM-art Chat',
+    footerLabel: nieznana
+      ? ''
+      : isWhiteLabel
+        ? branding?.widget_footer_text || ''
+        : branding?.widget_hide_branding
+          ? ''
+          : 'SM-art Chat',
   }
 }
 
