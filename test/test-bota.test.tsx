@@ -120,6 +120,30 @@ describe('dostępność (A-21)', () => {
     expect(await screen.findByText('Otwieramy o 9.')).toBeInTheDocument()
   })
 
+  it('odmowa z powodem pokazuje powód, nie „spróbuj ponownie” (R10)', async () => {
+    ustawToken('token')
+    podstawBackend(() =>
+      json(402, {
+        detail: 'Rozmowa testowa z botem wymaga aktywnego planu - chatbot bez niego nie odpowiada odwiedzającym. Wybierz plan w zakładce Subskrypcja.',
+      }),
+    )
+
+    await zapytaj('Test')
+
+    const alert = await screen.findByRole('alert')
+    expect(alert).toHaveTextContent('wymaga aktywnego planu')
+    expect(alert).not.toHaveTextContent('Spróbuj ponownie')
+  })
+
+  it('dzienny limit testów mówi, że to limit', async () => {
+    ustawToken('token')
+    podstawBackend(() => json(429, { detail: 'Wykorzystano dzisiejszy limit testów bota. Spróbuj jutro.' }))
+
+    await zapytaj('Test')
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('limit testów bota')
+  })
+
   it('błąd jest ogłaszany jako alert', async () => {
     ustawToken('token')
     podstawBackend(() => json(500))
