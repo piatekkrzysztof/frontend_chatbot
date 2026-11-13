@@ -78,7 +78,15 @@ export default function TestBotaPage() {
         setBlad('Rozmowa została usunięta. Możesz rozpocząć nową.')
         return
       }
-      if (!res.ok || !res.body) throw new Error('Bot nie odpowiedział. Spróbuj ponownie.')
+      if (!res.ok) {
+        // Odmowa z backendu niesie zdanie: brak aktywnego planu (402, R10),
+        // wykorzystany dzienny limit testów (429). Ogólne „spróbuj ponownie”
+        // kazało ponawiać coś, co nie mogło się udać.
+        const dane = await res.json().catch(() => ({}))
+        const zdanie = typeof dane?.detail === 'string' ? dane.detail : typeof dane?.error === 'string' ? dane.error : ''
+        throw new Error(zdanie || 'Bot nie odpowiedział. Spróbuj ponownie.')
+      }
+      if (!res.body) throw new Error('Bot nie odpowiedział. Spróbuj ponownie.')
 
       setWiadomosci((p) => [...p, { sender: 'bot', text: '' }])
 
