@@ -119,6 +119,7 @@ export default function FAQPage() {
           <input
             id="faq-pytanie"
             type="text"
+            maxLength={500}
             value={question}
             onChange={(e) => setQuestion(e.target.value)}
             placeholder="Jakie są godziny otwarcia?"
@@ -131,6 +132,7 @@ export default function FAQPage() {
             id="faq-odpowiedz"
             value={answer}
             onChange={(e) => setAnswer(e.target.value)}
+            maxLength={4000}
             rows={3}
             placeholder="Pracujemy od poniedziałku do piątku w godzinach 9-17."
             className="input"
