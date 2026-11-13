@@ -392,6 +392,7 @@ export default function WidgetSettingsPage() {
             aria-describedby="powitanie-opis"
             value={welcomeMessage}
             onChange={(e) => setWelcomeMessage(e.target.value)}
+            maxLength={1000}
             rows={2}
             placeholder="Cześć! W czym mogę pomóc?"
             className="input"
@@ -411,6 +412,7 @@ export default function WidgetSettingsPage() {
             aria-describedby="proponowane-pytania-opis"
             value={suggestedQuestions}
             onChange={(e) => setSuggestedQuestions(e.target.value)}
+            maxLength={1000}
             rows={4}
             placeholder={`Jakie macie godziny otwarcia?
 Ile kosztuje usługa?
