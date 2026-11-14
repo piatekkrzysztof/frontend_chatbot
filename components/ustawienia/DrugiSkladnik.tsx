@@ -20,7 +20,12 @@ type Stan = {
  * wylądować w pamięci podręcznej pośredników albo w logu dostępu. Tutaj adres
  * `otpauth://` przychodzi raz, w odpowiedzi API, i nigdzie dalej nie idzie.
  */
-export default function DrugiSkladnik() {
+/**
+ * `onZmiana` woła się po włączeniu i po wyłączeniu MFA. Sekcja „Bezpieczeństwo
+ * konta" niżej na tym samym ekranie pyta o kod tylko wtedy, gdy MFA jest
+ * włączone - i bez tego sygnału trzymała stan sprzed zmiany.
+ */
+export default function DrugiSkladnik({ onZmiana }: { onZmiana?: () => void } = {}) {
   const [stan, setStan] = useState<Stan | null>(null)
   const [blad, setBlad] = useState('')
   const [odczyt, setOdczyt] = useState(0)
@@ -84,6 +89,7 @@ export default function DrugiSkladnik() {
       setKod('')
       setHaslo('')
       setStan({ wlaczony: true, w_trakcie_konfiguracji: false, kodow_zapasowych: dane.kody_zapasowe.length })
+      onZmiana?.()
     } catch (err) {
       setBlad(err instanceof Error ? err.message : 'Kod nie pasuje.')
       setKod('')
@@ -102,6 +108,7 @@ export default function DrugiSkladnik() {
         body: JSON.stringify({ haslo, kod }),
       })
       setStan({ wlaczony: false, w_trakcie_konfiguracji: false, kodow_zapasowych: 0 })
+      onZmiana?.()
       setWylaczanie(false)
       setHaslo('')
       setKod('')

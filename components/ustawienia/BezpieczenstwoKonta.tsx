@@ -11,7 +11,8 @@ type Sessions = { count: number; next: string | null; previous: string | null; r
 type Action = { kind: 'password' | 'others' | 'session'; session?: Session }
 const date = (value: string) => new Date(value).toLocaleString('pl-PL', { dateStyle: 'medium', timeStyle: 'short' })
 
-export default function BezpieczenstwoKonta() {
+/** `wersjaMfa` rośnie, gdy MFA zmieniło się wyżej na ekranie - wtedy czytamy stan od nowa. */
+export default function BezpieczenstwoKonta({ wersjaMfa = 0 }: { wersjaMfa?: number } = {}) {
   const [data, setData] = useState<Sessions | null>(null)
   const [page, setPage] = useState(1)
   const [loading, setLoading] = useState(true)
@@ -43,7 +44,7 @@ export default function BezpieczenstwoKonta() {
     const revision = generation
     void load(1)
     return () => { revision.current++ }
-  }, [load])
+  }, [load, wersjaMfa])
 
   function reload(number: number) {
     setLoading(true); setLoadError(''); void load(number)

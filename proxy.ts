@@ -137,7 +137,7 @@ export function proxy(zadanie: NextRequest) {
     // Dokad uzytkownik zmierzal, zeby po zalogowaniu wrocic tam, a nie na
     // pulpit. Bez tego kazdy link do konkretnego ekranu wysylany zespolowi
     // konczy sie na pulpicie i trzeba szukac reczne.
-    cel.searchParams.set('powrot', sciezka)
+    cel.searchParams.set('powrot', sciezka + zadanie.nextUrl.search)
     return NextResponse.redirect(cel)
   }
 
