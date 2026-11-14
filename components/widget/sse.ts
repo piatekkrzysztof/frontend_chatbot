@@ -30,6 +30,8 @@ export type ZdarzenieDone = {
   /** Kształt źródeł normalizuje dopiero widget — patrz normalizujZrodla. */
   sources?: unknown[]
   message_id?: number
+  /** Backend od 2.32.34: strumień urwał się po pierwszych słowach odpowiedzi. */
+  przerwana?: boolean
 }
 
 /**

@@ -530,6 +530,11 @@ export default function WidgetChat() {
             if (event.source === 'gpt' && !contactSent) {
               setOfferContact(true)
             }
+            // Backend od 2.32.34: strumień urwał się po pierwszych słowach.
+            // Bez tej informacji pół zdania wyglądało jak cała odpowiedź.
+            if (event.przerwana) {
+              setNotice('Odpowiedź została przerwana. Zadaj pytanie jeszcze raz.')
+            }
           }
         }
       }

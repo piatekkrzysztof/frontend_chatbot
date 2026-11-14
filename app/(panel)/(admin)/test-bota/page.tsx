@@ -140,6 +140,9 @@ export default function TestBotaPage() {
               }
               return n
             })
+            if (zdarzenie.przerwana) {
+              setBlad('Odpowiedź została przerwana. Zadaj pytanie jeszcze raz.')
+            }
           }
         }
       }
