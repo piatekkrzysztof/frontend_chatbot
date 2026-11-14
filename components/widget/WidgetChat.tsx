@@ -272,6 +272,8 @@ export default function WidgetChat() {
   const [input, setInput] = useState('')
   const [sending, setSending] = useState(false)
   const [historyLoaded, setHistoryLoaded] = useState(false)
+  /** Kończy się, gdy zapisana rozmowa jest już na ekranie albo odrzucona. */
+  const historiaGotowa = useRef<Promise<void>>(Promise.resolve())
   const bottomRef = useRef<HTMLDivElement>(null)
 
   // Eskalacja do człowieka — pojawia się, gdy bot odpowiedział bez pokrycia w materiałach
@@ -336,7 +338,7 @@ export default function WidgetChat() {
       // Historię pokazujemy dopiero po odpowiedzi serwera. Pokazana od razu
       // mignęłaby na ekranie, zanim zniknie - a to jest dokładnie ten widok,
       // który odwiedzający miał przestać oglądać.
-      rozmowaUsunieta(apiKey, sesja).then((usunieta) => {
+      historiaGotowa.current = rozmowaUsunieta(apiKey, sesja).then((usunieta) => {
         if (!active) return
         if (usunieta) {
           wyczyscZapisanaRozmowe(apiKey)
@@ -386,6 +388,16 @@ export default function WidgetChat() {
   async function handleSend(presetText?: string) {
     const text = (presetText ?? input).trim()
     if (!text || !apiKey || sending) return
+
+    // Zapisana rozmowa wczytuje się po sprawdzeniu na serwerze (do 3 s).
+    // Pytanie wysłane w tym czasie trafiało na ekran, po czym wczytana
+    // historia je nadpisywała - odpowiedź przychodziła pod rozmową bez
+    // pytania (przegląd 2026-11, R18). Czekamy więc na historię; tekst
+    // zostaje w polu, a przycisk pokazuje, że wysyłka trwa.
+    if (!historyLoaded) {
+      setSending(true)
+      await historiaGotowa.current
+    }
 
     setMessages((prev) => [...prev, { sender: 'user', text }])
     setInput('')

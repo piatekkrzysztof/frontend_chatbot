@@ -172,8 +172,20 @@ export default function DocumentsPage() {
   async function loadDocuments(numer: number) {
     setWczytujeDok(true)
     try {
-      pokazDokumenty(await apiFetch(`/documents/?page=${numer}`))
-      setNumerDok(numer)
+      let strona = numer
+      let dane
+      try {
+        dane = await apiFetch(`/documents/?page=${strona}`)
+      } catch (err) {
+        // Usunięcie ostatniego dokumentu z ostatniej strony: tej strony już
+        // nie ma i backend odpowiada 404. Cofamy się o jedną, zamiast pokazać
+        // błąd nad listą z usuniętym dokumentem (przegląd 2026-11, R18).
+        if (!(err instanceof BladApi && err.status === 404 && strona > 1)) throw err
+        strona -= 1
+        dane = await apiFetch(`/documents/?page=${strona}`)
+      }
+      pokazDokumenty(dane)
+      setNumerDok(strona)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Nie udało się pobrać listy dokumentów.')
     } finally {

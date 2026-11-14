@@ -65,7 +65,15 @@ export default function ConversationsPage() {
         setError('')
       })
       .catch((err) => {
-        if (active) setError(err instanceof Error ? err.message : 'Nie udało się pobrać konwersacji.')
+        if (!active) return
+        // Usunięcie ostatnich wierszy ostatniej strony: tej strony już nie ma
+        // i backend odpowiada 404. Cofamy się o jedną, zamiast pokazać błąd
+        // nad starą listą z usuniętym wierszem (przegląd 2026-11, R18).
+        if (err instanceof BladApi && err.status === 404 && numer > 1) {
+          setNumer(numer - 1)
+          return
+        }
+        setError(err instanceof Error ? err.message : 'Nie udało się pobrać konwersacji.')
       })
 
     // Odpowiedź na porzuconą stronę nie może nadpisać tej, którą już widać
