@@ -9,6 +9,7 @@ import BezpieczenstwoKonta from '@/components/ustawienia/BezpieczenstwoKonta'
 
 export default function UstawieniaPage() {
   const [nazwa, setNazwa] = useState('')
+  const [wersjaMfa, setWersjaMfa] = useState(0)
   const [adres, setAdres] = useState('')
   const [wczytane, setWczytane] = useState(false)
   const [zapisuje, setZapisuje] = useState(false)
@@ -136,9 +137,9 @@ export default function UstawieniaPage() {
 
       <hr className="my-10 border-[color:var(--obramowanie-mocne)]" />
 
-      <DrugiSkladnik />
+      <DrugiSkladnik onZmiana={() => setWersjaMfa((poprzednia) => poprzednia + 1)} />
       <hr className="my-10 border-[color:var(--obramowanie-mocne)]" />
-      <BezpieczenstwoKonta />
+      <BezpieczenstwoKonta wersjaMfa={wersjaMfa} />
     </div>
   )
 }

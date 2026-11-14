@@ -860,6 +860,9 @@ export default function WidgetChat() {
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={(e) => e.key === 'Enter' && handleSend()}
+          // Ta sama granica co w backendzie (MAX_WIADOMOSC_ZNAKOW). Bez niej
+          // dłuższy tekst dało się wkleić, a wysyłka kończyła się błędem.
+          maxLength={2000}
           placeholder="Napisz wiadomość…"
           aria-label="Treść wiadomości"
           // Kolor podpowiedzi jawnie, bo domyślnie przeglądarka bierze kolor

@@ -198,10 +198,16 @@ function FormularzLogowania() {
       ) : (
       <form onSubmit={handleSubmit} className="flex flex-col gap-4">
         <div>
-          <label className="label" htmlFor="pole-email">E-mail</label>
+          <label className="label" htmlFor="pole-email">E-mail lub nazwa użytkownika</label>
           <input
             id="pole-email"
-            type="email"
+            // Nie `email`: osoba z zaproszenia wybiera własną nazwę i może się
+            // nią logować, a przeglądarka odrzucała ją przed wysłaniem jako
+            // niepoprawny adres. Klawiatura z @ zostaje dzięki inputMode.
+            type="text"
+            inputMode="email"
+            autoCapitalize="none"
+            spellCheck={false}
             autoComplete="username"
             required
             value={email}

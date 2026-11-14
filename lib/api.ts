@@ -150,8 +150,9 @@ export function komunikatPola(wartosc: unknown): string {
  *
  * DRF zwraca sam napis bledu walidacji jako liste, a `JSON.stringify` robil
  * z niej to, co klient widzial w panelu: `["Masz już aktywną subskrypcję..."]`.
- * Bledy pol (`{"email": [...]}`) zostaja jak dotad - surowo, bo ekran i tak
- * nie wie, ktore pole wskazac.
+ * Bledy pol (`{"email": ["..."]}`) tez skladamy w zdania. Do porzadkow po
+ * przegladzie 2026-11 szly na ekran surowo, razem z klamrami i nazwa pola
+ * z API: `{"question":["Upewnij się, że to pole ma nie więcej niż 500..."]}`.
  */
 function tekstBledu(data: unknown): string {
   if (typeof data === 'string') return data
@@ -160,7 +161,10 @@ function tekstBledu(data: unknown): string {
     const obiekt = data as Record<string, unknown>
     if (obiekt.detail) return tekstBledu(obiekt.detail)
     if (obiekt.error) return tekstBledu(obiekt.error)
-    return JSON.stringify(data)
+    // Komunikaty pol bez powtorzen; nazwy pol zostaja w API, bo sa po angielsku
+    // i nic nie mowia osobie przy formularzu.
+    const zdania = [...new Set(Object.values(obiekt).map(tekstBledu).filter(Boolean))]
+    return zdania.join(' ')
   }
   return ''
 }
