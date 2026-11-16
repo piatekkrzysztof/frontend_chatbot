@@ -39,14 +39,23 @@ export function czyChroniona(sciezka: string) {
  * `/login?powrot=<sciezka>`. Do audytu 2026-10 (A-11) logowanie ten parametr
  * pomijalo i link do konkretnego ekranu konczyl sie na pulpicie.
  *
- * Przyjmujemy wylacznie sama sciezke (litery, cyfry, myslniki, ukosniki
- * miedzy nimi) z listy CHRONIONE. Bez tego `?powrot=//obca.strona` albo
+ * Przyjmujemy wylacznie sciezke (litery, cyfry, myslniki, ukosniki miedzy
+ * nimi) z listy CHRONIONE. Bez tego `?powrot=//obca.strona` albo
  * `https://...` w podeslanym linku przekierowywaloby po zalogowaniu na
  * cudza strone.
+ *
+ * Za sciezka moga isc parametry (`/conversations?page=3`): link do konkretnej
+ * strony listy gubil je i konczyl na pierwszej. Parametry przechodza tylko
+ * w waskim alfabecie - bez ukosnikow, dwukropkow i znakow, z ktorych daloby
+ * sie zlozyc inny adres.
  */
 export function celPoZalogowaniu(zapytanie: string): string {
   const parametry = new URLSearchParams(zapytanie)
   if (parametry.get('dalej') === 'subskrypcja') return '/subskrypcja'
   const powrot = parametry.get('powrot') ?? ''
-  return /^(\/[a-z0-9-]+)+$/i.test(powrot) && czyChroniona(powrot) ? powrot : '/dashboard'
+  const [sciezka, ...reszta] = powrot.split('?')
+  if (!/^(\/[a-z0-9-]+)+$/i.test(sciezka) || !czyChroniona(sciezka)) return '/dashboard'
+  const zapytaniePowrotu = reszta.join('?')
+  if (!zapytaniePowrotu) return sciezka
+  return /^[a-z0-9_.~%=&-]{1,200}$/i.test(zapytaniePowrotu) ? `${sciezka}?${zapytaniePowrotu}` : sciezka
 }

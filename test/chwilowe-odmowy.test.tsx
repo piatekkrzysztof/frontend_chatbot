@@ -62,7 +62,7 @@ describe('logowanie (A-04)', () => {
   async function zaloguj() {
     const uzytkownik = userEvent.setup()
     render(<LoginPage />)
-    await uzytkownik.type(screen.getByLabelText('E-mail'), 'szef@firma.pl')
+    await uzytkownik.type(screen.getByLabelText('E-mail lub nazwa użytkownika'), 'szef@firma.pl')
     await uzytkownik.type(screen.getByLabelText('Hasło'), 'poprawne-haslo')
     await uzytkownik.click(screen.getByRole('button', { name: 'Zaloguj się' }))
     return uzytkownik

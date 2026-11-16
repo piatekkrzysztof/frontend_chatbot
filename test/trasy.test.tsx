@@ -58,11 +58,32 @@ describe('dokąd po zalogowaniu (A-11)', () => {
     '?powrot=https%3A%2F%2Fzly.example',
     '?powrot=%2F%5Czly.example',
     '?powrot=%2Flogin',
-    '?powrot=%2Fleads%3Fx%3D1',
     '?powrot=%2Fleadsy',
+    // Parametry nie ratują obcej ani niechronionej ścieżki
+    '?powrot=%2Flogin%3Fpage%3D2',
+    '?powrot=%2F%2Fzly.example%3Fpage%3D2',
     '?powrot=javascript%3Aalert(1)',
   ])('obcy albo niechroniony cel %s → pulpit', (zapytanie) => {
     expect(celPoZalogowaniu(zapytanie)).toBe('/dashboard')
+  })
+
+  it('parametry adresu wracają razem ze ścieżką', () => {
+    // Link do trzeciej strony rozmów kończył po zalogowaniu na pierwszej.
+    expect(celPoZalogowaniu('?powrot=%2Fleads%3Fpage%3D3')).toBe('/leads?page=3')
+    expect(celPoZalogowaniu('?powrot=%2Fleads%3Fpage%3D3%26ocena%3Dtrue')).toBe(
+      '/leads?page=3&ocena=true',
+    )
+  })
+
+  it.each([
+    // Z parametrów nie da się złożyć innego adresu: znaki spoza wąskiego
+    // alfabetu odcinają parametry, a ścieżka zostaje.
+    ['?powrot=%2Fleads%3Fnext%3Dhttps%3A%2F%2Fzly.example', '/leads'],
+    ['?powrot=%2Fleads%3Fx%3D%2F%2Fzly.example', '/leads'],
+    ['?powrot=%2Fleads%3Fx%3D1%23%40zly.example', '/leads'],
+    ['?powrot=%2Fleads%3Fa%3D1%3Fb%3D2', '/leads'],
+  ])('podejrzane parametry %s są odcinane', (zapytanie, cel) => {
+    expect(celPoZalogowaniu(zapytanie)).toBe(cel)
   })
 
   it('ekran logowania wraca pod adres z powrot', async () => {
@@ -73,7 +94,7 @@ describe('dokąd po zalogowaniu (A-11)', () => {
     const uzytkownik = userEvent.setup()
     render(<LoginPage />)
 
-    await uzytkownik.type(screen.getByLabelText('E-mail'), 'szef@firma.pl')
+    await uzytkownik.type(screen.getByLabelText('E-mail lub nazwa użytkownika'), 'szef@firma.pl')
     await uzytkownik.type(screen.getByLabelText('Hasło'), 'poprawne-haslo')
     await uzytkownik.click(screen.getByRole('button', { name: 'Zaloguj się' }))
 

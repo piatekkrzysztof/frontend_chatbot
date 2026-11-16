@@ -250,10 +250,31 @@ describe('zadanie', () => {
     expect(blad.message).toBe('Masz już aktywną subskrypcję (Grow).')
   })
 
-  it('bledy pol zostaja surowe, zeby nie zgubic, ktorego pola dotycza', async () => {
+  it('bledy pol sa zdaniami, a nie surowym JSON-em', async () => {
+    // Do porzadkow po przegladzie 2026-11 na ekran szlo `{"email":["..."]}`.
     vi.mocked(fetch).mockResolvedValue(odpowiedz(400, { email: ['Niepoprawny adres.'] }))
 
-    await expect(apiFetch('/accounts/register/')).rejects.toThrow('{"email":["Niepoprawny adres."]}')
+    await expect(apiFetch('/accounts/register/')).rejects.toThrow(/^Niepoprawny adres\.$/)
+  })
+
+  it('kilka pol daje kilka zdan, bez powtorzen', async () => {
+    vi.mocked(fetch).mockResolvedValue(
+      odpowiedz(400, {
+        question: ['Za długie pytanie.'],
+        answer: ['To pole jest wymagane.', 'Za długa odpowiedź.'],
+        extra: ['Za długie pytanie.'],
+      }),
+    )
+
+    await expect(apiFetch('/faq/')).rejects.toThrow(
+      /^Za długie pytanie\. To pole jest wymagane\. Za długa odpowiedź\.$/,
+    )
+  })
+
+  it('pusty obiekt bledu daje komunikat ogolny, nie klamry', async () => {
+    vi.mocked(fetch).mockResolvedValue(odpowiedz(400, {}))
+
+    await expect(apiFetch('/faq/')).rejects.not.toThrow('{}')
   })
 
   it('nie gubi bledu, gdy odpowiedz nie jest JSON-em', async () => {

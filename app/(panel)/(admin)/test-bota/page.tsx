@@ -230,6 +230,7 @@ export default function TestBotaPage() {
             value={tekst}
             onChange={(e) => setTekst(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && wyslij()}
+            maxLength={2000}
             placeholder="Np. Ile kosztuje wynajem sali w sobotę?"
             aria-label="Pytanie do bota"
             disabled={wysyla || czysci}

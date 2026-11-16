@@ -82,6 +82,7 @@ export default function TeamPage() {
   const [inviteError, setInviteError] = useState('')
   const [lastInvite, setLastInvite] = useState<{ url: string; emailSent: boolean } | null>(null)
   const [copied, setCopied] = useState('')
+  const [doCofniecia, setDoCofniecia] = useState<number | null>(null)
 
   async function loadInvitations() {
     const data = await apiFetch('/accounts/invitations/list/')
@@ -251,6 +252,14 @@ export default function TeamPage() {
   }
 
   async function handleRevoke(id: number) {
+    // Pierwsze kliknięcie pyta, drugie cofa - jak przy usuwaniu osoby
+    // i dokumentu. Jedno kliknięcie obok „skopiuj link" unieważniało
+    // zaproszenie, które ktoś miał już w skrzynce.
+    if (doCofniecia !== id) {
+      setDoCofniecia(id)
+      return
+    }
+    setDoCofniecia(null)
     try {
       await apiFetch(`/accounts/invitations/${id}/`, { method: 'DELETE' })
       await loadInvitations()
@@ -571,9 +580,15 @@ export default function TeamPage() {
                   </div>
                   <button
                     onClick={() => handleRevoke(invite.id)}
+                    onBlur={() => setDoCofniecia((obecne) => (obecne === invite.id ? null : obecne))}
                     className="text-sm text-[var(--blad)] hover:underline shrink-0"
+                    aria-label={
+                      doCofniecia === invite.id
+                        ? `Potwierdź cofnięcie zaproszenia: ${invite.email}`
+                        : `Cofnij zaproszenie: ${invite.email}`
+                    }
                   >
-                    Cofnij
+                    {doCofniecia === invite.id ? 'Na pewno cofnąć?' : 'Cofnij'}
                   </button>
                 </div>
               </li>
